@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "entities/Screen.json",
+  "title": "Screen",
+  "description": "Screen definition",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID (e.g., SCR-001)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Screen name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "page",
+        "modal",
+        "drawer",
+        "panel",
+        "wizard"
+      ],
+      "description": "Screen type"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL path"
+    },
+    "authRequired": {
+      "type": "boolean",
+      "description": "Authentication required"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description",
+    "type",
+    "url",
+    "authRequired"
+  ],
+  "additionalProperties": false
+}

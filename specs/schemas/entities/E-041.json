@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "entities/TableRef.json",
+  "title": "TableRef",
+  "description": "Reference to external table definition (DDL/Prisma)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID"
+    },
+    "tableName": {
+      "type": "string",
+      "description": "Table name"
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "ddl",
+        "prisma"
+      ],
+      "description": "Source type"
+    },
+    "sourcePath": {
+      "type": "string",
+      "description": "Source file path"
+    },
+    "entityId": {
+      "type": "string",
+      "description": "Corresponding concept entity ID"
+    }
+  },
+  "required": [
+    "id",
+    "tableName",
+    "sourceType",
+    "sourcePath",
+    "entityId"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,488 @@
+/**
+ * Model base class
+ * 
+ * All model definitions inherit from this class
+ */
+import { z, ZodType } from 'zod';
+import {
+  type ModelLevel,
+  type Relation,
+  type RelationValidationError,
+  validateRelationLevel,
+  detectCycles,
+  inferModelIdFromSpecId,
+} from './relation.js';
+
+// Re-export relation types
+export type { ModelLevel, Relation, RelationValidationError };
+export { RELATION_TYPES, RELATION_CONSTRAINTS, RelationSchema, RelationsFieldSchema } from './relation.js';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/**
+ * Lint rule definition
+ */
+export interface LintRule<T> {
+  id: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  check: (spec: T) => boolean; // true if there is an issue
+}
+
+/**
+ * Lint result
+ */
+export interface LintResult {
+  ruleId: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  specId?: string;
+}
+
+/**
+ * Exporter definition
+ */
+export interface Exporter<T> {
+  format: 'markdown' | 'json' | 'mermaid';
+  single?: (spec: T) => string;
+  index?: (specs: T[]) => string;
+  outputDir?: string;
+  filename?: (spec: T) => string;
+}
+
+/**
+ * External checker definition
+ */
+export interface ExternalChecker<T> {
+  targetType: string; // 'openapi' | 'ddl' | 'cli' etc.
+  sourcePath: (spec: T) => string;
+  check: (spec: T, externalData: unknown) => CheckResult;
+}
+
+/**
+ * Check result
+ */
+export interface CheckResult {
+  success: boolean;
+  errors: { message: string; field?: string; specId?: string }[];
+  warnings: { message: string; field?: string; specId?: string }[];
+}
+
+/**
+ * Coverage result
+ */
+export interface CoverageResult {
+  /** Total target count */
+  total: number;
+  /** Covered count */
+  covered: number;
+  /** Uncovered count */
+  uncovered: number;
+  /** Coverage rate (%) */
+  coveragePercent: number;
+  /** Details of covered items */
+  coveredItems: { id: string; description?: string }[];
+  /** Details of uncovered items */
+  uncoveredItems: { id: string; description?: string; sourceId?: string }[];
+}
+
+/**
+ * Coverage checker definition
+ * 
+ * Verify cross-model consistency (coverage).
+ * Example: Whether TestRef covers acceptanceCriteria of Requirement
+ */
+export interface CoverageChecker<T> {
+  /** Target model ID for coverage (e.g. 'requirement') */
+  targetModel: string;
+  /** Description of coverage check */
+  description: string;
+  /** Execute coverage check */
+  check: (
+    specs: T[],
+    registry: Record<string, Map<string, unknown>>
+  ) => CoverageResult;
+}
+
+// ============================================================================
+// Renderer (for embeds)
+// ============================================================================
+
+/**
+ * Render context
+ * Simplified version compatible with embedoc's EmbedContext
+ */
+export interface RenderContext {
+  /** Parameters (filter conditions other than format, etc.) */
+  params: Record<string, string | undefined>;
+  /** Markdown helpers */
+  markdown: {
+    /** Generate table */
+    table: (headers: string[], rows: (string | unknown)[][]) => string;
+  };
+}
+
+/**
+ * Renderer definition
+ * 
+ * Model-specific rendering called from embeds
+ */
+export interface Renderer<T> {
+  /** Format ID ('table', 'list', 'detail', 'spec-chapter', etc.) */
+  format: string;
+  /** Rendering process */
+  render: (specs: T[], ctx: RenderContext) => string;
+}
+
+// ============================================================================
+// Model Base Class
+// ============================================================================
+
+/**
+ * Model base class
+ * 
+ * @template TSchema - Zod schema type
+ */
+export abstract class Model<TSchema extends ZodType> {
+  /** Singleton instance storage (per subclass) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static _instances: WeakMap<new () => any, Model<ZodType>> = new WeakMap();
+
+  /**
+   * Get singleton instance of the model
+   * Usage: RequirementModel.instance
+   */
+  static get instance(): Model<ZodType> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ctor = this as unknown as new () => any;
+    if (!this._instances.has(ctor)) {
+      this._instances.set(ctor, new ctor());
+    }
+    return this._instances.get(ctor)!;
+  }
+
+  /** Model ID ('requirement', 'usecase', etc.) */
+  abstract readonly id: string;
+  
+  /** Model name ('Requirement', 'UseCase', etc.) */
+  abstract readonly name: string;
+  
+  /** ID prefix ('REQ', 'UC', etc.) */
+  abstract readonly idPrefix: string;
+  
+  /** Zod schema */
+  abstract readonly schema: TSchema;
+  
+  /** Model description (optional) */
+  readonly description?: string;
+  
+  /** External SSOT type (optional, e.g. 'OpenAPI', 'DDL/Prisma') */
+  readonly externalSsotType?: string;
+  
+  /** Spec instance type */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected get specType(): z.infer<TSchema> { return undefined as any; }
+  
+  /** Lint rules (override in subclass) */
+  protected lintRules: LintRule<z.infer<TSchema>>[] = [];
+  
+  /** Exporters (override in subclass) */
+  protected exporters: Exporter<z.infer<TSchema>>[] = [];
+  
+  /** External checker (optional) */
+  protected externalChecker?: ExternalChecker<z.infer<TSchema>>;
+  
+  /** Coverage checker (optional) */
+  protected coverageChecker?: CoverageChecker<z.infer<TSchema>>;
+  
+  /** Model level (set in _models/) */
+  protected modelLevel?: ModelLevel;
+  
+  /** Renderers (for embeds, override in subclass) */
+  protected renderers: Renderer<z.infer<TSchema>>[] = [];
+  
+  /**
+   * Get model level
+   * Returns modelLevel set in _models/
+   */
+  get level(): ModelLevel | undefined {
+    return this.modelLevel;
+  }
+  
+  /**
+   * Execute schema validation
+   */
+  validate(spec: unknown): z.infer<TSchema> {
+    return this.schema.parse(spec);
+  }
+  
+  /**
+   * Schema validation (safe version, returns error object on failure)
+   */
+  safeParse(spec: unknown): { success: true; data: z.infer<TSchema> } | { success: false; error: z.ZodError } {
+    return this.schema.safeParse(spec);
+  }
+  
+  /**
+   * Execute lint
+   */
+  lint(spec: z.infer<TSchema>): LintResult[] {
+    const specId = (spec as { id?: string }).id;
+    return this.lintRules
+      .filter(rule => rule.check(spec))
+      .map(rule => ({
+        ruleId: rule.id,
+        severity: rule.severity,
+        message: rule.message,
+        specId,
+      }));
+  }
+  
+  /**
+   * Execute lint for multiple specs
+   */
+  lintAll(specs: z.infer<TSchema>[]): LintResult[] {
+    return specs.flatMap(spec => this.lint(spec));
+  }
+  
+  /**
+   * Validate level constraints of relations
+   * @param spec - Spec instance (if it has relations property)
+   * @returns Array of validation errors
+   */
+  validateRelations(spec: z.infer<TSchema>): RelationValidationError[] {
+    const errors: RelationValidationError[] = [];
+    const specWithRelations = spec as { id?: string; relations?: Relation[] };
+    
+    if (!specWithRelations.relations || !specWithRelations.id) {
+      return errors;
+    }
+    
+    // Get all models to retrieve target model levels
+    const allModels = getAllModels();
+    const modelLevelMap = new Map<string, ModelLevel | undefined>();
+    for (const model of allModels) {
+      modelLevelMap.set(model.id, model.level);
+    }
+    
+    for (const relation of specWithRelations.relations) {
+      // Infer target model ID
+      const targetModelId = inferModelIdFromSpecId(relation.target);
+      if (!targetModelId) {
+        continue; // Skip if model ID cannot be inferred
+      }
+      
+      const targetLevel = modelLevelMap.get(targetModelId);
+      
+      const error = validateRelationLevel(
+        this.level,
+        specWithRelations.id,
+        relation,
+        targetLevel,
+      );
+      
+      if (error) {
+        errors.push(error);
+      }
+    }
+    
+    return errors;
+  }
+  
+  /**
+   * Validate relations of multiple specs (including circular reference check)
+   */
+  validateAllRelations(specs: z.infer<TSchema>[]): RelationValidationError[] {
+    const errors: RelationValidationError[] = [];
+    const allRelations: Array<{ sourceId: string; targetId: string; type: string }> = [];
+    
+    for (const spec of specs) {
+      // Individual level constraint check
+      errors.push(...this.validateRelations(spec));
+      
+      // Collect relations for circular reference check
+      const specWithRelations = spec as { id?: string; relations?: Relation[] };
+      if (specWithRelations.relations && specWithRelations.id) {
+        for (const rel of specWithRelations.relations) {
+          allRelations.push({
+            sourceId: specWithRelations.id,
+            targetId: rel.target,
+            type: rel.type,
+          });
+        }
+      }
+    }
+    
+    // Circular reference check
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    errors.push(...detectCycles(allRelations as any));
+    
+    return errors;
+  }
+  
+  /**
+   * Export in specified format (single spec)
+   */
+  exportSingle(spec: z.infer<TSchema>, format: string): string | null {
+    const exporter = this.exporters.find(e => e.format === format);
+    if (!exporter?.single) return null;
+    return exporter.single(spec);
+  }
+  
+  /**
+   * Export in specified format (index)
+   */
+  exportIndex(specs: z.infer<TSchema>[], format: string): string | null {
+    const exporter = this.exporters.find(e => e.format === format);
+    if (!exporter?.index) return null;
+    return exporter.index(specs);
+  }
+  
+  /**
+   * Get exporter output directory
+   */
+  getOutputDir(format: string): string | null {
+    const exporter = this.exporters.find(e => e.format === format);
+    return exporter?.outputDir ?? null;
+  }
+  
+  /**
+   * Get filename
+   */
+  getFilename(spec: z.infer<TSchema>, format: string): string | null {
+    const exporter = this.exporters.find(e => e.format === format);
+    if (!exporter?.filename) return null;
+    return exporter.filename(spec);
+  }
+  
+  /**
+   * Check consistency with external SSOT
+   */
+  check(spec: z.infer<TSchema>, externalData: unknown): CheckResult {
+    if (!this.externalChecker) {
+      return { success: true, errors: [], warnings: [] };
+    }
+    return this.externalChecker.check(spec, externalData);
+  }
+  
+  /**
+   * Get external SSOT path
+   */
+  getExternalSourcePath(spec: z.infer<TSchema>): string | null {
+    if (!this.externalChecker) return null;
+    return this.externalChecker.sourcePath(spec);
+  }
+  
+  /**
+   * Execute coverage check
+   * @param specs - Array of spec instances for this model
+   * @param registry - Registry of all models
+   */
+  checkCoverage(
+    specs: z.infer<TSchema>[],
+    registry: Record<string, Map<string, unknown>>
+  ): CoverageResult | null {
+    if (!this.coverageChecker) return null;
+    return this.coverageChecker.check(specs, registry);
+  }
+  
+  /**
+   * Get coverage checker
+   */
+  getCoverageChecker(): CoverageChecker<z.infer<TSchema>> | undefined {
+    return this.coverageChecker;
+  }
+  
+  /**
+   * Get lint rules
+   */
+  getLintRules(): LintRule<z.infer<TSchema>>[] {
+    return this.lintRules;
+  }
+  
+  /**
+   * Get exporters
+   */
+  getExporters(): Exporter<z.infer<TSchema>>[] {
+    return this.exporters;
+  }
+  
+  // ============================================================================
+  // Renderer (for embeds)
+  // ============================================================================
+  
+  /**
+   * Render in specified format
+   * @param format - Format ID ('table', 'list', 'detail', etc.)
+   * @param specs - Array of specs to render
+   * @param ctx - Render context
+   * @returns Rendered result (Markdown string), null if no matching renderer
+   */
+  render(format: string, specs: z.infer<TSchema>[], ctx: RenderContext): string | null {
+    const renderer = this.renderers.find(r => r.format === format);
+    if (!renderer) return null;
+    return renderer.render(specs, ctx);
+  }
+  
+  /**
+   * Get list of available formats
+   */
+  getAvailableFormats(): string[] {
+    return this.renderers.map(r => r.format);
+  }
+  
+  /**
+   * Get renderers
+   */
+  getRenderers(): Renderer<z.infer<TSchema>>[] {
+    return this.renderers;
+  }
+  
+  /**
+   * Check if renderer exists for specific format
+   */
+  hasRenderer(format: string): boolean {
+    return this.renderers.some(r => r.format === format);
+  }
+}
+
+// ============================================================================
+// Model Registry
+// ============================================================================
+
+/** Map of registered models */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const modelRegistry = new Map<string, Model<any>>();
+
+/**
+ * Register model
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function registerModel(model: Model<any>): void {
+  modelRegistry.set(model.id, model);
+}
+
+/**
+ * Get model
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getModel(id: string): Model<any> | undefined {
+  return modelRegistry.get(id);
+}
+
+/**
+ * Get all registered models
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getAllModels(): Model<any>[] {
+  return Array.from(modelRegistry.values());
+}
+
+/**
+ * Clear registry
+ */
+export function clearModelRegistry(): void {
+  modelRegistry.clear();
+}

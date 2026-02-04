@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "entities/Requirement.json",
+  "title": "Requirement",
+  "description": "Entity representing requirements. Base for functional requirements, non-functional requirements, and constraints",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID (e.g., FR-001)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Requirement name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the requirement"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Reason/background of the requirement"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "must",
+        "should",
+        "could",
+        "wont"
+      ],
+      "description": "Priority"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "review",
+        "approved",
+        "implemented"
+      ],
+      "description": "Status"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description",
+    "rationale",
+    "priority",
+    "status"
+  ],
+  "additionalProperties": false
+}

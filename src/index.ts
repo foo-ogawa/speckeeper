@@ -1,0 +1,57 @@
+// Types (prioritize definitions from meta-model.ts)
+export * from './types/index.js';
+
+// Core (Model Registry) - export excluding duplicates
+export {
+  Model,
+  registerModel,
+  getModel,
+  getAllModels,
+  clearModelRegistry,
+  // Re-exported from relation.ts
+  RELATION_TYPES,
+  RELATION_CONSTRAINTS,
+  RelationSchema,
+  RelationsFieldSchema,
+} from './core/model.js';
+
+export type {
+  ModelLevel,
+  Relation,
+  RelationValidationError,
+  LintRule,
+  LintResult,
+  Exporter,
+  ExternalChecker,
+  CheckResult,
+  CoverageResult,
+  CoverageChecker,
+  Renderer,
+  RenderContext,
+} from './core/model.js';
+
+// Relation utilities
+export {
+  validateRelationLevel,
+  detectCycles,
+  inferModelIdFromSpecId,
+  getLevelIndex,
+} from './core/relation.js';
+
+export * from './core/model-registry.js';
+export * from './core/config-api.js';
+
+// DSL
+export * from './dsl/index.js';
+
+// Generators
+export * from './generators/index.js';
+
+// Validators
+export * from './validators/index.js';
+
+// Checkers
+export * from './checkers/index.js';
+
+// Utils
+export * from './utils/index.js';

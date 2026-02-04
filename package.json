@@ -1,0 +1,80 @@
+{
+  "name": "spects",
+  "version": "0.1.0",
+  "description": "TypeScript-first specification validation framework with external SSOT integration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dsl": {
+      "import": "./dist/dsl/index.js",
+      "types": "./dist/dsl/index.d.ts"
+    }
+  },
+  "bin": {
+    "spects": "./bin/spects.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:docs": "npm run build && embedoc build",
+    "dev": "tsup --watch",
+    "lint": "eslint",
+    "lint:design": "eslint design/",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "docs": "embedoc build",
+    "docs:watch": "embedoc watch",
+    "ci": "npm run ci:validate && npm run ci:generate && npm run ci:verify",
+    "ci:validate": "npm run typecheck && npm run lint && npm run lint:design && npm run build && npx spects lint && npm run test:run",
+    "ci:generate": "embedoc build",
+    "ci:verify": "npx spects check external-ssot && npx spects check test && npx spects check test --coverage"
+  },
+  "keywords": [
+    "requirements",
+    "design",
+    "documentation",
+    "markdown",
+    "mermaid",
+    "typescript",
+    "dsl",
+    "architecture",
+    "c4-model"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "embedoc": "^0.10.1",
+    "glob": "^10.3.10",
+    "tsx": "^4.21.0",
+    "yaml": "^2.3.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^9.39.2",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^1.2.0"
+  }
+}

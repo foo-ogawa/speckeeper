@@ -1,0 +1,19 @@
+# embedoc configuration for spects documentation
+# 
+# Directly import TypeScript models from spects and
+# auto-update marker sections in documentation.
+#
+version: "1.0"
+
+targets:
+  - pattern: "./docs/**/*.md"
+    comment_style: html
+    exclude:
+      - "**/node_modules/**"
+
+# Note: Do not use datasources, directly import TypeScript in embeds
+embeds_dir: "./embeds"
+
+output:
+  encoding: utf-8
+  line_ending: lf
