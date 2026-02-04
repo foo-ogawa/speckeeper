@@ -2,19 +2,19 @@
 
 [![npm version](https://badge.fury.io/js/spects.svg)](https://www.npmjs.com/package/spects)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
 
 **TypeScript-first specification validation framework** — validate design consistency and external SSOT integrity with full traceability.
 
 ## Why spects?
 
-Requirements and design documents often drift from implementation. **spects** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (OpenAPI, DDL, IaC, tests).
+Requirements and design documents often drift from implementation. **spects** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
 
 ```
 design/*.ts  ──────►  Validation & Consistency Checks
     │
     ├─► spects lint    → Design integrity (IDs, references, phase gates)
-    ├─► spects check   → External SSOT validation (OpenAPI, DDL, etc.)
+    ├─► spects check   → External SSOT validation (test coverage, etc.)
     └─► spects impact  → Change impact analysis with traceability
 ```
 
@@ -22,7 +22,7 @@ design/*.ts  ──────►  Validation & Consistency Checks
 
 - **TypeScript as SSOT** — Define requirements, architecture, and design in type-safe TypeScript
 - **Design validation** — Lint rules for ID uniqueness, reference integrity, circular dependencies, and phase gates
-- **External SSOT validation** — Check consistency with OpenAPI, DDL, Terraform, test files, and more
+- **External SSOT validation** — Check consistency with test files, and custom checkers for OpenAPI, DDL, etc.
 - **Traceability** — Track relationships across model levels (L0-L3) with impact analysis
 - **Custom models** — Extend with domain-specific models (Runbooks, Policies, etc.)
 - **CI-ready** — Built-in lint, drift detection, and coverage checks
@@ -31,6 +31,9 @@ design/*.ts  ──────►  Validation & Consistency Checks
 
 ```bash
 npm install spects
+
+# Verify installation
+npx spects --help
 ```
 
 ## Quick Start
@@ -46,6 +49,20 @@ This creates:
 - `design/_models/` — Model definitions (Requirement, UseCase, Term, Entity, Component)
 - `design/requirements.ts` — Sample specification file
 
+The generated `spects.config.ts`:
+
+```typescript
+import { defineConfig } from 'spects';
+import { allModels } from './design/_models/index';
+
+export default defineConfig({
+  projectName: 'my-project',
+  models: allModels,
+});
+```
+
+See [Model Definition Guide](./docs/model-guide.md) for customization details.
+
 ### 2. Define your specifications
 
 Edit files in `design/` to add your specifications:
@@ -60,10 +77,10 @@ export const requirements: Requirement[] = [
     name: 'User Authentication',
     type: 'functional',
     description: 'Users can authenticate using email and password',
-    priority: 'high',
+    priority: 'must',
     acceptanceCriteria: [
-      { id: 'FR-001-01', description: 'Valid credentials grant access' },
-      { id: 'FR-001-02', description: 'Invalid credentials show error' },
+      { id: 'FR-001-01', description: 'Valid credentials grant access', verificationMethod: 'test' },
+      { id: 'FR-001-02', description: 'Invalid credentials show error', verificationMethod: 'test' },
     ],
   },
 ];
@@ -75,8 +92,8 @@ export const requirements: Requirement[] = [
 # Validate design integrity
 npx spects lint
 
-# Check external SSOT consistency  
-npx spects check
+# Check test coverage against requirements
+npx spects check test --coverage
 
 # Analyze change impact
 npx spects impact FR-001
@@ -88,15 +105,31 @@ npx spects impact FR-001
 |---------|-------------|
 | `spects init` | Initialize a new project with starter templates |
 | `spects lint` | Validate design integrity (ID uniqueness, references, phase gates) |
-| `spects check` | Verify consistency with external SSOT (OpenAPI, DDL, etc.) |
-| `spects check --coverage` | Verify cross-model coverage (e.g., TestRef → Requirements) |
-| `spects drift` | Detect manual edits to generated files |
+| `spects check` | Verify consistency with external SSOT |
+| `spects check test --coverage` | Verify test coverage for requirements |
+| `spects drift` | Detect manual edits to generated `specs/` files |
 | `spects impact <id>` | Analyze change impact for a specific element |
+
+**Note**: `spects build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
 
 ## Validation Features
 
 ### Design Integrity (lint)
 
+```bash
+$ npx spects lint
+
+spects lint
+
+  Design: design/
+  Loaded: 17 files
+
+  Running lint checks...
+
+  ✓ No issues found
+```
+
+Checks include:
 - **ID uniqueness** — No duplicate IDs within model types
 - **ID conventions** — Enforce naming patterns (e.g., `FR-001`, `COMP-AUTH`)
 - **Reference integrity** — All referenced IDs must exist
@@ -106,29 +139,47 @@ npx spects impact FR-001
 
 ### External SSOT Validation (check)
 
-Validate your specifications against actual implementation artifacts:
+Validate your specifications against actual implementation artifacts.
+
+**Built-in: Test Coverage Check**
+
+Define test references that link to your requirements:
 
 ```typescript
-// design/api-refs.ts
-export const apiRefs: APIRef[] = [
+// design/test-refs.ts
+import type { TestRef } from 'spects';
+
+export const testRefs: TestRef[] = [
   {
-    id: 'API-001',
-    operationId: 'createUser',
-    source: { path: './openapi.yaml' },
-    relatedComponent: 'COMP-AUTH',
+    id: 'TEST-001',
+    description: 'Authentication tests',
+    source: { path: 'test/auth.test.ts', framework: 'vitest' },
+    verifiesRequirements: ['FR-001'],
+    testCasePatterns: [
+      { acceptanceCriteriaId: 'FR-001-01', pattern: 'valid credentials' },
+      { acceptanceCriteriaId: 'FR-001-02', pattern: 'invalid credentials' },
+    ],
   },
 ];
 ```
 
 ```bash
-# Validates operationId exists in OpenAPI spec
-npx spects check --model api-ref
+$ npx spects check test --coverage
+
+spects check
+
+  Design: design/
+  Type:   test
+
+  ✓ All checks passed
+
+  Coverage: TestRef → Requirement
+    Coverage: 100% (34/34 acceptance criteria covered)
 ```
 
-Built-in checks:
-- **Test files** — Validate requirement coverage in tests
+**Custom Checkers**
 
-Custom checkers can be implemented via `externalChecker` in model definitions to validate against any external source (OpenAPI, DDL, IaC, etc.).
+Implement `externalChecker` in model definitions to validate against any external source (OpenAPI, DDL, IaC, etc.). See [Model Definition Guide](./docs/model-guide.md) for details.
 
 ## Model Levels & Traceability
 
@@ -151,6 +202,8 @@ FR-001 (Requirement)
 ├── satisfies: UC-001 (UseCase)
 └── verifies: TEST-001 (TestRef)
 ```
+
+See [Model Entity Catalog](./docs/model_entity_catalog.md) for relation types and level constraints.
 
 ## Customizing Models
 
@@ -189,14 +242,31 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 
 ## Documentation
 
-- [Model Definition Guide](./docs/model-guide.md)
-- [Framework Requirements Specification](./docs/framework_requirements_spec.md)
-- [Model Entity Catalog](./docs/model_entity_catalog.md)
+- **[Model Definition Guide](./docs/model-guide.md)** — Start here for model customization and API reference
+- [Framework Requirements Specification](./docs/framework_requirements_spec.md) — Detailed feature specifications
+- [Model Entity Catalog](./docs/model_entity_catalog.md) — Model hierarchy and relation types
 
-## Requirements
+## Compatibility
 
 - Node.js >= 20.0.0
 - TypeScript >= 5.0
+
+## Contributing
+
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Lint
+npm run lint
+npm run lint:design
+
+# Full CI check
+npm run ci
+```
 
 ## License
 

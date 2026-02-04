@@ -1,7 +1,7 @@
 /**
  * NFR-002/003/004/005: Compatibility tests
  * 
- * - NFR-002: Operates on Node.js 18 or higher
+ * - NFR-002: Operates on Node.js 20 or higher
  * - NFR-003: Type checking passes with TypeScript 5.0 or higher
  * - NFR-004: Can be distributed as an npm package
  * - NFR-005: Provided in ES Modules format
@@ -14,9 +14,9 @@ import { join } from 'node:path';
 const projectRoot = process.cwd();
 
 describe('NFR-002: Node.js compatibility', () => {
-  // NFR-002-01: Verify operation on Node.js 18 LTS
-  describe('NFR-002-01: Node.js 18 LTS', () => {
-    it('should specify Node.js 18+ in package.json engines', () => {
+  // NFR-002-01: Verify operation on Node.js 20 LTS
+  describe('NFR-002-01: Node.js 20 LTS', () => {
+    it('should specify Node.js 20+ in package.json engines', () => {
       const packageJsonPath = join(projectRoot, 'package.json');
       
       if (existsSync(packageJsonPath)) {
@@ -24,18 +24,18 @@ describe('NFR-002: Node.js compatibility', () => {
         
         // Check if engines.node is specified
         if (packageJson.engines?.node) {
-          // Should be >= 18
-          expect(packageJson.engines.node).toMatch(/^>=?\s*18|^18/);
+          // Should be >= 20
+          expect(packageJson.engines.node).toMatch(/^>=?\s*20|^20/);
         } else {
           // If not specified, it's assumed to work with current Node.js
           const nodeVersion = parseInt(process.version.slice(1).split('.')[0], 10);
-          expect(nodeVersion).toBeGreaterThanOrEqual(18);
+          expect(nodeVersion).toBeGreaterThanOrEqual(20);
         }
       }
     });
     
     it('should use Node.js built-in modules correctly', () => {
-      // Verify we can use Node.js 18+ APIs
+      // Verify we can use Node.js 20+ APIs
       expect(typeof globalThis.fetch).toBe('function'); // fetch is built-in since Node 18
       expect(typeof Buffer.from).toBe('function');
       expect(typeof URL).toBe('function');
