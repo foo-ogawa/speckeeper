@@ -59,7 +59,7 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 - **ID Linkage**: A mechanism that ensures componentId/entityId/requirementId from TS models appear in external SSOT, generated artifacts, implementation, and IaC to connect design and implementation
 - **Drift（drift）**: A state where docs//specs/ that should have been generated from TS have differences due to manual edits, etc.
 - **Reconciliation（Reconciliation）**: Checks to bridge gaps between design and external SSOT/implementation (design consistency, external SSOT consistency, implementation existence verification)
-- **User-defined Model（User-defined Model）**: Project-specific models defined by users inheriting from the Model base class. The standard way to use spects
+- **User-defined Model（User-defined Model）**: Project-specific models defined by users inheriting from the Model base class. The standard way to use speckeeper
 <!--@embedoc:end-->
 
 ---
@@ -102,16 +102,16 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 │   ② eslint src/         : Source code quality                    │
 │   ③ eslint design/      : Design file quality                    │
 │   ④ tsup                : Build (dist/ generation)               │
-│   ⑤ spects lint        : Model consistency (references/ID/phase gates) │
+│   ⑤ speckeeper lint        : Model consistency (references/ID/phase gates) │
 │   ⑥ vitest run          : Unit tests (288 cases)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │ Phase 2: ci:generate (Generation)                                │
 │   ⑦ embedoc build       : docs/ marker update                    │
 ├─────────────────────────────────────────────────────────────────┤
 │ Phase 3: ci:verify (Reconciliation)                              │
-│   ⑧ spects check external-ssot : External SSOT consistency       │
-│   ⑨ spects check test          : Test-requirement linkage        │
-│   ⑩ spects check test --coverage : Coverage verification         │
+│   ⑧ speckeeper check external-ssot : External SSOT consistency       │
+│   ⑨ speckeeper check test          : Test-requirement linkage        │
+│   ⑩ speckeeper check test --coverage : Coverage verification         │
 │      - TestRef → Requirement (acceptanceCriteria)                │
 │      - Requirement → UseCase (satisfies)                         │
 │      - Component → Requirement (implements)                      │
@@ -196,11 +196,11 @@ specs/  # Machine-readable artifacts (JSON Schema for consistency checking)
 │   └── entities/  # Entity JSON Schema (E-001.json, etc.)
 └── index.json  # Aggregated data (reference graph for all models)
 
-src/  # Application implementation code (not managed by spects)
+src/  # Application implementation code (not managed by speckeeper)
 ```
 <!--@embedoc:end-->
 
-> **Note**: See constraint requirement CR-003. spects does not generate implementation code.
+> **Note**: See constraint requirement CR-003. speckeeper does not generate implementation code.
 
 ### 7.2 Artifact Classification
 
@@ -210,10 +210,10 @@ src/  # Application implementation code (not managed by spects)
 | **SSOT** | `design/` | TypeScript models (source of truth) = requirement/design definitions | - |
 | **Human-readable artifacts** | `docs/` | Markdown/Mermaid (for review) | Yes |
 | **Machine-readable artifacts** | `specs/` | JSON/JSON Schema for consistency checking | Yes |
-| **Implementation code** | `src/` | Application implementation (not managed by spects) | - |
+| **Implementation code** | `src/` | Application implementation (not managed by speckeeper) | - |
 <!--@embedoc:end-->
 
-> **Note**: spects does not generate implementation code. Implementation code is generated from external SSOT by micro-contracts (API contracts) or ORM (DB connections).
+> **Note**: speckeeper does not generate implementation code. Implementation code is generated from external SSOT by micro-contracts (API contracts) or ORM (DB connections).
 
 ### 7.3 CI Definition
 
@@ -230,7 +230,7 @@ src/  # Application implementation code (not managed by spects)
 
 ## 8. Functional Requirements
 
-This chapter defines the **common system functionality** that the spects framework (`src/`) should implement.
+This chapter defines the **common system functionality** that the speckeeper framework (`src/`) should implement.
 
 > **Note**: For specific field definitions and usage examples of individual models (Requirement, Entity, Screen, etc.),
 > see **[Model Definition Examples](model-guide.md)**.
@@ -251,7 +251,7 @@ All model elements have a unique `id` and provide ID-based reference and consist
 
 **Impact of ID Changes**
 - ID changes detect all reference locations via reference integrity check (lint)
-- **Change Impact Analysis CLI**: `spects impact {ID}` lists the impact scope
+- **Change Impact Analysis CLI**: `speckeeper impact {ID}` lists the impact scope
 
 #### FR-102: Phase Management
 
@@ -270,7 +270,7 @@ Define and register project-specific models in TypeScript
 - **FR-104-03**: Can define model-specific lint rules [test]
 - **FR-104-04**: Can define model-specific renderers (text output functions) [test]
 - **FR-104-05**: Can define external SSOT consistency checkers (optional) [test]
-- **FR-104-06**: Can register as models: [...] in spects.config.ts [demo]
+- **FR-104-06**: Can register as models: [...] in speckeeper.config.ts [demo]
 - **FR-104-07**: Registered models become targets of lint/build/drift/check [test]
 - **FR-104-08**: Can set modelLevel on models to enable relation constraint verification [test]
 - **FR-104-09**: Can get model level (L0/L1/L2/L3) via Model.level property [test]
@@ -311,7 +311,7 @@ The following models are defined in this project:
 ```typescript
 // Model definition example
 import { z } from 'zod';
-import { Model } from 'spects';
+import { Model } from 'speckeeper';
 
 const RunbookSchema = z.object({
   id: z.string(),
@@ -353,18 +353,18 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 
 #### FR-105: Project Initialization
 
-Initialize a new spects project with starter templates and basic model definitions
+Initialize a new speckeeper project with starter templates and basic model definitions
 
-- **FR-105-01**: spects init creates design/ directory structure [test]
-- **FR-105-02**: spects init generates spects.config.ts with default settings [test]
-- **FR-105-03**: spects init generates package.json with type: module and dependencies [test]
-- **FR-105-04**: spects init generates tsconfig.json for TypeScript support [test]
-- **FR-105-05**: spects init generates basic model definitions in design/_models/ [test]
-- **FR-105-06**: spects init generates sample specification files [test]
-- **FR-105-07**: Generated project passes spects lint without errors [test]
+- **FR-105-01**: speckeeper init creates design/ directory structure [test]
+- **FR-105-02**: speckeeper init generates speckeeper.config.ts with default settings [test]
+- **FR-105-03**: speckeeper init generates package.json with type: module and dependencies [test]
+- **FR-105-04**: speckeeper init generates tsconfig.json for TypeScript support [test]
+- **FR-105-05**: speckeeper init generates basic model definitions in design/_models/ [test]
+- **FR-105-06**: speckeeper init generates sample specification files [test]
+- **FR-105-07**: Generated project passes speckeeper lint without errors [test]
 - **FR-105-08**: Generated project passes typecheck without errors [test]
-- **FR-105-09**: spects init --force overwrites existing files [test]
-- **FR-105-10**: spects init skips package.json if it already exists (without --force) [test]
+- **FR-105-09**: speckeeper init --force overwrites existing files [test]
+- **FR-105-10**: speckeeper init skips package.json if it already exists (without --force) [test]
 
 **Generated Files**
 
@@ -380,7 +380,7 @@ Initialize a new spects project with starter templates and basic model definitio
 | `design/_models/index.ts` | Model exports |
 | `design/index.ts` | Design entry point |
 | `design/requirements.ts` | Sample requirements |
-| `spects.config.ts` | Configuration file |
+| `speckeeper.config.ts` | Configuration file |
 | `package.json` | Package manifest (if not exists) |
 | `tsconfig.json` | TypeScript configuration |
 
@@ -388,10 +388,10 @@ Initialize a new spects project with starter templates and basic model definitio
 
 ```bash
 # Initialize a new project
-npx spects init
+npx speckeeper init
 
 # Force overwrite existing files
-npx spects init --force
+npx speckeeper init --force
 ```
 
 ### 8.2 External SSOT Reference
@@ -427,7 +427,7 @@ Models provide text rendering functionality callable from external programs
 
 **Design Policy**
 
-- spects itself does not directly generate documents (docs/)
+- speckeeper itself does not directly generate documents (docs/)
 - External programs (template engines, etc.) invoke model rendering functionality to generate documents
 - Model-specific rendering logic is consolidated in `design/_models/`
 - Common rendering interface (`Renderer`) is provided
@@ -484,7 +484,7 @@ Generate JSON Schema and requirement definitions from concept model entities
 | `specs/schemas/entities/` | JSON Schema (concept Entity common vocabulary) |
 | `specs/index.json` | Reference resolution graph (ID list and reference relations for all models) |
 
-> **Note**: spects **does not generate implementation code**.
+> **Note**: speckeeper **does not generate implementation code**.
 > Implementation code is generated by external tools from external SSOT:
 > - API contract → External tools (generated from OpenAPI)
 > - DB connection → ORM/DDL tools (generated from DDL/Prisma)
@@ -565,8 +565,8 @@ All external SSOT consistency checks are uniformly composed of existence, type, 
 
 Provide CLI command to execute external SSOT consistency check
 
-- **FR-602-01**: spects check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: spects check --model <model-name> checks only specific model [test]
+- **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
+- **FR-602-02**: speckeeper check --model <model-name> checks only specific model [test]
 - **FR-602-03**: Model name is the model ID defined in design/_models/ [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
@@ -574,16 +574,16 @@ Provide CLI command to execute external SSOT consistency check
 
 ```bash
 # External SSOT consistency check for all models
-spects check
+speckeeper check
 
 # Check specific model only
-spects check --model api-ref      # APIRef consistency only
-spects check --model table-ref    # TableRef consistency only
-spects check --model iac-ref      # IaCRef consistency only
-spects check --model batch-ref    # BatchRef consistency only
+speckeeper check --model api-ref      # APIRef consistency only
+speckeeper check --model table-ref    # TableRef consistency only
+speckeeper check --model iac-ref      # IaCRef consistency only
+speckeeper check --model batch-ref    # BatchRef consistency only
 
 # Specify multiple models
-spects check --model api-ref --model table-ref
+speckeeper check --model api-ref --model table-ref
 ```
 
 #### FR-603: External Checker
@@ -593,7 +593,7 @@ Each model can define externalChecker to implement consistency check with extern
 - **FR-603-01**: Can set externalChecker in Model definition [test]
 - **FR-603-02**: externalChecker includes target file reading and check logic [test]
 - **FR-603-03**: Check results include success, errors, warnings [test]
-- **FR-603-04**: spects check command auto-detects and runs models with externalChecker [test]
+- **FR-603-04**: speckeeper check command auto-detects and runs models with externalChecker [test]
 
 **External Checker Structure**
 
@@ -630,7 +630,7 @@ externalChecker: ExternalChecker<APIRef> = {
 
 Use Model class coverageChecker to verify cross-model coverage
 
-- **FR-604-01**: Execute coverage verification with spects check --coverage [test]
+- **FR-604-01**: Execute coverage verification with speckeeper check --coverage [test]
 - **FR-604-02**: Define coverageChecker interface in Model class [test]
 - **FR-604-03**: Auto-detect and execute models with coverageChecker [test]
 - **FR-604-04**: Calculate and display coverage rate (%) [test]
@@ -654,7 +654,7 @@ Coverage logic is defined in each project's design/.
 
 ```bash
 # Coverage verification
-spects check --coverage
+speckeeper check --coverage
 
 # Output example
 Test Coverage Report
@@ -828,7 +828,7 @@ Users can define custom models by inheriting from Model base class
 
 - Can define new models by inheriting from Model base class
 - Can define model-specific schema, lint rules, and renderers
-- Models registered in spects.config.ts become targets of lint/build/check
+- Models registered in speckeeper.config.ts become targets of lint/build/check
 
 **NFR-005: Input Format Diversity**
 
@@ -880,7 +880,7 @@ Provided in ES Modules format
 Can be distributed as npm package
 
 - Can publish package via npm publish
-- Can install via npm install spects
+- Can install via npm install speckeeper
 
 <!--@embedoc:end-->
 
@@ -898,12 +898,12 @@ Can be distributed as npm package
 
 Refer to `acceptanceCriteria` defined in each requirement (FR-*, NFR-*, CR-*).
 
-Verification of acceptance criteria is automated with `spects check test --coverage`,
+Verification of acceptance criteria is automated with `speckeeper check test --coverage`,
 which confirms that acceptance criteria with `verificationMethod: test` are covered by `TestRef`.
 
 ```bash
 # Check acceptance criteria coverage
-npx spects check test --coverage
+npx speckeeper check test --coverage
 ```
 
 ---

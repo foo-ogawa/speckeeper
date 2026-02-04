@@ -37,12 +37,12 @@ export interface ImpactResult {
 // ============================================================================
 
 export async function impactCommand(targetId: string, options: ImpactCommandOptions): Promise<void> {
-  console.log(chalk.blue('spects impact'));
+  console.log(chalk.blue('speckeeper impact'));
   console.log('');
   
   if (!targetId) {
     console.error(chalk.red('Error: ID is required'));
-    console.log(chalk.gray('  Usage: spects impact <id>'));
+    console.log(chalk.gray('  Usage: speckeeper impact <id>'));
     process.exit(1);
   }
   

@@ -1,9 +1,9 @@
 /**
- * spects Test References - Test Reference Definitions
+ * speckeeper Test References - Test Reference Definitions
  *
  * Defines associations between test files and acceptance criteria.
  * verifiesRequirements and relations are auto-derived from testCasePatterns.acceptanceCriteriaId.
- * spects check test verifies test file existence and acceptance criteria ID mentions.
+ * speckeeper check test verifies test file existence and acceptance criteria ID mentions.
  */
 import type { TestRef, TestCasePattern } from './_models/test-ref.ts';
 
@@ -240,12 +240,12 @@ const modelLevelTestPatterns: TestCasePattern[] = [
 // Init command test patterns
 const initTestPatterns: TestCasePattern[] = [
   { acceptanceCriteriaId: 'FR-105-01', pattern: 'FR-105-01.*creates design/', description: 'Design directory creation test' },
-  { acceptanceCriteriaId: 'FR-105-02', pattern: 'FR-105-02.*spects.config.ts', description: 'Config file generation test' },
+  { acceptanceCriteriaId: 'FR-105-02', pattern: 'FR-105-02.*speckeeper.config.ts', description: 'Config file generation test' },
   { acceptanceCriteriaId: 'FR-105-03', pattern: 'FR-105-03.*package.json', description: 'Package.json generation test' },
   { acceptanceCriteriaId: 'FR-105-04', pattern: 'FR-105-04.*tsconfig.json', description: 'tsconfig.json generation test' },
   { acceptanceCriteriaId: 'FR-105-05', pattern: 'FR-105-05.*model definitions', description: 'Model definitions generation test' },
   { acceptanceCriteriaId: 'FR-105-06', pattern: 'FR-105-06.*sample specification', description: 'Sample specification generation test' },
-  { acceptanceCriteriaId: 'FR-105-07', pattern: 'FR-105-07.*spects lint', description: 'Generated project lint test' },
+  { acceptanceCriteriaId: 'FR-105-07', pattern: 'FR-105-07.*speckeeper lint', description: 'Generated project lint test' },
   { acceptanceCriteriaId: 'FR-105-08', pattern: 'FR-105-08.*typecheck', description: 'Generated project typecheck test' },
   { acceptanceCriteriaId: 'FR-105-09', pattern: 'FR-105-09.*--force', description: 'Force overwrite test' },
   { acceptanceCriteriaId: 'FR-105-10', pattern: 'FR-105-10.*skips package.json', description: 'Skip existing package.json test' },

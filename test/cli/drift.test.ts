@@ -105,7 +105,7 @@ function generateDriftReport(results: DriftResult[]): string {
   
   lines.push('## Action Required');
   lines.push('');
-  lines.push('Run `spects build` to regenerate files, then commit the changes.');
+  lines.push('Run `speckeeper build` to regenerate files, then commit the changes.');
   lines.push('');
   lines.push('> **Note**: Manual editing of generated files is discouraged.');
   lines.push('> Modify the source TypeScript models instead.');
@@ -259,7 +259,7 @@ describe('FR-500: Drift check', () => {
       const report = generateDriftReport(results);
       
       expect(report).toContain('Action Required');
-      expect(report).toContain('spects build');
+      expect(report).toContain('speckeeper build');
       expect(report).toContain('commit');
     });
     

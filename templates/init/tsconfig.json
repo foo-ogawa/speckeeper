@@ -10,5 +10,5 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["design/**/*", "spects.config.ts"]
+  "include": ["design/**/*", "speckeeper.config.ts"]
 }

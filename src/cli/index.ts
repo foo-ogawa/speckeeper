@@ -12,7 +12,7 @@ import { runInit } from './init.js';
 const program = new Command();
 
 program
-  .name('spects')
+  .name('speckeeper')
   .description('Requirements and design management framework with TypeScript DSL')
   .version('0.1.0');
 
@@ -89,7 +89,7 @@ program
 // Init command
 program
   .command('init')
-  .description('Initialize a new spects project with starter templates')
+  .description('Initialize a new speckeeper project with starter templates')
   .option('-f, --force', 'Overwrite existing files')
   .action(runInit);
 

@@ -1,6 +1,6 @@
 # Model Definition Guide
 
-In the spects model system, you define project-specific models by extending the `Model` base class. All models under `design/_models/` (Requirement, Entity, Component, etc.) are defined within the project.
+In the speckeeper model system, you define project-specific models by extending the `Model` base class. All models under `design/_models/` (Requirement, Entity, Component, etc.) are defined within the project.
 
 ## Overview
 
@@ -15,7 +15,7 @@ Defining a model enables the following capabilities:
 
 ## Architecture
 
-The spects model system is designed with the following structure:
+The speckeeper model system is designed with the following structure:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -45,7 +45,7 @@ The spects model system is designed with the following structure:
 
 ## Model Definition Examples
 
-Below are examples of models actually defined in the spects project.
+Below are examples of models actually defined in the speckeeper project.
 
 ### APIRef Model (with External SSOT Checker)
 

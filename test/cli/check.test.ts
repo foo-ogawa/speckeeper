@@ -439,7 +439,7 @@ describe('FR-602: Check command', () => {
     modelRegistry.clear();
   });
   
-  // FR-602-01: Check external SSOT consistency for all models with spects check
+  // FR-602-01: Check external SSOT consistency for all models with speckeeper check
   describe('FR-602-01: All models check', () => {
     it('should run check on all models with external checker', () => {
       const apiModel: Model<APIRef> = {
@@ -473,7 +473,7 @@ describe('FR-602: Check command', () => {
     });
   });
   
-  // FR-602-02: Check specific model only with spects check --model <model-name>
+  // FR-602-02: Check specific model only with speckeeper check --model <model-name>
   describe('FR-602-02: Specific model check', () => {
     it('should run check on specific model only', () => {
       const apiModel: Model<APIRef> = {
@@ -634,7 +634,7 @@ describe('FR-603: External checker', () => {
     });
   });
   
-  // FR-603-04: spects check command auto-detects and executes models with externalChecker
+  // FR-603-04: speckeeper check command auto-detects and executes models with externalChecker
   describe('FR-603-04: Auto-detection and execution', () => {
     it('should auto-detect models with external checker', () => {
       modelRegistry.clear();

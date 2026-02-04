@@ -240,7 +240,7 @@ function generateImpactMermaid(result: ImpactResult): string {
 }
 
 describe('FR-700: Change impact analysis', () => {
-  // FR-700-01: Analyze and list impact scope with spects impact {ID}
+  // FR-700-01: Analyze and list impact scope with speckeeper impact {ID}
   describe('FR-700-01: Impact scope analysis', () => {
     it('should analyze direct dependents', () => {
       const specs: Spec[] = [

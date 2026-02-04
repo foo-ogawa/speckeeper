@@ -1,5 +1,5 @@
 /**
- * spects CLI Commands - CLI Command Specifications
+ * speckeeper CLI Commands - CLI Command Specifications
  */
 import type { CLICommand } from './_models/cli-command.ts';
 
@@ -8,7 +8,7 @@ import type { CLICommand } from './_models/cli-command.ts';
 // ============================================================================
 
 export const commands: CLICommand[] = [
-  // spects build - Generation command
+  // speckeeper build - Generation command
   {
     id: 'CMD-BUILD',
     name: 'build',
@@ -23,12 +23,12 @@ export const commands: CLICommand[] = [
     ],
     subCommands: [],
     relatedRequirements: ['FR-001', 'FR-002', 'FR-003', 'FR-004', 'FR-005'],
-    examples: ['spects build', 'spects build --output ./dist', 'spects build --format markdown', 'spects build --watch'],
+    examples: ['speckeeper build', 'speckeeper build --output ./dist', 'speckeeper build --format markdown', 'speckeeper build --watch'],
     exitCodes: [{ code: 0, description: 'Success' }, { code: 1, description: 'Generation error' }],
     ciStep: { enabled: true, order: 2, description: 'Generate docs/specs' },
   },
 
-  // spects lint - Validation command
+  // speckeeper lint - Validation command
   {
     id: 'CMD-LINT',
     name: 'lint',
@@ -43,12 +43,12 @@ export const commands: CLICommand[] = [
     ],
     subCommands: [],
     relatedRequirements: ['FR-010', 'FR-011', 'FR-012'],
-    examples: ['spects lint', 'spects lint --phase LLD', 'spects lint --strict', 'spects lint --format json'],
+    examples: ['speckeeper lint', 'speckeeper lint --phase LLD', 'speckeeper lint --strict', 'speckeeper lint --format json'],
     exitCodes: [{ code: 0, description: 'No issues' }, { code: 1, description: 'Errors found' }, { code: 2, description: 'Warnings found (in strict mode)' }],
     ciStep: { enabled: true, order: 1, description: 'Design consistency' },
   },
 
-  // spects drift - Drift check command
+  // speckeeper drift - Drift check command
   {
     id: 'CMD-DRIFT',
     name: 'drift',
@@ -61,12 +61,12 @@ export const commands: CLICommand[] = [
     ],
     subCommands: [],
     relatedRequirements: ['FR-020'],
-    examples: ['spects drift', 'spects drift --update', 'spects drift --format diff'],
+    examples: ['speckeeper drift', 'speckeeper drift --update', 'speckeeper drift --format diff'],
     exitCodes: [{ code: 0, description: 'No differences' }, { code: 1, description: 'Differences found (manual edits detected)' }],
     ciStep: { enabled: true, order: 3, description: 'Detect manual edits to artifacts' },
   },
 
-  // spects check - External SSOT consistency check command
+  // speckeeper check - External SSOT consistency check command
   {
     id: 'CMD-CHECK',
     name: 'check',
@@ -81,7 +81,7 @@ export const commands: CLICommand[] = [
         parameters: [
           { kind: 'option', name: 'path', alias: 'p', type: 'path', description: 'OpenAPI file path', required: false, example: './api/openapi.yaml' },
         ],
-        examples: ['spects check openapi', 'spects check openapi --path ./api/spec.yaml'],
+        examples: ['speckeeper check openapi', 'speckeeper check openapi --path ./api/spec.yaml'],
       },
       {
         name: 'ddl',
@@ -90,7 +90,7 @@ export const commands: CLICommand[] = [
           { kind: 'option', name: 'path', alias: 'p', type: 'path', description: 'Schema file path', required: false, example: './db/schema.prisma' },
           { kind: 'option', name: 'type', alias: 't', type: 'enum', description: 'Schema type', required: false, choices: ['ddl', 'prisma', 'typeorm', 'drizzle'] },
         ],
-        examples: ['spects check ddl', 'spects check ddl --path ./db/schema.prisma --type prisma'],
+        examples: ['speckeeper check ddl', 'speckeeper check ddl --path ./db/schema.prisma --type prisma'],
       },
       {
         name: 'iac',
@@ -99,13 +99,13 @@ export const commands: CLICommand[] = [
           { kind: 'option', name: 'path', alias: 'p', type: 'path', description: 'IaC file path', required: false, example: './infra/template.yaml' },
           { kind: 'option', name: 'type', alias: 't', type: 'enum', description: 'IaC type', required: false, choices: ['cloudformation', 'cdk', 'terraform'] },
         ],
-        examples: ['spects check iac', 'spects check iac --path ./infra/main.tf --type terraform'],
+        examples: ['speckeeper check iac', 'speckeeper check iac --path ./infra/main.tf --type terraform'],
       },
       {
         name: 'external-ssot',
         description: 'Check consistency with all external SSOTs',
         parameters: [],
-        examples: ['spects check external-ssot'],
+        examples: ['speckeeper check external-ssot'],
       },
       {
         name: 'test',
@@ -116,10 +116,10 @@ export const commands: CLICommand[] = [
           { kind: 'option', name: 'coverage', type: 'boolean', description: 'Verify TestRef coverage for acceptanceCriteria (verificationMethod: test)', required: false, default: false },
         ],
         examples: [
-          'spects check test',
-          'spects check test --with-results',
-          'spects check test --requirement FR-101',
-          'spects check test --coverage',
+          'speckeeper check test',
+          'speckeeper check test --with-results',
+          'speckeeper check test --requirement FR-101',
+          'speckeeper check test --coverage',
         ],
       },
       {
@@ -128,20 +128,20 @@ export const commands: CLICommand[] = [
         parameters: [
           { kind: 'option', name: 'path', alias: 'p', type: 'path', description: 'Contract package path', required: false, example: './packages/contract' },
         ],
-        examples: ['spects check contract', 'spects check contract --path ./packages/contract'],
+        examples: ['speckeeper check contract', 'speckeeper check contract --path ./packages/contract'],
       },
     ],
     relatedRequirements: ['FR-030', 'FR-031', 'FR-032', 'FR-033', 'FR-034'],
-    examples: ['spects check openapi', 'spects check ddl', 'spects check iac', 'spects check external-ssot', 'spects check contract'],
+    examples: ['speckeeper check openapi', 'speckeeper check ddl', 'speckeeper check iac', 'speckeeper check external-ssot', 'speckeeper check contract'],
     exitCodes: [{ code: 0, description: 'Consistency OK' }, { code: 1, description: 'Consistency error' }, { code: 2, description: 'External SSOT file not found' }],
     ciStep: { enabled: true, order: 4, description: 'External SSOT consistency check', subCommand: 'external-ssot' },
   },
 
-  // spects init - Project initialization command
+  // speckeeper init - Project initialization command
   {
     id: 'CMD-INIT',
     name: 'init',
-    description: 'Initialize a new spects project with starter templates',
+    description: 'Initialize a new speckeeper project with starter templates',
     componentId: 'COMP-CLI',
     globalParameters: [],
     parameters: [
@@ -149,11 +149,11 @@ export const commands: CLICommand[] = [
     ],
     subCommands: [],
     relatedRequirements: ['FR-105'],
-    examples: ['spects init', 'spects init --force'],
+    examples: ['speckeeper init', 'speckeeper init --force'],
     exitCodes: [{ code: 0, description: 'Initialization successful' }, { code: 1, description: 'Initialization error' }],
   },
 
-  // spects impact - Impact analysis command
+  // speckeeper impact - Impact analysis command
   {
     id: 'CMD-IMPACT',
     name: 'impact',
@@ -168,7 +168,7 @@ export const commands: CLICommand[] = [
     ],
     subCommands: [],
     relatedRequirements: [],
-    examples: ['spects impact REQ-001', 'spects impact ENT-ORDER --depth 5', 'spects impact COMP-API --direction downstream', 'spects impact UC-001 --format mermaid'],
+    examples: ['speckeeper impact REQ-001', 'speckeeper impact ENT-ORDER --depth 5', 'speckeeper impact COMP-API --direction downstream', 'speckeeper impact UC-001 --format mermaid'],
     exitCodes: [{ code: 0, description: 'Analysis successful' }, { code: 1, description: 'Target ID not found' }],
   },
 ];

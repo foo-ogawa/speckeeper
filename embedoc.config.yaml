@@ -1,6 +1,6 @@
-# embedoc configuration for spects documentation
+# embedoc configuration for speckeeper documentation
 # 
-# Directly import TypeScript models from spects and
+# Directly import TypeScript models from speckeeper and
 # auto-update marker sections in documentation.
 #
 version: "1.0"

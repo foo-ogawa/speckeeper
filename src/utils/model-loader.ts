@@ -6,7 +6,7 @@
 
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, extname, basename } from 'node:path';
-import type { SpectsConfig } from './config-loader.js';
+import type { SpeckeeperConfig } from './config-loader.js';
 import { registerModel as coreRegisterModel } from '../core/model.js';
 
 // ============================================================================
@@ -385,7 +385,7 @@ export async function loadModelsFromDirectory(
  * Load all models based on configuration
  */
 export async function loadAllModels(
-  config: SpectsConfig,
+  config: SpeckeeperConfig,
   cwd: string = process.cwd()
 ): Promise<{
   registry: ModelRegistry;

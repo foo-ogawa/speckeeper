@@ -1,21 +1,21 @@
-# spects
+# speckeeper
 
-[![npm version](https://badge.fury.io/js/spects.svg)](https://www.npmjs.com/package/spects)
+[![npm version](https://badge.fury.io/js/speckeeper.svg)](https://www.npmjs.com/package/speckeeper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
 
 **TypeScript-first specification validation framework** — validate design consistency and external SSOT integrity with full traceability.
 
-## Why spects?
+## Why speckeeper?
 
-Requirements and design documents often drift from implementation. **spects** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
+Requirements and design documents often drift from implementation. **speckeeper** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
 
 ```
 design/*.ts  ──────►  Validation & Consistency Checks
     │
-    ├─► spects lint    → Design integrity (IDs, references, phase gates)
-    ├─► spects check   → External SSOT validation (test coverage, etc.)
-    └─► spects impact  → Change impact analysis with traceability
+    ├─► speckeeper lint    → Design integrity (IDs, references, phase gates)
+    ├─► speckeeper check   → External SSOT validation (test coverage, etc.)
+    └─► speckeeper impact  → Change impact analysis with traceability
 ```
 
 ## Features
@@ -30,10 +30,10 @@ design/*.ts  ──────►  Validation & Consistency Checks
 ## Installation
 
 ```bash
-npm install spects
+npm install speckeeper
 
 # Verify installation
-npx spects --help
+npx speckeeper --help
 ```
 
 ## Quick Start
@@ -41,18 +41,18 @@ npx spects --help
 ### 1. Initialize project
 
 ```bash
-npx spects init
+npx speckeeper init
 ```
 
 This creates:
-- `spects.config.ts` — Configuration file
+- `speckeeper.config.ts` — Configuration file
 - `design/_models/` — Model definitions (Requirement, UseCase, Term, Entity, Component)
 - `design/requirements.ts` — Sample specification file
 
-The generated `spects.config.ts`:
+The generated `speckeeper.config.ts`:
 
 ```typescript
-import { defineConfig } from 'spects';
+import { defineConfig } from 'speckeeper';
 import { allModels } from './design/_models/index';
 
 export default defineConfig({
@@ -69,7 +69,7 @@ Edit files in `design/` to add your specifications:
 
 ```typescript
 // design/requirements.ts
-import type { Requirement } from 'spects';
+import type { Requirement } from 'speckeeper';
 
 export const requirements: Requirement[] = [
   {
@@ -90,36 +90,36 @@ export const requirements: Requirement[] = [
 
 ```bash
 # Validate design integrity
-npx spects lint
+npx speckeeper lint
 
 # Check test coverage against requirements
-npx spects check test --coverage
+npx speckeeper check test --coverage
 
 # Analyze change impact
-npx spects impact FR-001
+npx speckeeper impact FR-001
 ```
 
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
-| `spects init` | Initialize a new project with starter templates |
-| `spects lint` | Validate design integrity (ID uniqueness, references, phase gates) |
-| `spects check` | Verify consistency with external SSOT |
-| `spects check test --coverage` | Verify test coverage for requirements |
-| `spects drift` | Detect manual edits to generated `specs/` files |
-| `spects impact <id>` | Analyze change impact for a specific element |
+| `speckeeper init` | Initialize a new project with starter templates |
+| `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
+| `speckeeper check` | Verify consistency with external SSOT |
+| `speckeeper check test --coverage` | Verify test coverage for requirements |
+| `speckeeper drift` | Detect manual edits to generated `specs/` files |
+| `speckeeper impact <id>` | Analyze change impact for a specific element |
 
-**Note**: `spects build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
+**Note**: `speckeeper build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
 
 ## Validation Features
 
 ### Design Integrity (lint)
 
 ```bash
-$ npx spects lint
+$ npx speckeeper lint
 
-spects lint
+speckeeper lint
 
   Design: design/
   Loaded: 17 files
@@ -147,7 +147,7 @@ Define test references that link to your requirements:
 
 ```typescript
 // design/test-refs.ts
-import type { TestRef } from 'spects';
+import type { TestRef } from 'speckeeper';
 
 export const testRefs: TestRef[] = [
   {
@@ -164,9 +164,9 @@ export const testRefs: TestRef[] = [
 ```
 
 ```bash
-$ npx spects check test --coverage
+$ npx speckeeper check test --coverage
 
-spects check
+speckeeper check
 
   Design: design/
   Type:   test
@@ -183,7 +183,7 @@ Implement `externalChecker` in model definitions to validate against any externa
 
 ## Model Levels & Traceability
 
-spects organizes models by abstraction level:
+speckeeper organizes models by abstraction level:
 
 | Level | Focus | Examples |
 |-------|-------|----------|
@@ -195,7 +195,7 @@ spects organizes models by abstraction level:
 Relations between models enable **impact analysis**:
 
 ```bash
-$ npx spects impact FR-001
+$ npx speckeeper impact FR-001
 
 FR-001 (Requirement)
 ├── implements: COMP-AUTH (Component)
@@ -211,7 +211,7 @@ The starter templates provide basic models. You can customize them or add new do
 
 ```typescript
 import { z } from 'zod';
-import { Model } from 'spects';
+import { Model } from 'speckeeper';
 
 const RunbookSchema = z.object({
   id: z.string(),

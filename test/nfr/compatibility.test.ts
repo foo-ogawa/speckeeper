@@ -171,7 +171,7 @@ describe('NFR-004: npm distribution', () => {
     });
   });
   
-  // NFR-004-02: Can install via npm install spects
+  // NFR-004-02: Can install via npm install speckeeper
   describe('NFR-004-02: npm install', () => {
     it('should have bin field for CLI', () => {
       const packageJsonPath = join(projectRoot, 'package.json');

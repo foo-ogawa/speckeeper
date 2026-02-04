@@ -1,7 +1,7 @@
 /**
- * spects Concept Model - Concept Model
+ * speckeeper Concept Model - Concept Model
  * 
- * Defines the domain model (entities, relations, rules) of spects itself.
+ * Defines the domain model (entities, relations, rules) of speckeeper itself.
  */
 import type { Entity, EntityRelation, Rule } from './_models/concept-model.ts';
 

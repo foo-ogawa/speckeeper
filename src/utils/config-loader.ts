@@ -37,7 +37,7 @@ export interface OutputPaths {
   schemasEntities: string;
 }
 
-export interface SpectsConfig {
+export interface SpeckeeperConfig {
   // Project info
   projectName?: string;
   version?: string;
@@ -110,7 +110,7 @@ export interface SpectsConfig {
 }
 
 // Default configuration
-const defaultConfig: SpectsConfig = {
+const defaultConfig: SpeckeeperConfig = {
   srcDir: 'src',
   designDir: 'design',  // Directory for requirements/design TS models
   docsDir: 'docs',
@@ -124,7 +124,7 @@ const defaultConfig: SpectsConfig = {
 /**
  * Get output paths compliant with specification
  */
-export function getOutputPaths(config: SpectsConfig, cwd: string = process.cwd()): OutputPaths {
+export function getOutputPaths(config: SpeckeeperConfig, cwd: string = process.cwd()): OutputPaths {
   const docsDir = resolve(cwd, config.docsDir);
   const specsDir = resolve(cwd, config.specsDir);
   
@@ -147,7 +147,7 @@ export function getOutputPaths(config: SpectsConfig, cwd: string = process.cwd()
 /**
  * List of expected output paths (for drift check)
  */
-export function getExpectedOutputDirs(config: SpectsConfig, cwd: string = process.cwd()): string[] {
+export function getExpectedOutputDirs(config: SpeckeeperConfig, cwd: string = process.cwd()): string[] {
   const paths = getOutputPaths(config, cwd);
   return [
     paths.requirements,
@@ -165,7 +165,7 @@ export function getExpectedOutputDirs(config: SpectsConfig, cwd: string = proces
 /**
  * Validate if output path complies with specification
  */
-export function validateOutputPaths(actualPath: string, config: SpectsConfig, cwd: string = process.cwd()): {
+export function validateOutputPaths(actualPath: string, config: SpeckeeperConfig, cwd: string = process.cwd()): {
   valid: boolean;
   expectedPaths: string[];
   message?: string;
@@ -205,11 +205,11 @@ export function validateOutputPaths(actualPath: string, config: SpectsConfig, cw
 // ============================================================================
 
 const CONFIG_FILES = [
-  'spects.config.yaml',
-  'spects.config.yml',
-  'spects.config.json',
-  'spects.config.ts',
-  'spects.config.js',
+  'speckeeper.config.yaml',
+  'speckeeper.config.yml',
+  'speckeeper.config.json',
+  'speckeeper.config.ts',
+  'speckeeper.config.js',
 ];
 
 export function findConfigFile(startDir: string = process.cwd()): string | null {
@@ -231,7 +231,7 @@ export function findConfigFile(startDir: string = process.cwd()): string | null 
 export async function loadConfig(
   configPath?: string,
   cwd: string = process.cwd()
-): Promise<SpectsConfig> {
+): Promise<SpeckeeperConfig> {
   const resolvedPath = configPath ?? findConfigFile(cwd);
   
   if (!resolvedPath) {
@@ -243,13 +243,13 @@ export async function loadConfig(
   try {
     if (ext === 'yaml' || ext === 'yml') {
       const content = readFileSync(resolvedPath, 'utf-8');
-      const parsed = parseYaml(content) as Partial<SpectsConfig>;
+      const parsed = parseYaml(content) as Partial<SpeckeeperConfig>;
       return { ...defaultConfig, ...parsed };
     }
     
     if (ext === 'json') {
       const content = readFileSync(resolvedPath, 'utf-8');
-      const parsed = JSON.parse(content) as Partial<SpectsConfig>;
+      const parsed = JSON.parse(content) as Partial<SpeckeeperConfig>;
       return { ...defaultConfig, ...parsed };
     }
     
@@ -271,7 +271,7 @@ export async function loadConfig(
 // Configuration Validation
 // ============================================================================
 
-export function validateConfig(config: SpectsConfig): string[] {
+export function validateConfig(config: SpeckeeperConfig): string[] {
   const errors: string[] = [];
   
   if (!config.srcDir) {

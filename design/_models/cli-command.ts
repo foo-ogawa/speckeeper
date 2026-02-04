@@ -1,7 +1,7 @@
 /**
  * CLI Command Model Definition
  * 
- * Models the CLI command interface specification for spects itself.
+ * Models the CLI command interface specification for speckeeper itself.
  */
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
@@ -216,9 +216,9 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
         lines.push('');
         lines.push('```bash');
         if (spec.subCommands.length > 0) {
-          lines.push(`spects ${spec.name} <subcommand> [options]`);
+          lines.push(`speckeeper ${spec.name} <subcommand> [options]`);
         } else {
-          lines.push(`spects ${spec.name} [options]`);
+          lines.push(`speckeeper ${spec.name} [options]`);
         }
         lines.push('```');
         lines.push('');

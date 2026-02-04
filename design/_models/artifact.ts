@@ -1,7 +1,7 @@
 /**
  * Artifact Model Definition
  * 
- * Defines artifacts managed by spects (SSOT/human-readable/machine-readable)
+ * Defines artifacts managed by speckeeper (SSOT/human-readable/machine-readable)
  */
 import { z } from 'zod';
 import { Model } from '../../src/core/model.ts';

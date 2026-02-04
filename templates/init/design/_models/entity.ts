@@ -2,8 +2,8 @@
  * Entity Model Definition (Concept Model)
  */
 import { z } from 'zod';
-import { Model, RelationSchema } from 'spects';
-import type { LintRule, Exporter, ModelLevel } from 'spects';
+import { Model, RelationSchema } from 'speckeeper';
+import type { LintRule, Exporter, ModelLevel } from 'speckeeper';
 
 // =============================================================================
 // Schema Definition

@@ -44,7 +44,7 @@ export interface LintResult {
 // ============================================================================
 
 export async function lintCommand(options: LintCommandOptions): Promise<void> {
-  console.log(chalk.blue('spects lint'));
+  console.log(chalk.blue('speckeeper lint'));
   console.log('');
   
   const cwd = process.cwd();

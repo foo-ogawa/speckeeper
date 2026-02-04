@@ -37,11 +37,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run spects lint
-        run: npx spects lint
+      - name: Run speckeeper lint
+        run: npx speckeeper lint
 
       - name: Run tests
         run: npm run test:run
 
-      - name: Run spects check
+      - name: Run speckeeper check
         run: npm run ci:verify

@@ -7,13 +7,13 @@ Version: 0.3
 
 ## 1. Overview
 
-This document is a catalog of models defined in spects and registered in the framework.
+This document is a catalog of models defined in speckeeper and registered in the framework.
 
 ---
 
 ## 2. Registered Models
 
-Models defined in `design/_models/` and registered in spects:
+Models defined in `design/_models/` and registered in speckeeper:
 
 <!--@embedoc:models format="full-table"-->
 | Model ID | Name | Level | Lint | Export | External SSOT | Coverage | Description |

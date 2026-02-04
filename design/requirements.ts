@@ -1,7 +1,7 @@
 /**
- * spects Requirements - Requirement Definitions
+ * speckeeper Requirements - Requirement Definitions
  * 
- * Defines the functional and non-functional requirements for spects itself.
+ * Defines the functional and non-functional requirements for speckeeper itself.
  * 
  * Requirements are organized in a parent-child hierarchy and categorized as:
  * - FR-1xx: Common requirements (ID management, phase management, model definition)
@@ -60,7 +60,7 @@ const commonRequirements: Requirement[] = [
     ],
     notes: `**Impact of ID Changes**
 - ID changes detect all reference locations via reference integrity check (lint)
-- **Change Impact Analysis CLI**: \`spects impact {ID}\` lists the impact scope`,
+- **Change Impact Analysis CLI**: \`speckeeper impact {ID}\` lists the impact scope`,
   },
 
   // ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ const commonRequirements: Requirement[] = [
       { id: 'FR-104-03', description: 'Can define model-specific lint rules', verificationMethod: 'test' },
       { id: 'FR-104-04', description: 'Can define model-specific renderers (text output functions)', verificationMethod: 'test' },
       { id: 'FR-104-05', description: 'Can define external SSOT consistency checkers (optional)', verificationMethod: 'test' },
-      { id: 'FR-104-06', description: 'Can register as models: [...] in spects.config.ts', verificationMethod: 'demo' },
+      { id: 'FR-104-06', description: 'Can register as models: [...] in speckeeper.config.ts', verificationMethod: 'demo' },
       { id: 'FR-104-07', description: 'Registered models become targets of lint/build/drift/check', verificationMethod: 'test' },
       { id: 'FR-104-08', description: 'Can set modelLevel on models to enable relation constraint verification', verificationMethod: 'test' },
       { id: 'FR-104-09', description: 'Can get model level (L0/L1/L2/L3) via Model.level property', verificationMethod: 'test' },
@@ -142,7 +142,7 @@ The following models are defined in this project:
         language: 'typescript',
         code: `// Model definition example
 import { z } from 'zod';
-import { Model } from 'spects';
+import { Model } from 'speckeeper';
 
 const RunbookSchema = z.object({
   id: z.string(),
@@ -192,23 +192,23 @@ class RunbookModel extends Model<typeof RunbookSchema> {
   {
     id: 'FR-105',
     name: 'Project Initialization',
-    description: 'Initialize a new spects project with starter templates and basic model definitions',
+    description: 'Initialize a new speckeeper project with starter templates and basic model definitions',
     type: 'functional',
     priority: 'should',
     category: 'common',
     parentId: 'FR-100',
     rationale: 'To provide a quick start experience for new users by generating project structure, configuration, and basic model definitions',
     acceptanceCriteria: [
-      { id: 'FR-105-01', description: 'spects init creates design/ directory structure', verificationMethod: 'test' },
-      { id: 'FR-105-02', description: 'spects init generates spects.config.ts with default settings', verificationMethod: 'test' },
-      { id: 'FR-105-03', description: 'spects init generates package.json with type: module and dependencies', verificationMethod: 'test' },
-      { id: 'FR-105-04', description: 'spects init generates tsconfig.json for TypeScript support', verificationMethod: 'test' },
-      { id: 'FR-105-05', description: 'spects init generates basic model definitions in design/_models/', verificationMethod: 'test' },
-      { id: 'FR-105-06', description: 'spects init generates sample specification files', verificationMethod: 'test' },
-      { id: 'FR-105-07', description: 'Generated project passes spects lint without errors', verificationMethod: 'test' },
+      { id: 'FR-105-01', description: 'speckeeper init creates design/ directory structure', verificationMethod: 'test' },
+      { id: 'FR-105-02', description: 'speckeeper init generates speckeeper.config.ts with default settings', verificationMethod: 'test' },
+      { id: 'FR-105-03', description: 'speckeeper init generates package.json with type: module and dependencies', verificationMethod: 'test' },
+      { id: 'FR-105-04', description: 'speckeeper init generates tsconfig.json for TypeScript support', verificationMethod: 'test' },
+      { id: 'FR-105-05', description: 'speckeeper init generates basic model definitions in design/_models/', verificationMethod: 'test' },
+      { id: 'FR-105-06', description: 'speckeeper init generates sample specification files', verificationMethod: 'test' },
+      { id: 'FR-105-07', description: 'Generated project passes speckeeper lint without errors', verificationMethod: 'test' },
       { id: 'FR-105-08', description: 'Generated project passes typecheck without errors', verificationMethod: 'test' },
-      { id: 'FR-105-09', description: 'spects init --force overwrites existing files', verificationMethod: 'test' },
-      { id: 'FR-105-10', description: 'spects init skips package.json if it already exists (without --force)', verificationMethod: 'test' },
+      { id: 'FR-105-09', description: 'speckeeper init --force overwrites existing files', verificationMethod: 'test' },
+      { id: 'FR-105-10', description: 'speckeeper init skips package.json if it already exists (without --force)', verificationMethod: 'test' },
     ],
     notes: `**Generated Files**
 
@@ -224,17 +224,17 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 | \`design/_models/index.ts\` | Model exports |
 | \`design/index.ts\` | Design entry point |
 | \`design/requirements.ts\` | Sample requirements |
-| \`spects.config.ts\` | Configuration file |
+| \`speckeeper.config.ts\` | Configuration file |
 | \`package.json\` | Package manifest (if not exists) |
 | \`tsconfig.json\` | TypeScript configuration |`,
     examples: [
       {
         language: 'bash',
         code: `# Initialize a new project
-npx spects init
+npx speckeeper init
 
 # Force overwrite existing files
-npx spects init --force`,
+npx speckeeper init --force`,
         description: 'Project initialization examples',
       },
     ],
@@ -317,7 +317,7 @@ const buildRequirements: Requirement[] = [
     ],
     notes: `**Design Policy**
 
-- spects itself does not directly generate documents (docs/)
+- speckeeper itself does not directly generate documents (docs/)
 - External programs (template engines, etc.) invoke model rendering functionality to generate documents
 - Model-specific rendering logic is consolidated in \`design/_models/\`
 - Common rendering interface (\`Renderer\`) is provided
@@ -385,7 +385,7 @@ const list = myModel.render('list', specs, ctx);`,
 | \`specs/schemas/entities/\` | JSON Schema (concept Entity common vocabulary) |
 | \`specs/index.json\` | Reference resolution graph (ID list and reference relations for all models) |
 
-> **Note**: spects **does not generate implementation code**.
+> **Note**: speckeeper **does not generate implementation code**.
 > Implementation code is generated by external tools from external SSOT:
 > - API contract → External tools (generated from OpenAPI)
 > - DB connection → ORM/DDL tools (generated from DDL/Prisma)`,
@@ -567,8 +567,8 @@ const externalCheckRequirements: Requirement[] = [
     parentId: 'FR-600',
     rationale: 'Since consistency checks are implemented per model, filter by model name',
     acceptanceCriteria: [
-      { id: 'FR-602-01', description: 'spects check runs external SSOT consistency check for all models', verificationMethod: 'test' },
-      { id: 'FR-602-02', description: 'spects check --model <model-name> checks only specific model', verificationMethod: 'test' },
+      { id: 'FR-602-01', description: 'speckeeper check runs external SSOT consistency check for all models', verificationMethod: 'test' },
+      { id: 'FR-602-02', description: 'speckeeper check --model <model-name> checks only specific model', verificationMethod: 'test' },
       { id: 'FR-602-03', description: 'Model name is the model ID defined in design/_models/', verificationMethod: 'review' },
       { id: 'FR-602-04', description: 'Only models with externalChecker are targeted', verificationMethod: 'test' },
     ],
@@ -576,16 +576,16 @@ const externalCheckRequirements: Requirement[] = [
       {
         language: 'bash',
         code: `# External SSOT consistency check for all models
-spects check
+speckeeper check
 
 # Check specific model only
-spects check --model api-ref      # APIRef consistency only
-spects check --model table-ref    # TableRef consistency only
-spects check --model iac-ref      # IaCRef consistency only
-spects check --model batch-ref    # BatchRef consistency only
+speckeeper check --model api-ref      # APIRef consistency only
+speckeeper check --model table-ref    # TableRef consistency only
+speckeeper check --model iac-ref      # IaCRef consistency only
+speckeeper check --model batch-ref    # BatchRef consistency only
 
 # Specify multiple models
-spects check --model api-ref --model table-ref`,
+speckeeper check --model api-ref --model table-ref`,
         description: 'Check command examples',
       },
     ],
@@ -607,7 +607,7 @@ spects check --model api-ref --model table-ref`,
       { id: 'FR-603-01', description: 'Can set externalChecker in Model definition', verificationMethod: 'test' },
       { id: 'FR-603-02', description: 'externalChecker includes target file reading and check logic', verificationMethod: 'test' },
       { id: 'FR-603-03', description: 'Check results include success, errors, warnings', verificationMethod: 'test' },
-      { id: 'FR-603-04', description: 'spects check command auto-detects and runs models with externalChecker', verificationMethod: 'test' },
+      { id: 'FR-603-04', description: 'speckeeper check command auto-detects and runs models with externalChecker', verificationMethod: 'test' },
     ],
     notes: `**External Checker Structure**
 
@@ -655,7 +655,7 @@ externalChecker: ExternalChecker<APIRef> = {
     parentId: 'FR-600',
     rationale: 'To verify cross-model consistency (coverage) and prevent gaps',
     acceptanceCriteria: [
-      { id: 'FR-604-01', description: 'Execute coverage verification with spects check --coverage', verificationMethod: 'test' },
+      { id: 'FR-604-01', description: 'Execute coverage verification with speckeeper check --coverage', verificationMethod: 'test' },
       { id: 'FR-604-02', description: 'Define coverageChecker interface in Model class', verificationMethod: 'test' },
       { id: 'FR-604-03', description: 'Auto-detect and execute models with coverageChecker', verificationMethod: 'test' },
       { id: 'FR-604-04', description: 'Calculate and display coverage rate (%)', verificationMethod: 'test' },
@@ -665,7 +665,7 @@ externalChecker: ExternalChecker<APIRef> = {
       {
         language: 'bash',
         code: `# Coverage verification
-spects check --coverage
+speckeeper check --coverage
 
 # Output example
 Test Coverage Report
@@ -714,7 +714,7 @@ const impactRequirements: Requirement[] = [
     category: 'impact',
     rationale: 'To understand the impact of changes in advance and support safe refactoring',
     acceptanceCriteria: [
-      { id: 'FR-700-01', description: 'Analyze and list impact scope with spects impact {ID}', verificationMethod: 'test' },
+      { id: 'FR-700-01', description: 'Analyze and list impact scope with speckeeper impact {ID}', verificationMethod: 'test' },
       { id: 'FR-700-02', description: 'Define relations between models and track associations', verificationMethod: 'test' },
       { id: 'FR-700-03', description: 'Reference depth (--depth) can be specified', verificationMethod: 'test' },
       { id: 'FR-700-04', description: 'Display impacted specs, components, and documents', verificationMethod: 'test' },
@@ -940,7 +940,7 @@ export const nonFunctionalRequirements: Requirement[] = [
     acceptanceCriteria: [
       { id: 'NFR-004-01', description: 'Can define new models by inheriting from Model base class', verificationMethod: 'test' },
       { id: 'NFR-004-02', description: 'Can define model-specific schema, lint rules, and renderers', verificationMethod: 'test' },
-      { id: 'NFR-004-03', description: 'Models registered in spects.config.ts become targets of lint/build/check', verificationMethod: 'test' },
+      { id: 'NFR-004-03', description: 'Models registered in speckeeper.config.ts become targets of lint/build/check', verificationMethod: 'test' },
     ],
   },
   {
@@ -1028,7 +1028,7 @@ export const nonFunctionalRequirements: Requirement[] = [
     category: 'deployability',
     acceptanceCriteria: [
       { id: 'NFR-010-01', description: 'Can publish package via npm publish', verificationMethod: 'demo' },
-      { id: 'NFR-010-02', description: 'Can install via npm install spects', verificationMethod: 'demo' },
+      { id: 'NFR-010-02', description: 'Can install via npm install speckeeper', verificationMethod: 'demo' },
     ],
   },
 ];
@@ -1058,28 +1058,28 @@ export const constraints: Requirement[] = [
     priority: 'should',
     category: 'usability',
     acceptanceCriteria: [
-      { id: 'CR-002-01', description: 'build/lint/drift works without spects.config.ts', verificationMethod: 'test' },
+      { id: 'CR-002-01', description: 'build/lint/drift works without speckeeper.config.ts', verificationMethod: 'test' },
       { id: 'CR-002-02', description: 'Default settings cover typical use cases', verificationMethod: 'review' },
     ],
   },
   {
     id: 'CR-003',
     name: 'No Implementation Code Generation',
-    description: 'spects does not generate implementation code. API contracts and DB connection code are handled by external tools',
+    description: 'speckeeper does not generate implementation code. API contracts and DB connection code are handled by external tools',
     type: 'constraint',
     priority: 'must',
     category: 'scope',
     acceptanceCriteria: [
-      { id: 'CR-003-01', description: 'spects does not generate or modify code under src/', verificationMethod: 'review' },
+      { id: 'CR-003-01', description: 'speckeeper does not generate or modify code under src/', verificationMethod: 'review' },
       { id: 'CR-003-02', description: 'API contracts (TypeScript types, routes, clients) generated by external tools from OpenAPI', verificationMethod: 'review' },
       { id: 'CR-003-03', description: 'DB connections (Entity types, repositories) generated by ORM/DDL tools from DDL/schema', verificationMethod: 'review' },
-      { id: 'CR-003-04', description: 'spects only handles requirement definition and external SSOT consistency checks', verificationMethod: 'review' },
+      { id: 'CR-003-04', description: 'speckeeper only handles requirement definition and external SSOT consistency checks', verificationMethod: 'review' },
     ],
   },
   {
     id: 'CR-004',
     name: 'Respect External SSOT',
-    description: 'Treat API specs, DB definitions, IaC definitions as external SSOT, spects only references and verifies',
+    description: 'Treat API specs, DB definitions, IaC definitions as external SSOT, speckeeper only references and verifies',
     type: 'constraint',
     priority: 'must',
     category: 'scope',
@@ -1087,7 +1087,7 @@ export const constraints: Requirement[] = [
       { id: 'CR-004-01', description: 'Do not directly generate or modify OpenAPI files', verificationMethod: 'review' },
       { id: 'CR-004-02', description: 'Do not directly generate or modify DDL/Prisma schemas', verificationMethod: 'review' },
       { id: 'CR-004-03', description: 'Do not directly generate or modify CloudFormation/Terraform', verificationMethod: 'review' },
-      { id: 'CR-004-04', description: 'Principle is to fix spects side when consistency check fails', verificationMethod: 'review' },
+      { id: 'CR-004-04', description: 'Principle is to fix speckeeper side when consistency check fails', verificationMethod: 'review' },
     ],
   },
 ];

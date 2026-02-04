@@ -1,7 +1,7 @@
 /**
- * spects init command
+ * speckeeper init command
  * 
- * Generate starter templates for a new spects project
+ * Generate starter templates for a new speckeeper project
  */
 import chalk from 'chalk';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -18,12 +18,12 @@ const __dirname = dirname(__filename);
 export async function runInit(options: InitOptions = {}): Promise<void> {
   const cwd = process.cwd();
   
-  console.log(chalk.cyan('spects init'));
+  console.log(chalk.cyan('speckeeper init'));
   console.log('');
   
   // Check if already initialized
   const designDir = join(cwd, 'design');
-  const configFile = join(cwd, 'spects.config.ts');
+  const configFile = join(cwd, 'speckeeper.config.ts');
   
   if (!options.force && (existsSync(designDir) || existsSync(configFile))) {
     console.log(chalk.yellow('  Project already initialized.'));
@@ -64,13 +64,13 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     console.log(chalk.gray('    1. Run `npm install` to install dependencies'));
     console.log(chalk.gray('    2. Edit design/_models/ to customize your models'));
     console.log(chalk.gray('    3. Add specifications in design/'));
-    console.log(chalk.gray('    4. Run `npx spects lint` to validate'));
+    console.log(chalk.gray('    4. Run `npx speckeeper lint` to validate'));
   } else {
-    console.log(chalk.gray('    1. Add spects and zod to your package.json dependencies'));
+    console.log(chalk.gray('    1. Add speckeeper and zod to your package.json dependencies'));
     console.log(chalk.gray('    2. Ensure "type": "module" is set in package.json'));
     console.log(chalk.gray('    3. Edit design/_models/ to customize your models'));
     console.log(chalk.gray('    4. Add specifications in design/'));
-    console.log(chalk.gray('    5. Run `npx spects lint` to validate'));
+    console.log(chalk.gray('    5. Run `npx speckeeper lint` to validate'));
   }
 }
 

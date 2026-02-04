@@ -1,8 +1,8 @@
 /**
- * Configuration API for spects
+ * Configuration API for speckeeper
  * 
  * Provides `defineConfig` and `defineModel` functions for users to
- * create spects.config.ts files with custom model definitions.
+ * create speckeeper.config.ts files with custom model definitions.
  */
 
 import { z } from 'zod';
@@ -22,9 +22,9 @@ import { registerModelDefinitions } from './model-registry.js';
 // ============================================================================
 
 /**
- * spects configuration type
+ * speckeeper configuration type
  */
-export interface SpectsConfigInput {
+export interface SpeckeeperConfigInput {
   /** Project name */
   projectName?: string;
   /** Project version */
@@ -65,9 +65,9 @@ export interface SpectsConfigInput {
 }
 
 /**
- * Resolved spects configuration
+ * Resolved speckeeper configuration
  */
-export interface ResolvedSpectsConfig extends SpectsConfigInput {
+export interface ResolvedSpeckeeperConfig extends SpeckeeperConfigInput {
   designDir: string;
   docsDir: string;
   specsDir: string;
@@ -78,12 +78,12 @@ export interface ResolvedSpectsConfig extends SpectsConfigInput {
 // ============================================================================
 
 /**
- * Define spects configuration
+ * Define speckeeper configuration
  * 
  * @example
  * ```typescript
- * // spects.config.ts
- * import { defineConfig, defineModel } from 'spects';
+ * // speckeeper.config.ts
+ * import { defineConfig, defineModel } from 'speckeeper';
  * 
  * export default defineConfig({
  *   projectName: 'My Project',
@@ -93,8 +93,8 @@ export interface ResolvedSpectsConfig extends SpectsConfigInput {
  * });
  * ```
  */
-export function defineConfig(input: SpectsConfigInput): ResolvedSpectsConfig {
-  const resolved: ResolvedSpectsConfig = {
+export function defineConfig(input: SpeckeeperConfigInput): ResolvedSpeckeeperConfig {
+  const resolved: ResolvedSpeckeeperConfig = {
     ...input,
     designDir: input.designDir ?? 'design',
     docsDir: input.docsDir ?? 'docs',
@@ -267,15 +267,15 @@ export function createLintRule<T>(
 // ============================================================================
 
 /**
- * Load spects.config.ts file and register custom models
+ * Load speckeeper.config.ts file and register custom models
  */
-export async function loadSpectsConfig(configPath?: string): Promise<ResolvedSpectsConfig | null> {
+export async function loadSpeckeeperConfig(configPath?: string): Promise<ResolvedSpeckeeperConfig | null> {
   const possiblePaths = configPath 
     ? [configPath]
     : [
-        'spects.config.ts',
-        'spects.config.js',
-        'spects.config.mjs',
+        'speckeeper.config.ts',
+        'speckeeper.config.js',
+        'speckeeper.config.mjs',
       ];
   
   for (const path of possiblePaths) {

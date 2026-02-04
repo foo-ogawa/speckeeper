@@ -1,7 +1,7 @@
 /**
- * spects Use Cases - Use Case Definitions
+ * speckeeper Use Cases - Use Case Definitions
  * 
- * Defines the main use cases for spects.
+ * Defines the main use cases for speckeeper.
  */
 import type { UseCase, Actor } from './_models/usecase.ts';
 
@@ -62,7 +62,7 @@ export const useCases: UseCase[] = [
     actor: 'UC-ACTOR-001',
     phase: 'REQ',
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'design/ directory exists in the project',
     ],
     postconditions: [
@@ -75,9 +75,9 @@ export const useCases: UseCase[] = [
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion and validation errors' },
       { stepNumber: 3, type: 'user_action', description: 'Define requirements using DSL' },
       { stepNumber: 4, type: 'system_response', description: 'DSL builder validates input' },
-      { stepNumber: 5, type: 'user_action', description: 'Run spects build' },
+      { stepNumber: 5, type: 'user_action', description: 'Run speckeeper build' },
       { stepNumber: 6, type: 'system_response', description: 'Markdown is generated in docs/requirements/' },
-      { stepNumber: 7, type: 'user_action', description: 'Run spects lint' },
+      { stepNumber: 7, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 8, type: 'system_response', description: 'Requirement consistency is verified' },
     ],
     // L0(UseCase) traces→ L1(Requirement)
@@ -94,7 +94,7 @@ export const useCases: UseCase[] = [
     description: 'Design engineer defines components, boundaries, and layers',
     actor: 'UC-ACTOR-002',
     phase: 'HLD',
-    preconditions: ['spects is installed', 'REQ phase is complete'],
+    preconditions: ['speckeeper is installed', 'REQ phase is complete'],
     postconditions: ['C4 diagram has been generated', 'Lint has verified architecture consistency'],
     relatedRequirements: ['FR-004'],
     mainFlow: [
@@ -102,9 +102,9 @@ export const useCases: UseCase[] = [
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
       { stepNumber: 3, type: 'user_action', description: 'Define components and relationships' },
       { stepNumber: 4, type: 'system_response', description: 'DSL builder validates input' },
-      { stepNumber: 5, type: 'user_action', description: 'Run spects build' },
+      { stepNumber: 5, type: 'user_action', description: 'Run speckeeper build' },
       { stepNumber: 6, type: 'system_response', description: 'Mermaid C4 diagram is generated in docs/architecture/' },
-      { stepNumber: 7, type: 'user_action', description: 'Run spects lint' },
+      { stepNumber: 7, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 8, type: 'system_response', description: 'Layer violations, boundary crossings, etc. are verified' },
     ],
     relations: [
@@ -119,16 +119,16 @@ export const useCases: UseCase[] = [
     description: 'Design engineer defines screen list and screen transitions',
     actor: 'UC-ACTOR-002',
     phase: 'HLD',
-    preconditions: ['spects is installed', 'REQ phase is complete'],
+    preconditions: ['speckeeper is installed', 'REQ phase is complete'],
     postconditions: ['Screen transition diagram has been generated', 'Lint has verified screen consistency'],
     relatedRequirements: ['FR-004'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Create or edit design/screens.ts' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
       { stepNumber: 3, type: 'user_action', description: 'Define screen list and transitions' },
-      { stepNumber: 4, type: 'user_action', description: 'Run spects build' },
+      { stepNumber: 4, type: 'user_action', description: 'Run speckeeper build' },
       { stepNumber: 5, type: 'system_response', description: 'Mermaid screen transition diagram is generated in docs/screens/' },
-      { stepNumber: 6, type: 'user_action', description: 'Run spects lint' },
+      { stepNumber: 6, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 7, type: 'system_response', description: 'Screen consistency is verified' },
     ],
   },
@@ -140,14 +140,14 @@ export const useCases: UseCase[] = [
     description: 'Design engineer defines entities, relations, and business rules',
     actor: 'UC-ACTOR-002',
     phase: 'LLD',
-    preconditions: ['spects is installed', 'HLD phase is complete'],
+    preconditions: ['speckeeper is installed', 'HLD phase is complete'],
     postconditions: ['ER diagram has been generated', 'Common vocabulary JSON has been generated'],
     relatedRequirements: ['FR-004', 'FR-005'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Create or edit design/concept-model.ts' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
       { stepNumber: 3, type: 'user_action', description: 'Define entities and relations' },
-      { stepNumber: 4, type: 'user_action', description: 'Run spects build' },
+      { stepNumber: 4, type: 'user_action', description: 'Run speckeeper build' },
       { stepNumber: 5, type: 'system_response', description: 'Mermaid ER diagram is generated in docs/data-model/' },
       { stepNumber: 6, type: 'system_response', description: 'Common vocabulary JSON is generated in specs/schemas/' },
     ],
@@ -158,16 +158,16 @@ export const useCases: UseCase[] = [
     description: 'Implementation engineer defines form fields and validation',
     actor: 'UC-ACTOR-003',
     phase: 'LLD',
-    preconditions: ['spects is installed', 'Screen specifications are defined'],
+    preconditions: ['speckeeper is installed', 'Screen specifications are defined'],
     postconditions: ['Form requirement definition has been generated', 'Screen-API consistency has been verified'],
     relatedRequirements: ['FR-004'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Add form definition to design/screens/forms/' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
       { stepNumber: 3, type: 'user_action', description: 'Define fields and validation' },
-      { stepNumber: 4, type: 'user_action', description: 'Run spects build' },
+      { stepNumber: 4, type: 'user_action', description: 'Run speckeeper build' },
       { stepNumber: 5, type: 'system_response', description: 'Form requirement definition is generated' },
-      { stepNumber: 6, type: 'user_action', description: 'Run spects lint' },
+      { stepNumber: 6, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 7, type: 'system_response', description: 'Form-request consistency is verified' },
     ],
   },
@@ -180,14 +180,14 @@ export const useCases: UseCase[] = [
     actor: 'UC-ACTOR-003',
     phase: 'IMPL',
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'APIRef/TableRef are defined',
       'Corresponding external SSOT files exist',
     ],
     postconditions: ['Consistency errors are reported if any'],
     relatedRequirements: ['FR-020', 'FR-033'],
     mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Run spects check external-ssot' },
+      { stepNumber: 1, type: 'user_action', description: 'Run speckeeper check external-ssot' },
       { stepNumber: 2, type: 'system_response', description: 'Load OpenAPI/DDL files' },
       { stepNumber: 3, type: 'system_response', description: 'Verify requirement-external SSOT consistency' },
       { stepNumber: 4, type: 'system_response', description: 'Display verification results' },
@@ -207,11 +207,11 @@ export const useCases: UseCase[] = [
       'LLD phase is complete',
       'Implementation code generation by external tools is complete',
     ],
-    postconditions: ['spects IDs are linked to implementation code'],
+    postconditions: ['speckeeper IDs are linked to implementation code'],
     relatedRequirements: [],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Add componentId/entityId to implementation code as comments or annotations' },
-      { stepNumber: 2, type: 'user_action', description: 'Run spects impact to check impact scope' },
+      { stepNumber: 2, type: 'user_action', description: 'Run speckeeper impact to check impact scope' },
       { stepNumber: 3, type: 'system_response', description: 'Components and requirements related to the ID are listed' },
     ],
   },
@@ -224,14 +224,14 @@ export const useCases: UseCase[] = [
     actor: 'UC-ACTOR-004',
     phase: 'OPS',
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'Implementation phase is complete',
     ],
     postconditions: ['All TBDs in OPS phase are resolved'],
     relatedRequirements: ['FR-012'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Add runbook URLs, etc. to models under design/' },
-      { stepNumber: 2, type: 'user_action', description: 'Run spects lint --phase OPS' },
+      { stepNumber: 2, type: 'user_action', description: 'Run speckeeper lint --phase OPS' },
       { stepNumber: 3, type: 'system_response', description: 'Required items for OPS phase are verified' },
       { stepNumber: 4, type: 'system_response', description: 'Report error if TBDs remain' },
     ],
@@ -246,13 +246,13 @@ export const useCases: UseCase[] = [
     phase: 'CI',
     secondaryActors: ['UC-ACTOR-003'],
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'Model files exist under design/',
     ],
     postconditions: ['Validation results are reported'],
     relatedRequirements: ['FR-010', 'FR-011', 'FR-012', 'FR-031'],
     mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Run spects lint' },
+      { stepNumber: 1, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 2, type: 'system_response', description: 'Verify ID uniqueness' },
       { stepNumber: 3, type: 'system_response', description: 'Verify reference integrity' },
       { stepNumber: 4, type: 'system_response', description: 'Verify layer dependency direction' },
@@ -270,13 +270,13 @@ export const useCases: UseCase[] = [
     actor: 'UC-ACTOR-SYS-001',
     phase: 'CI',
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'Generated artifacts exist under docs/ or specs/',
     ],
     postconditions: ['Exit with code 1 if drift exists'],
     relatedRequirements: ['FR-032'],
     mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Run spects drift' },
+      { stepNumber: 1, type: 'user_action', description: 'Run speckeeper drift' },
       { stepNumber: 2, type: 'system_response', description: 'Regenerate artifacts from TS models' },
       { stepNumber: 3, type: 'system_response', description: 'Compare existing artifacts with regenerated artifacts' },
       { stepNumber: 4, type: 'system_response', description: 'Report if differences exist' },
@@ -292,13 +292,13 @@ export const useCases: UseCase[] = [
     actor: 'UC-ACTOR-SYS-001',
     phase: 'CI',
     preconditions: [
-      'spects is installed',
+      'speckeeper is installed',
       'Implementation code and contract definition exist',
     ],
     postconditions: ['Contract violations are reported if any'],
     relatedRequirements: ['FR-033'],
     mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Run spects check contract' },
+      { stepNumber: 1, type: 'user_action', description: 'Run speckeeper check contract' },
       { stepNumber: 2, type: 'system_response', description: 'Compare implementation and contract definition' },
       { stepNumber: 3, type: 'system_response', description: 'Report if violations exist' },
     ],

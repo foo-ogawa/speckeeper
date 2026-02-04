@@ -1,7 +1,7 @@
 /**
- * spects configuration file
+ * speckeeper configuration file
  */
-import { defineConfig } from 'spects';
+import { defineConfig } from 'speckeeper';
 import { allModels } from './design/_models/index';
 
 export default defineConfig({

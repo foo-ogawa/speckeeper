@@ -120,7 +120,7 @@ function createRegistry(requirements: Requirement[]): Record<string, Map<string,
 
 describe('FR-604: Coverage verification', () => {
   // ---------------------------------------------------------------------------
-  // FR-604-01: Execute coverage verification with spects check --coverage
+  // FR-604-01: Execute coverage verification with speckeeper check --coverage
   // ---------------------------------------------------------------------------
   describe('FR-604-01: --coverage option execution', () => {
     it('should execute coverage check when --coverage option is provided', () => {

@@ -27,7 +27,7 @@ export interface BuildCommandOptions {
 // ============================================================================
 
 export async function buildCommand(options: BuildCommandOptions): Promise<void> {
-  console.log(chalk.blue('spects build'));
+  console.log(chalk.blue('speckeeper build'));
   console.log('');
   
   const cwd = process.cwd();

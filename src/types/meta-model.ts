@@ -11,7 +11,7 @@ import { z } from 'zod';
 export interface ExportContext {
   /** Access to all models (MetaModelRegistry type, using unknown to avoid circular references) */
   registry: unknown;
-  /** Configuration (SpectsConfig type, using unknown to avoid circular references) */
+  /** Configuration (SpeckeeperConfig type, using unknown to avoid circular references) */
   config: unknown;
   /** Output base directory */
   outputDir: string;
@@ -41,7 +41,7 @@ export interface CheckContext {
   registry: unknown;
   /** External SSOT file path */
   sourcePath: string;
-  /** Configuration (SpectsConfig type) */
+  /** Configuration (SpeckeeperConfig type) */
   config: unknown;
 }
 

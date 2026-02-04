@@ -1,7 +1,7 @@
 /**
- * spects Glossary - Term Definitions
+ * speckeeper Glossary - Term Definitions
  * 
- * Defines key terms used in the spects requirement specification.
+ * Defines key terms used in the speckeeper requirement specification.
  * This file is the SSOT, and the "4. Terms & Definitions" section
  * in docs/framework_requirements_spec.md is generated from this file.
  */
@@ -106,7 +106,7 @@ export const terms: Term[] = [
     term: 'User-defined Model',
     englishTerm: 'User-defined Model',
     category: 'core',
-    definition: 'Project-specific models defined by users inheriting from the Model base class. The standard way to use spects',
+    definition: 'Project-specific models defined by users inheriting from the Model base class. The standard way to use speckeeper',
   },
 ];
 

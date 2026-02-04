@@ -1,7 +1,7 @@
 /**
- * spects Artifacts & Directory Structure
+ * speckeeper Artifacts & Directory Structure
  * 
- * Defines artifacts and directory structure managed by spects.
+ * Defines artifacts and directory structure managed by speckeeper.
  * This file is the SSOT, and sections "7.1 Directory Structure" and "7.2 Artifact Classification"
  * in docs/framework_requirements_spec.md are auto-generated via embedoc.
  */
@@ -44,7 +44,7 @@ export const artifacts: Artifact[] = [
     name: 'Implementation code',
     category: 'implementation',
     location: 'src/',
-    purpose: 'Application implementation (not managed by spects)',
+    purpose: 'Application implementation (not managed by speckeeper)',
     driftTarget: false,
   },
 ];
@@ -110,7 +110,7 @@ export const directoryStructure: DirectoryEntry[] = [
   {
     id: 'DIR-004',
     path: 'src/',
-    description: 'Application implementation code (not managed by spects)',
+    description: 'Application implementation code (not managed by speckeeper)',
     artifactId: 'ART-004',
   },
 ];

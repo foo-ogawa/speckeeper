@@ -1,5 +1,5 @@
 /**
- * spects embeds for embedoc
+ * speckeeper embeds for embedoc
  * 
  * Exports only. Each feature is defined in individual files.
  */

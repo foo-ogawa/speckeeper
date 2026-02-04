@@ -32,7 +32,7 @@ export interface DriftResult {
 // ============================================================================
 
 export async function driftCommand(options: DriftCommandOptions): Promise<void> {
-  console.log(chalk.blue('spects drift'));
+  console.log(chalk.blue('speckeeper drift'));
   console.log('');
   
   const cwd = process.cwd();

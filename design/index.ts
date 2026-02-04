@@ -1,8 +1,8 @@
 /**
- * spects Self-Model - Requirement and Design Model for spects itself
+ * speckeeper Self-Model - Requirement and Design Model for speckeeper itself
  * 
- * This file models the requirement specification and design of the spects framework
- * itself in TypeScript. spects uses itself as "dogfooding".
+ * This file models the requirement specification and design of the speckeeper framework
+ * itself in TypeScript. speckeeper uses itself as "dogfooding".
  */
 
 // Glossary
@@ -26,4 +26,4 @@ export { commands } from './cli-commands';
 // Artifacts
 export { artifacts, directoryStructure, categoryLabels } from './artifacts';
 
-console.log('spects Self-Model loaded successfully!');
+console.log('speckeeper Self-Model loaded successfully!');

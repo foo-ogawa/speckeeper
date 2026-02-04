@@ -44,7 +44,7 @@ export async function checkCommand(
   type: string | undefined,
   options: CheckCommandOptions
 ): Promise<void> {
-  console.log(chalk.blue('spects check'));
+  console.log(chalk.blue('speckeeper check'));
   console.log('');
   
   const cwd = process.cwd();

@@ -1,7 +1,7 @@
 /**
- * spects Architecture - Architecture Definition
+ * speckeeper Architecture - Architecture Definition
  * 
- * Defines the logical architecture of spects itself.
+ * Defines the logical architecture of speckeeper itself.
  */
 import type { Component, Boundary, Layer, ArchitectureRelation } from './_models/architecture.ts';
 
@@ -17,9 +17,9 @@ export const actors: Component[] = [
 ];
 
 export const externalSystems: Component[] = [
-  { id: 'EXT-001', name: 'OpenAPI Specification', type: 'system', description: 'External SSOT managing API specifications. spects references via APIRef', external: true },
-  { id: 'EXT-002', name: 'Database Schema', type: 'system', description: 'External SSOT managing DB definitions via DDL/Prisma. spects references via TableRef', external: true },
-  { id: 'EXT-003', name: 'Infrastructure as Code', type: 'system', description: 'IaC definitions like Terraform/CloudFormation. spects references via IaCRef', external: true },
+  { id: 'EXT-001', name: 'OpenAPI Specification', type: 'system', description: 'External SSOT managing API specifications. speckeeper references via APIRef', external: true },
+  { id: 'EXT-002', name: 'Database Schema', type: 'system', description: 'External SSOT managing DB definitions via DDL/Prisma. speckeeper references via TableRef', external: true },
+  { id: 'EXT-003', name: 'Infrastructure as Code', type: 'system', description: 'IaC definitions like Terraform/CloudFormation. speckeeper references via IaCRef', external: true },
   { id: 'EXT-004', name: 'GitHub/GitLab', type: 'system', description: 'Repository managing source code and documentation', external: true },
 ];
 
@@ -28,9 +28,9 @@ export const externalSystems: Component[] = [
 // ============================================================================
 
 export const boundaries: Boundary[] = [
-  { id: 'BND-001', name: 'spects System', description: 'spects framework as a whole', type: 'system' },
-  { id: 'BND-002', name: 'Core Library', description: 'spects core library', type: 'container' },
-  { id: 'BND-003', name: 'CLI Application', description: 'spects CLI application', type: 'container' },
+  { id: 'BND-001', name: 'speckeeper System', description: 'speckeeper framework as a whole', type: 'system' },
+  { id: 'BND-002', name: 'Core Library', description: 'speckeeper core library', type: 'container' },
+  { id: 'BND-003', name: 'CLI Application', description: 'speckeeper CLI application', type: 'container' },
 ];
 
 // ============================================================================

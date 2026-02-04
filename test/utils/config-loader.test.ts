@@ -14,7 +14,7 @@ import {
   getExpectedOutputDirs,
   validateOutputPaths,
   findConfigFile,
-  type SpectsConfig,
+  type SpeckeeperConfig,
 } from '../../src/utils/config-loader.js';
 
 describe('FR-103, CR-002: config-loader', () => {
@@ -43,7 +43,7 @@ describe('FR-103, CR-002: config-loader', () => {
     });
     
     it('should load YAML config', async () => {
-      const configPath = join(testDir, 'spects.config.yaml');
+      const configPath = join(testDir, 'speckeeper.config.yaml');
       writeFileSync(configPath, `
 srcDir: custom-src
 docsDir: custom-docs
@@ -58,7 +58,7 @@ specsDir: custom-specs
     });
     
     it('should load JSON config', async () => {
-      const configPath = join(testDir, 'spects.config.json');
+      const configPath = join(testDir, 'speckeeper.config.json');
       writeFileSync(configPath, JSON.stringify({
         srcDir: 'json-src',
         docsDir: 'json-docs',
@@ -73,7 +73,7 @@ specsDir: custom-specs
     });
     
     it('should merge with defaults', async () => {
-      const configPath = join(testDir, 'spects.config.yaml');
+      const configPath = join(testDir, 'speckeeper.config.yaml');
       writeFileSync(configPath, `
 docsDir: custom-docs
 `);
@@ -88,7 +88,7 @@ docsDir: custom-docs
   
   describe('validateConfig', () => {
     it('should return no errors for valid config', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -100,7 +100,7 @@ docsDir: custom-docs
     });
     
     it('should return errors for missing required fields', () => {
-      const config = {} as SpectsConfig;
+      const config = {} as SpeckeeperConfig;
       
       const errors = validateConfig(config);
       
@@ -112,7 +112,7 @@ docsDir: custom-docs
   
   describe('getOutputPaths', () => {
     it('should return correct output paths', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -133,7 +133,7 @@ docsDir: custom-docs
   
   describe('getExpectedOutputDirs', () => {
     it('should return all expected directories', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -150,7 +150,7 @@ docsDir: custom-docs
   
   describe('validateOutputPaths', () => {
     it('should validate correct path', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -166,7 +166,7 @@ docsDir: custom-docs
     });
     
     it('should reject path outside docs/specs', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -183,7 +183,7 @@ docsDir: custom-docs
     });
     
     it('should reject non-compliant path under docs/', () => {
-      const config: SpectsConfig = {
+      const config: SpeckeeperConfig = {
         srcDir: 'src',
         docsDir: 'docs',
         specsDir: 'specs',
@@ -202,30 +202,30 @@ docsDir: custom-docs
   
   describe('findConfigFile', () => {
     it('should find YAML config', () => {
-      writeFileSync(join(testDir, 'spects.config.yaml'), 'srcDir: src');
+      writeFileSync(join(testDir, 'speckeeper.config.yaml'), 'srcDir: src');
       
       const found = findConfigFile(testDir);
       
-      expect(found).toBe(join(testDir, 'spects.config.yaml'));
+      expect(found).toBe(join(testDir, 'speckeeper.config.yaml'));
     });
     
     it('should find JSON config', () => {
-      writeFileSync(join(testDir, 'spects.config.json'), '{}');
+      writeFileSync(join(testDir, 'speckeeper.config.json'), '{}');
       
       const found = findConfigFile(testDir);
       
-      expect(found).toBe(join(testDir, 'spects.config.json'));
+      expect(found).toBe(join(testDir, 'speckeeper.config.json'));
     });
     
     it('should search in specified directory', () => {
       // Note: findConfigFile may also search parent directories
       // This test verifies it can find config in the specified directory
-      writeFileSync(join(testDir, 'spects.config.yaml'), 'srcDir: test');
+      writeFileSync(join(testDir, 'speckeeper.config.yaml'), 'srcDir: test');
       
       const found = findConfigFile(testDir);
       
       // Should find the config in testDir, not parent
-      expect(found).toBe(join(testDir, 'spects.config.yaml'));
+      expect(found).toBe(join(testDir, 'speckeeper.config.yaml'));
     });
   });
 });

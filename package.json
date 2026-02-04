@@ -1,5 +1,5 @@
 {
-  "name": "spects",
+  "name": "speckeeper",
   "version": "0.1.0",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
@@ -17,7 +17,7 @@
     }
   },
   "bin": {
-    "spects": "./bin/spects.js"
+    "speckeeper": "./bin/speckeeper.js"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -39,9 +39,9 @@
     "docs": "embedoc build",
     "docs:watch": "embedoc watch",
     "ci": "npm run ci:validate && npm run ci:generate && npm run ci:verify",
-    "ci:validate": "npm run typecheck && npm run lint && npm run lint:design && npm run build && npx spects lint && npm run test:run",
+    "ci:validate": "npm run typecheck && npm run lint && npm run lint:design && npm run build && npx speckeeper lint && npm run test:run",
     "ci:generate": "embedoc build",
-    "ci:verify": "npx spects check external-ssot && npx spects check test && npx spects check test --coverage"
+    "ci:verify": "npx speckeeper check external-ssot && npx speckeeper check test && npx speckeeper check test --coverage"
   },
   "keywords": [
     "requirements",
