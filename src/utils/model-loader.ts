@@ -427,6 +427,17 @@ export async function loadAllModels(
     }
   }
   
+  // Register Model instances from config.models
+  // (index.ts is skipped by the file scanner, so Model instances defined in
+  //  allModels via config.models need to be registered explicitly)
+  if (config.models && Array.isArray(config.models)) {
+    for (const model of config.models) {
+      if (isModelInstance(model)) {
+        coreRegisterModel(model as Parameters<typeof coreRegisterModel>[0]);
+      }
+    }
+  }
+  
   return {
     registry: getGlobalRegistry(),
     loadedFiles,
