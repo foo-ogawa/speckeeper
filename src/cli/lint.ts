@@ -6,7 +6,7 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { getAllModels, getSpecs, registerModelsFromConfig, registerSpecsFromConfig } from '../core/model.js';
+import { getSpecsFromConfig, type SpecEntry } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -54,22 +54,19 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
   console.log('');
   
   try {
-    console.log(chalk.blue('  Loading models...'));
-    registerModelsFromConfig(config.models || []);
-    registerSpecsFromConfig(config.specs);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const models = (config.models || []) as any[];
+    const specs = config.specs;
     
-    const models = getAllModels();
     console.log(chalk.gray(`  Loaded: ${models.length} models`));
     console.log('');
     
     console.log(chalk.blue('  Running lint checks...'));
-    const result = runModelLint(options);
+    const result = runModelLint(models, specs, options);
     
-    // Output results
     console.log('');
     outputLintResults(result, options);
     
-    // Exit with error code if there are errors
     if (result.errors > 0) {
       process.exit(1);
     }
@@ -84,17 +81,16 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
 // Lint Runner
 // ============================================================================
 
-function runModelLint(options: LintCommandOptions): LintResult {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runModelLint(models: any[], specs: SpecEntry[] | undefined, options: LintCommandOptions): LintResult {
   const issues: LintIssue[] = [];
-  const models = getAllModels();
   
   for (const model of models) {
-    const specs = getSpecs(model.id);
+    const modelSpecs = getSpecsFromConfig(specs, model.id);
     
-    if (specs.length === 0) continue;
+    if (modelSpecs.length === 0) continue;
     
-    // Run lint rules
-    const lintResults = model.lintAll(specs);
+    const lintResults = model.lintAll(modelSpecs);
     
     for (const result of lintResults) {
       issues.push({
@@ -107,12 +103,10 @@ function runModelLint(options: LintCommandOptions): LintResult {
     }
   }
   
-  // Count by severity
   const errors = issues.filter(i => i.severity === 'error').length;
   const warnings = issues.filter(i => i.severity === 'warning').length;
   const infos = issues.filter(i => i.severity === 'info').length;
   
-  // Filter by strict mode
   if (!options.strict) {
     return {
       issues: issues.filter(i => i.severity !== 'info'),
@@ -143,7 +137,6 @@ function outputLintResults(result: LintResult, options: LintCommandOptions): voi
     return;
   }
   
-  // Default text format
   if (result.issues.length === 0) {
     console.log(chalk.green('  ✓ No issues found'));
     return;

@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles, ensureDir } from '../utils/file-writer.js';
-import { getAllModels, getSpecs, registerModelsFromConfig, registerSpecsFromConfig } from '../core/model.js';
+import { getSpecsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Build Command Options
@@ -31,10 +31,7 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log('');
   
   const cwd = process.cwd();
-  
-  // Load config
   const config = await loadConfig(options.config);
-  // Output paths available via getOutputPaths(config, cwd) if needed
   
   console.log(chalk.gray(`  Design:  ${config.designDir || 'design'}/`));
   console.log(chalk.gray(`  Docs:    ${config.docsDir}/`));
@@ -42,17 +39,14 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log('');
   
   try {
-    console.log(chalk.blue('  Loading models...'));
-    registerModelsFromConfig(config.models || []);
-    registerSpecsFromConfig(config.specs);
-    console.log('');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const models = (config.models || []) as any[];
+    const specs = config.specs;
     
-    // Ensure base output directories exist
     ensureDir(join(cwd, config.docsDir));
     ensureDir(join(cwd, config.specsDir));
     
     const files: Array<{ path: string; content: string }> = [];
-    const models = getAllModels();
     
     if (models.length === 0) {
       console.log(chalk.yellow('  No models registered. Add models to speckeeper.config.ts.'));
@@ -61,7 +55,6 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
     
     console.log(chalk.blue(`  Processing ${models.length} model types...`));
     
-    // Process each model type
     for (const model of models) {
       const exporters = model.getExporters();
       
@@ -72,9 +65,9 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
         continue;
       }
       
-      const specs = getSpecs(model.id);
+      const modelSpecs = getSpecsFromConfig(specs, model.id);
       
-      if (specs.length === 0) {
+      if (modelSpecs.length === 0) {
         if (options.verbose) {
           console.log(chalk.gray(`    ${model.name}: no specs found`));
         }
@@ -88,9 +81,8 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
         
         ensureDir(outputDir);
         
-        // Generate individual files
         if (exporter.single) {
-          for (const spec of specs) {
+          for (const spec of modelSpecs) {
             const content = exporter.single(spec);
             const filename = model.getFilename(spec, exporter.format) || (spec as { id: string }).id;
             files.push({
@@ -100,9 +92,8 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
           }
         }
         
-        // Generate index file
         if (exporter.index) {
-          const indexContent = exporter.index(specs);
+          const indexContent = exporter.index(modelSpecs);
           files.push({
             path: join(outputDir, 'index.md'),
             content: indexContent,
@@ -113,7 +104,6 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
       console.log(chalk.green(`    ✓ ${model.name}`));
     }
     
-    // Write all files
     if (files.length > 0) {
       console.log('');
       console.log(chalk.blue(`  Writing ${files.length} files...`));

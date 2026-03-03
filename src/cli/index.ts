@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { createRequire } from 'node:module';
 import { buildCommand } from './build.js';
 import { lintCommand } from './lint.js';
 import { driftCommand } from './drift.js';
@@ -10,12 +11,15 @@ import { impactCommand } from './impact.js';
 import { runInit } from './init.js';
 import { scaffoldCommand } from './scaffold.js';
 
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json') as { version: string };
+
 const program = new Command();
 
 program
   .name('speckeeper')
   .description('Requirements and design management framework with TypeScript DSL')
-  .version('0.1.0');
+  .version(pkg.version);
 
 // Build command
 // Spec: design/cli-commands.ts CMD-BUILD

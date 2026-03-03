@@ -650,12 +650,55 @@ export function mergeSpecs(...modules: SpecModule[]): MergedDesign {
 }
 
 /**
- * Register spec data from config.specs into specStore.
- * Call this after registerModelsFromConfig().
+ * Build a registry (modelId -> Map<specId, spec>) from config.specs.
+ * Pure function — no global state.
  */
-export function registerSpecsFromConfig(specs: SpecEntry[] | undefined): void {
-  if (!specs) return;
+export function buildRegistryFromConfig(
+  specs: SpecEntry[] | undefined
+): Record<string, Map<string, unknown>> {
+  const registry: Record<string, Map<string, unknown>> = {};
+  if (!specs) return registry;
   for (const entry of specs) {
-    entry.model.register(entry.data);
+    if (!registry[entry.model.id]) {
+      registry[entry.model.id] = new Map();
+    }
+    const map = registry[entry.model.id];
+    for (const spec of entry.data) {
+      map.set((spec as { id: string }).id, spec);
+    }
   }
+  return registry;
+}
+
+/**
+ * Get specs for a model ID from config.specs.
+ * Pure function — no global state.
+ */
+export function getSpecsFromConfig(
+  specs: SpecEntry[] | undefined,
+  modelId: string
+): unknown[] {
+  if (!specs) return [];
+  return specs
+    .filter(e => e.model.id === modelId)
+    .flatMap(e => e.data);
+}
+
+/**
+ * Find which model type a spec ID belongs to, from config.specs.
+ * Pure function — no global state.
+ */
+export function findModelTypeFromConfig(
+  specs: SpecEntry[] | undefined,
+  specId: string
+): string | null {
+  if (!specs) return null;
+  for (const entry of specs) {
+    for (const spec of entry.data) {
+      if ((spec as { id: string }).id === specId) {
+        return entry.model.id;
+      }
+    }
+  }
+  return null;
 }

@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { getAllModels, getSpecs, getSpecStore, registerModelsFromConfig, registerSpecsFromConfig, type CoverageResult } from '../core/model.js';
+import { getSpecsFromConfig, buildRegistryFromConfig, type SpecEntry, type CoverageResult } from '../core/model.js';
 import { parse as parseYaml } from 'yaml';
 
 // ============================================================================
@@ -55,23 +55,21 @@ export async function checkCommand(
   console.log('');
   
   try {
-    console.log(chalk.blue('  Loading models...'));
-    registerModelsFromConfig(config.models || []);
-    registerSpecsFromConfig(config.specs);
-    
-    const results: CheckResult[] = [];
-    const models = getAllModels();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const models = (config.models || []) as any[];
+    const specs = config.specs;
     
     if (options.verbose) {
-      console.log(chalk.gray(`  Registered models: ${models.map(m => m.id).join(', ')}`));
+      console.log(chalk.gray(`  Registered models: ${models.map((m: { id: string }) => m.id).join(', ')}`));
     }
     
-    // Run checks for each model that has an external checker
+    const results: CheckResult[] = [];
+    
     for (const model of models) {
-      const specs = getSpecs(model.id);
-      if (specs.length === 0) continue;
+      const modelSpecs = getSpecsFromConfig(specs, model.id);
+      if (modelSpecs.length === 0) continue;
       
-      for (const spec of specs) {
+      for (const spec of modelSpecs) {
         const sourcePath = model.getExternalSourcePath(spec);
         if (!sourcePath) continue;
         
@@ -89,10 +87,7 @@ export async function checkCommand(
           continue;
         }
         
-        // Load external data
         const externalData = loadExternalData(fullPath);
-        
-        // Run check
         const checkResult = model.check(spec, externalData);
         
         if (!checkResult.success || checkResult.errors.length > 0 || checkResult.warnings.length > 0) {
@@ -100,32 +95,29 @@ export async function checkCommand(
             type: model.id,
             success: checkResult.success,
             issues: [
-              ...checkResult.errors.map(e => ({ severity: 'error' as const, message: e.message, specId: e.specId, field: e.field })),
-              ...checkResult.warnings.map(w => ({ severity: 'warning' as const, message: w.message, specId: w.specId, field: w.field })),
+              ...checkResult.errors.map((e: { message: string; specId?: string; field?: string }) => ({ severity: 'error' as const, message: e.message, specId: e.specId, field: e.field })),
+              ...checkResult.warnings.map((w: { message: string; specId?: string; field?: string }) => ({ severity: 'warning' as const, message: w.message, specId: w.specId, field: w.field })),
             ],
           });
         }
       }
     }
     
-    // Output results
     outputCheckResults(results);
     
-    // Coverage check (if --coverage flag is set)
     if (options.coverage) {
       console.log('');
       console.log(chalk.blue('  Coverage checks...'));
-      const coverageResults = runAllCoverageChecks();
+      const coverageResults = runAllCoverageChecks(models, specs);
       
       if (coverageResults.length > 0) {
         outputAllCoverageResults(coverageResults);
         
-        // Add uncovered items as warnings
         for (const check of coverageResults) {
           if (check.result.uncoveredItems.length > 0) {
             results.push({
               type: `coverage-${check.modelId}`,
-              success: check.result.coveragePercent >= 80, // fail if below 80%
+              success: check.result.coveragePercent >= 80,
               issues: check.result.uncoveredItems.slice(0, 10).map(item => ({
                 severity: 'warning' as const,
                 message: `[${check.modelName}→${check.targetModel}] '${item.id}'${item.sourceId ? ` (${item.sourceId})` : ''} not covered`,
@@ -135,7 +127,6 @@ export async function checkCommand(
           }
         }
         
-        // Summary
         console.log('');
         console.log(chalk.gray('  ─────────────────────────────────────'));
         const allPassed = coverageResults.every(c => c.result.coveragePercent >= 80);
@@ -150,7 +141,6 @@ export async function checkCommand(
       }
     }
     
-    // Exit with error code if there are errors
     const hasErrors = results.some(r => !r.success);
     if (hasErrors) {
       process.exit(1);
@@ -220,22 +210,16 @@ interface CoverageCheckResult {
   result: CoverageResult;
 }
 
-/**
- * Execute all coverage checks
- * 
- * Detect all models with coverageChecker and run coverage checks.
- * Logic is defined in each model (design/_models/).
- */
-function runAllCoverageChecks(): CoverageCheckResult[] {
-  const models = getAllModels();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runAllCoverageChecks(models: any[], specs: SpecEntry[] | undefined): CoverageCheckResult[] {
   const results: CoverageCheckResult[] = [];
-  const registry = Object.fromEntries(getSpecStore());
+  const registry = buildRegistryFromConfig(specs);
   
   for (const model of models) {
     const checker = model.getCoverageChecker();
     if (checker) {
-      const specs = getSpecs(model.id);
-      const result = model.checkCoverage(specs, registry);
+      const modelSpecs = getSpecsFromConfig(specs, model.id);
+      const result = model.checkCoverage(modelSpecs, registry);
       
       if (result) {
         results.push({

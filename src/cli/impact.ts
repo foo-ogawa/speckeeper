@@ -6,7 +6,7 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { getSpecStore, registerModelsFromConfig, registerSpecsFromConfig, findModelTypeBySpecId } from '../core/model.js';
+import { buildRegistryFromConfig, findModelTypeFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -54,22 +54,18 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
   console.log('');
   
   try {
-    console.log(chalk.blue('  Loading models...'));
-    registerModelsFromConfig(config.models || []);
-    registerSpecsFromConfig(config.specs);
+    const specs = config.specs;
+    const registry = buildRegistryFromConfig(specs);
     
-    const store = getSpecStore();
-    
-    const targetType = findModelTypeBySpecId(targetId);
+    const targetType = findModelTypeFromConfig(specs, targetId);
     if (!targetType) {
       console.error(chalk.red(`  Error: Target '${targetId}' not found`));
       process.exit(1);
     }
     
     console.log(chalk.blue('  Analyzing impact...'));
-    const result = analyzeImpact(store, targetId, targetType, maxDepth);
+    const result = analyzeImpact(registry, targetId, targetType, maxDepth);
     
-    // Output results
     outputImpactResults(result, options);
     
   } catch (error) {
@@ -83,7 +79,7 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
 // ============================================================================
 
 function analyzeImpact(
-  store: Map<string, Map<string, unknown>>,
+  registry: Record<string, Map<string, unknown>>,
   targetId: string,
   targetType: string,
   maxDepth: number
@@ -94,11 +90,10 @@ function analyzeImpact(
   function findReferences(id: string, depth: number): void {
     if (depth > maxDepth) return;
     
-    for (const [type, map] of store) {
+    for (const [type, map] of Object.entries(registry)) {
       for (const [itemId, item] of map) {
         if (visited.has(itemId)) continue;
         
-        // Check if this item references the target
         const itemStr = JSON.stringify(item);
         if (itemStr.includes(`"${id}"`)) {
           visited.add(itemId);
@@ -109,7 +104,6 @@ function analyzeImpact(
             impactType: depth === 1 ? 'direct' : 'indirect',
           });
           
-          // Recursively find references to this item
           findReferences(itemId, depth + 1);
         }
       }
@@ -149,7 +143,6 @@ function outputImpactResults(result: ImpactResult, options: ImpactCommandOptions
     return;
   }
   
-  // Default text format
   if (result.impactedNodes.length === 0) {
     console.log(chalk.green('  No impacted elements found'));
     return;

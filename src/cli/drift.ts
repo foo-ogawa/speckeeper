@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { getAllModels, getSpecs, registerModelsFromConfig, registerSpecsFromConfig } from '../core/model.js';
+import { getSpecsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -36,24 +36,21 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
   
   const cwd = process.cwd();
   const config = await loadConfig(options.config);
-  // Output paths available via getOutputPaths if needed
   
   console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
   console.log(chalk.gray(`  Docs:   ${config.docsDir}/`));
   console.log('');
   
   try {
-    console.log(chalk.blue('  Loading models...'));
-    registerModelsFromConfig(config.models || []);
-    registerSpecsFromConfig(config.specs);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const models = (config.models || []) as any[];
+    const specs = config.specs;
     
     const results: DriftResult[] = [];
-    const models = getAllModels();
     
-    // Check each model's generated files
     for (const model of models) {
-      const specs = getSpecs(model.id);
-      if (specs.length === 0) continue;
+      const modelSpecs = getSpecsFromConfig(specs, model.id);
+      if (modelSpecs.length === 0) continue;
       
       for (const exporter of model.getExporters()) {
         if (exporter.format !== 'markdown') continue;
@@ -62,9 +59,8 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
           ? join(cwd, config.docsDir, exporter.outputDir)
           : join(cwd, config.docsDir);
         
-        // Check individual files
         if (exporter.single) {
-          for (const spec of specs) {
+          for (const spec of modelSpecs) {
             const filename = model.getFilename(spec, 'markdown') || (spec as { id: string }).id;
             const filePath = join(outputDir, `${filename}.md`);
             
@@ -84,14 +80,13 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
           }
         }
         
-        // Check index file
         if (exporter.index) {
           const indexPath = join(outputDir, 'index.md');
           
           if (!existsSync(indexPath)) {
             results.push({ file: indexPath, status: 'missing' });
           } else {
-            const expected = exporter.index(specs);
+            const expected = exporter.index(modelSpecs);
             const actual = readFileSync(indexPath, 'utf-8');
             
             if (normalizeContent(expected) !== normalizeContent(actual)) {
@@ -104,10 +99,8 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
       }
     }
     
-    // Output results
     outputDriftResults(results, options);
     
-    // Exit with error code if drift detected and failOnDrift is set
     const hasDrift = results.some(r => r.status === 'drifted' || r.status === 'missing');
     if (hasDrift && options.failOnDrift) {
       process.exit(1);

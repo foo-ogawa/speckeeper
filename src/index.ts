@@ -4,20 +4,11 @@ export * from './types/index.js';
 // Core (Model Registry) - export excluding duplicates
 export {
   Model,
-  registerModel,
-  getModel,
-  getAllModels,
-  clearModelRegistry,
-  registerModelsFromConfig,
-  registerSpecsFromConfig,
   defineSpecs,
   mergeSpecs,
-  getSpecStore,
-  resetSpecStore,
-  getSpecs,
-  getAllSpecIds,
-  findModelTypeBySpecId,
-  getSpecById,
+  buildRegistryFromConfig,
+  getSpecsFromConfig,
+  findModelTypeFromConfig,
   // Re-exported from relation.ts
   RELATION_TYPES,
   RELATION_CONSTRAINTS,
