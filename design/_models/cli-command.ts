@@ -129,36 +129,19 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
   return commands;
 }
 
-function checkCLICommands(specs: CLICommand[], implPath: string): CheckResult {
+function checkCLICommand(spec: CLICommand, implPath: string): CheckResult {
   const errors: CheckResult['errors'] = [];
   const warnings: CheckResult['warnings'] = [];
   
   const implementations = parseCommanderCLI(implPath);
+  const impl = implementations.get(spec.name);
   
-  for (const spec of specs) {
-    const impl = implementations.get(spec.name);
-    
-    if (!impl) {
-      errors.push({
-        message: `Command '${spec.name}' not found in implementation`,
-        specId: spec.id,
-        field: 'name',
-      });
-      continue;
-    }
-    
-    // Additional checks can be added here
-  }
-  
-  // Check for commands in implementation but not in spec
-  for (const [cmdName] of implementations) {
-    const hasSpec = specs.some(s => s.name === cmdName);
-    if (!hasSpec) {
-      warnings.push({
-        message: `Command '${cmdName}' in implementation but not in spec`,
-        field: 'name',
-      });
-    }
+  if (!impl) {
+    errors.push({
+      message: `Command '${spec.name}' not found in implementation`,
+      specId: spec.id,
+      field: 'name',
+    });
   }
   
   return { success: errors.length === 0, errors, warnings };
@@ -296,13 +279,26 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
     sourcePath: () => 'src/cli/index.ts',
     check: (spec): CheckResult => {
       const cliIndexPath = join(process.cwd(), 'src/cli/index.ts');
-      return checkCLICommands([spec], cliIndexPath);
+      return checkCLICommand(spec, cliIndexPath);
     },
   };
 
-  // ============================================================================
-  // Renderers (for embeds)
-  // ============================================================================
+  override lintAll(specs: CLICommand[]): import('../../src/core/model.ts').LintResult[] {
+    const results = super.lintAll(specs);
+    const cliIndexPath = join(process.cwd(), 'src/cli/index.ts');
+    const implementations = parseCommanderCLI(cliIndexPath);
+    for (const [cmdName] of implementations) {
+      const hasSpec = specs.some(s => s.name === cmdName);
+      if (!hasSpec) {
+        results.push({
+          ruleId: 'cmd-impl-without-spec',
+          severity: 'error',
+          message: `Command '${cmdName}' exists in implementation but has no spec definition`,
+        });
+      }
+    }
+    return results;
+  }
 
   protected renderers: Renderer<CLICommand>[] = [
     {

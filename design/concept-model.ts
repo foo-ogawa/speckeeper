@@ -27,6 +27,7 @@ export const entities: Entity[] = [
     // L2(Entity) refines→ L1(Requirement)
     relations: [
       { type: 'refines', target: 'FR-104', description: 'Refines model definition requirement' },
+      { type: 'refines', target: 'ART-001' },
     ],
   },
   {
@@ -44,6 +45,7 @@ export const entities: Entity[] = [
     ],
     relations: [
       { type: 'refines', target: 'FR-104', description: 'Refines model definition requirement' },
+      { type: 'refines', target: 'ART-001' },
     ],
   },
   {
@@ -56,6 +58,9 @@ export const entities: Entity[] = [
       { name: 'description', type: 'string', description: 'Description', required: false },
       { name: 'type', type: 'enum', enumValues: ['enterprise', 'system', 'container'], description: 'Boundary type', required: false },
     ],
+    relations: [
+      { type: 'refines', target: 'ART-001' },
+    ],
   },
   {
     id: 'E-012',
@@ -65,6 +70,9 @@ export const entities: Entity[] = [
       { name: 'id', type: 'string', description: 'Unique ID', required: true },
       { name: 'name', type: 'string', description: 'Layer name', required: true },
       { name: 'order', type: 'integer', description: 'Layer order (higher is more upper)', required: true },
+    ],
+    relations: [
+      { type: 'refines', target: 'ART-001' },
     ],
   },
   {
@@ -78,6 +86,9 @@ export const entities: Entity[] = [
       { name: 'isAggregate', type: 'boolean', description: 'Whether aggregate root', required: false },
       { name: 'boundaryId', type: 'string', description: 'Belonging boundary ID', required: false },
     ],
+    relations: [
+      { type: 'refines', target: 'ART-001' },
+    ],
   },
   {
     id: 'E-030',
@@ -90,6 +101,9 @@ export const entities: Entity[] = [
       { name: 'type', type: 'enum', enumValues: ['page', 'modal', 'drawer', 'panel', 'wizard'], description: 'Screen type', required: false },
       { name: 'url', type: 'string', description: 'URL path', required: false },
       { name: 'authRequired', type: 'boolean', description: 'Whether authentication required', required: false },
+    ],
+    relations: [
+      { type: 'refines', target: 'ART-001' },
     ],
   },
   {
@@ -105,6 +119,7 @@ export const entities: Entity[] = [
     // L3(External SSOT reference) implements→ L1(Requirement)
     relations: [
       { type: 'implements', target: 'FR-200', description: 'Implements external SSOT reference requirement' },
+      { type: 'refines', target: 'ART-003' },
     ],
   },
   {
@@ -121,6 +136,7 @@ export const entities: Entity[] = [
     relations: [
       { type: 'implements', target: 'FR-200', description: 'Implements external SSOT reference requirement' },
       { type: 'dependsOn', target: 'E-020', description: 'Depends on Entity' },
+      { type: 'refines', target: 'ART-003' },
     ],
   },
   {
@@ -135,6 +151,9 @@ export const entities: Entity[] = [
       { name: 'purpose', type: 'string', description: 'Purpose', required: true },
       { name: 'driftTarget', type: 'boolean', description: 'Whether drift detection target', required: false },
       { name: 'generatedFrom', type: 'string', description: 'Source (SSOT ID)', required: false },
+    ],
+    relations: [
+      { type: 'refines', target: 'ART-001' },
     ],
   },
 ];

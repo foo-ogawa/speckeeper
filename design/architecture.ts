@@ -66,6 +66,8 @@ export const containers: Component[] = [
       { type: 'implements', target: 'FR-500', description: 'Implements drift command' },
       { type: 'implements', target: 'FR-600', description: 'Implements check command' },
       { type: 'implements', target: 'FR-700', description: 'Implements impact command' },
+      { type: 'implements', target: 'FR-105', description: 'Implements init command for project initialization' },
+      { type: 'implements', target: 'FR-602', description: 'Implements check command invocation' },
     ],
   },
   {
@@ -78,6 +80,7 @@ export const containers: Component[] = [
     layerId: 'LAYER-003',
     relations: [
       { type: 'implements', target: 'FR-104', description: 'Implements model definition requirement' },
+      { type: 'implements', target: 'FR-100', description: 'Implements common model structure definitions' },
     ],
   },
   {
@@ -104,6 +107,8 @@ export const containers: Component[] = [
     relations: [
       { type: 'implements', target: 'FR-300', description: 'Implements build functionality' },
       { type: 'implements', target: 'FR-301', description: 'Implements Markdown rendering' },
+      { type: 'implements', target: 'FR-302', description: 'Implements machine-readable artifact generation' },
+      { type: 'implements', target: 'FR-800', description: 'Implements artifact export functionality' },
       { type: 'dependsOn', target: 'CONT-002', description: 'Depends on type definitions' },
     ],
   },
@@ -118,6 +123,9 @@ export const containers: Component[] = [
     relations: [
       { type: 'implements', target: 'FR-400', description: 'Implements lint functionality' },
       { type: 'implements', target: 'FR-701', description: 'Implements relation validation' },
+      { type: 'implements', target: 'FR-102', description: 'Implements phase gate validation' },
+      { type: 'implements', target: 'FR-401', description: 'Implements common lint items' },
+      { type: 'implements', target: 'FR-402', description: 'Implements custom lint rule support' },
       { type: 'dependsOn', target: 'CONT-002', description: 'Depends on type definitions' },
     ],
   },
@@ -132,6 +140,9 @@ export const containers: Component[] = [
     relations: [
       { type: 'implements', target: 'FR-600', description: 'Implements external SSOT consistency check' },
       { type: 'implements', target: 'FR-603', description: 'Implements external checker functionality' },
+      { type: 'implements', target: 'FR-200', description: 'Implements external SSOT reference validation' },
+      { type: 'implements', target: 'FR-601', description: 'Implements three-category check classification' },
+      { type: 'implements', target: 'FR-604', description: 'Implements coverage verification' },
       { type: 'dependsOn', target: 'CONT-007', description: 'Depends on utilities' },
     ],
   },

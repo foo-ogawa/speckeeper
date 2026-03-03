@@ -132,59 +132,6 @@ class ComponentModelBase extends Model<typeof ComponentSchema> {
     },
   ];
 
-  /**
-   * Coverage Checker
-   * 
-   * Verifies that all functional requirements (FR-*) are implemented via Component relations
-   */
-  protected coverageChecker: CoverageChecker<Component> = {
-    targetModel: 'requirement',
-    description: 'Verifies functional requirements (FR-*) are implemented by Components',
-    check: (specs, registry): CoverageResult => {
-      const requirements = registry['functional-requirement'];
-      if (!requirements) {
-        return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
-      }
-
-      interface RequirementSpec { id: string; name: string; type: string }
-      const functionalReqIds = new Set<string>();
-      const reqMap = new Map<string, RequirementSpec>();
-      for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
-        functionalReqIds.add(req.id);
-        reqMap.set(req.id, req);
-      }
-
-      // Collect Requirements implemented via Component.relations
-      const implementedReqIds = new Set<string>();
-      for (const comp of specs) {
-        if (!comp.relations) continue;
-        for (const rel of comp.relations) {
-          if (rel.type === 'implements' && rel.target.startsWith('FR-')) {
-            implementedReqIds.add(rel.target);
-          }
-        }
-      }
-
-      // Determine coverage
-      const coveredItems: CoverageResult['coveredItems'] = [];
-      const uncoveredItems: CoverageResult['uncoveredItems'] = [];
-      for (const reqId of functionalReqIds) {
-        const req = reqMap.get(reqId);
-        if (implementedReqIds.has(reqId)) {
-          coveredItems.push({ id: reqId, description: req?.name });
-        } else {
-          uncoveredItems.push({ id: reqId, description: req?.name });
-        }
-      }
-
-      const total = functionalReqIds.size;
-      const covered = coveredItems.length;
-      const uncovered = uncoveredItems.length;
-      const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
-
-      return { total, covered, uncovered, coveragePercent, coveredItems, uncoveredItems };
-    },
-  };
 }
 
 // ============================================================================
@@ -260,6 +207,53 @@ class ContainerModel extends ComponentModelBase {
   readonly name = 'Container';
   readonly idPrefix = 'CONT';
   readonly description = 'Defines containers (deployable units)';
+
+  protected coverageChecker: CoverageChecker<Component> = {
+    targetModel: 'requirement',
+    description: 'Verifies functional requirements (FR-*) are implemented by Containers',
+    check: (specs, registry): CoverageResult => {
+      const requirements = registry['functional-requirement'];
+      if (!requirements) {
+        return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
+      }
+
+      interface RequirementSpec { id: string; name: string; type: string }
+      const functionalReqIds = new Set<string>();
+      const reqMap = new Map<string, RequirementSpec>();
+      for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
+        functionalReqIds.add(req.id);
+        reqMap.set(req.id, req);
+      }
+
+      const implementedReqIds = new Set<string>();
+      for (const comp of specs) {
+        if (!comp.relations) continue;
+        for (const rel of comp.relations) {
+          if (rel.type === 'implements' && rel.target.startsWith('FR-')) {
+            implementedReqIds.add(rel.target);
+          }
+        }
+      }
+
+      const coveredItems: CoverageResult['coveredItems'] = [];
+      const uncoveredItems: CoverageResult['uncoveredItems'] = [];
+      for (const reqId of functionalReqIds) {
+        const req = reqMap.get(reqId);
+        if (implementedReqIds.has(reqId)) {
+          coveredItems.push({ id: reqId, description: req?.name });
+        } else {
+          uncoveredItems.push({ id: reqId, description: req?.name });
+        }
+      }
+
+      const total = functionalReqIds.size;
+      const covered = coveredItems.length;
+      const uncovered = uncoveredItems.length;
+      const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
+
+      return { total, covered, uncovered, coveragePercent, coveredItems, uncoveredItems };
+    },
+  };
 }
 
 export {

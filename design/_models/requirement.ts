@@ -181,7 +181,7 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
    * 
    * Verifies that all UseCases are satisfied by Requirement relations
    */
-  protected coverageChecker: CoverageChecker<Requirement> = {
+  protected coverageChecker: CoverageChecker<Requirement> | undefined = {
     targetModel: 'usecase',
     description: 'Verifies UseCases are satisfied by Requirements',
     check: (specs, registry): CoverageResult => {
@@ -271,6 +271,7 @@ class NonFunctionalRequirementModel extends RequirementModelBase {
   readonly name = 'Non-Functional Requirement';
   readonly idPrefix = 'NFR';
   readonly description = 'Defines non-functional requirements (quality attributes)';
+  protected coverageChecker = undefined;
 }
 
 class ConstraintModel extends RequirementModelBase {
@@ -278,6 +279,7 @@ class ConstraintModel extends RequirementModelBase {
   readonly name = 'Constraint';
   readonly idPrefix = 'CR';
   readonly description = 'Defines constraints';
+  protected coverageChecker = undefined;
 }
 
 export { RequirementModelBase as RequirementModel, FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel };

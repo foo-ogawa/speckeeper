@@ -155,6 +155,45 @@ export const commands: CLICommand[] = [
     exitCodes: [{ code: 0, description: 'Initialization successful' }, { code: 1, description: 'Initialization error' }],
   },
 
+  // speckeeper new - Element creation command
+  {
+    id: 'CMD-NEW',
+    name: 'new',
+    description: 'Create a new element with auto-generated ID',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'argument', name: 'type', type: 'string', description: 'Type: requirement, usecase, entity, component, screen, flow, error-case, term', required: true },
+      { kind: 'option', name: 'kind', alias: 'k', type: 'string', description: 'Sub-kind (e.g., functional, non-functional for requirements)', required: false },
+      { kind: 'option', name: 'name', alias: 'n', type: 'string', description: 'Name of the element', required: false },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Output directory path', required: false },
+      { kind: 'option', name: 'template', alias: 't', type: 'path', description: 'Path to template file', required: false },
+    ],
+    subCommands: [],
+    relatedRequirements: [],
+    examples: ['speckeeper new requirement --kind functional --name "User Login"'],
+    exitCodes: [{ code: 0, description: 'Element created' }, { code: 1, description: 'Creation error' }],
+  },
+
+  // speckeeper scaffold - Scaffold command
+  {
+    id: 'CMD-SCAFFOLD',
+    name: 'scaffold',
+    description: 'Generate _models/ and _checkers/ from a mermaid flowchart definition',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'option', name: 'source', alias: 's', type: 'path', description: 'Path to Markdown file containing mermaid flowchart', required: true },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Output directory', required: false, default: 'design/' },
+      { kind: 'option', name: 'force', alias: 'f', type: 'boolean', description: 'Overwrite existing files', required: false, default: false },
+      { kind: 'option', name: 'dry-run', type: 'boolean', description: 'Preview generated files without writing', required: false, default: false },
+    ],
+    subCommands: [],
+    relatedRequirements: [],
+    examples: ['speckeeper scaffold --source requirements.md', 'speckeeper scaffold -s spec.md --dry-run'],
+    exitCodes: [{ code: 0, description: 'Scaffold successful' }, { code: 1, description: 'Scaffold error' }],
+  },
+
   // speckeeper impact - Impact analysis command
   {
     id: 'CMD-IMPACT',

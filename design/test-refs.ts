@@ -208,7 +208,7 @@ const performanceTestPatterns: TestCasePattern[] = [
 ];
 
 const compatibilityTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'NFR-002-01', pattern: 'NFR-002-01.*Node.js 18', description: 'Node.js 18 compatibility test' },
+  { acceptanceCriteriaId: 'NFR-002-01', pattern: 'NFR-002-01.*Node.js 20', description: 'Node.js 20 LTS compatibility test' },
   { acceptanceCriteriaId: 'NFR-002-02', pattern: 'NFR-002-02.*Node.js 20', description: 'Node.js 20 compatibility test' },
   { acceptanceCriteriaId: 'NFR-003-01', pattern: 'NFR-003-01.*TypeScript 5.0', description: 'TypeScript 5.0 compatibility test' },
   { acceptanceCriteriaId: 'NFR-003-02', pattern: 'NFR-003-02.*strict mode', description: 'Strict mode test' },

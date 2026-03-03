@@ -21,9 +21,13 @@ Models defined in `design/_models/` and registered in speckeeper:
 | `usecase` | UseCase | L0 | ✅ | ✅ | - | - | Defines use cases (business flows) |
 | `actor` | Actor | L0 | ✅ | ✅ | - | - | Defines actors |
 | `term` | Term | L0 | ✅ | ✅ | - | - | Defines terms (glossary) |
-| `requirement` | Requirement | L1 | ✅ | ✅ | - | ✅ | Defines functional requirements, non-functional requirements, and constraints |
+| `functional-requirement` | Functional Requirement | L1 | ✅ | ✅ | - | ✅ | Defines functional requirements |
+| `nonfunctional-requirement` | Non-Functional Requirement | L1 | ✅ | ✅ | - | - | Defines non-functional requirements (quality attributes) |
+| `constraint` | Constraint | L1 | ✅ | ✅ | - | - | Defines constraints |
 | `entity` | Entity | L2 | ✅ | ✅ | - | ✅ | Defines conceptual entities (domain model) |
-| `component` | Component | L2 | ✅ | ✅ | - | ✅ | Defines architecture components |
+| `actor-component` | Actor (Architecture) | L2 | ✅ | ✅ | - | - | Defines actors (people) in the architecture |
+| `external-system` | External System | L2 | ✅ | ✅ | - | - | Defines external systems |
+| `container` | Container | L2 | ✅ | ✅ | - | ✅ | Defines containers (deployable units) |
 | `boundary` | Boundary | L2 | ❌ | ❌ | - | - | Defines system boundaries (context) |
 | `layer` | Layer | L2 | ❌ | ❌ | - | - | Defines architecture layers |
 | `relation` | Relation | L2 | ✅ | ❌ | - | - | Defines relations between components |

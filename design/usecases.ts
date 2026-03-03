@@ -115,26 +115,6 @@ export const useCases: UseCase[] = [
       { type: 'traces', target: 'FR-500', description: 'Related to lint requirement' },
     ],
   },
-  {
-    id: 'UC-003',
-    name: 'Define Screen Specifications',
-    description: 'Design engineer defines screen list and screen transitions',
-    actor: 'UC-ACTOR-002',
-    phase: 'HLD',
-    preconditions: ['speckeeper is installed', 'REQ phase is complete'],
-    postconditions: ['Screen transition diagram has been generated', 'Lint has verified screen consistency'],
-    relatedRequirements: ['FR-004'],
-    mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Create or edit design/screens.ts' },
-      { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
-      { stepNumber: 3, type: 'user_action', description: 'Define screen list and transitions' },
-      { stepNumber: 4, type: 'user_action', description: 'Run speckeeper build' },
-      { stepNumber: 5, type: 'system_response', description: 'Mermaid screen transition diagram is generated in docs/screens/' },
-      { stepNumber: 6, type: 'user_action', description: 'Run speckeeper lint' },
-      { stepNumber: 7, type: 'system_response', description: 'Screen consistency is verified' },
-    ],
-  },
-
   // LLD Phase
   {
     id: 'UC-004',
@@ -154,26 +134,6 @@ export const useCases: UseCase[] = [
       { stepNumber: 6, type: 'system_response', description: 'Common vocabulary JSON is generated in specs/schemas/' },
     ],
   },
-  {
-    id: 'UC-005',
-    name: 'Define Form Details',
-    description: 'Implementation engineer defines form fields and validation',
-    actor: 'UC-ACTOR-003',
-    phase: 'LLD',
-    preconditions: ['speckeeper is installed', 'Screen specifications are defined'],
-    postconditions: ['Form requirement definition has been generated', 'Screen-API consistency has been verified'],
-    relatedRequirements: ['FR-004'],
-    mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Add form definition to design/screens/forms/' },
-      { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
-      { stepNumber: 3, type: 'user_action', description: 'Define fields and validation' },
-      { stepNumber: 4, type: 'user_action', description: 'Run speckeeper build' },
-      { stepNumber: 5, type: 'system_response', description: 'Form requirement definition is generated' },
-      { stepNumber: 6, type: 'user_action', description: 'Run speckeeper lint' },
-      { stepNumber: 7, type: 'system_response', description: 'Form-request consistency is verified' },
-    ],
-  },
-
   // Implementation Phase
   {
     id: 'UC-006',
@@ -199,46 +159,6 @@ export const useCases: UseCase[] = [
       { type: 'traces', target: 'FR-200', description: 'Related to external SSOT reference requirement' },
     ],
   },
-  {
-    id: 'UC-007',
-    name: 'Link IDs to Implementation',
-    description: 'Implementation engineer embeds componentId/entityId/requirementId in implementation code',
-    actor: 'UC-ACTOR-003',
-    phase: 'IMPL',
-    preconditions: [
-      'LLD phase is complete',
-      'Implementation code generation by external tools is complete',
-    ],
-    postconditions: ['speckeeper IDs are linked to implementation code'],
-    relatedRequirements: [],
-    mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Add componentId/entityId to implementation code as comments or annotations' },
-      { stepNumber: 2, type: 'user_action', description: 'Run speckeeper impact to check impact scope' },
-      { stepNumber: 3, type: 'system_response', description: 'Components and requirements related to the ID are listed' },
-    ],
-  },
-
-  // OPS Phase
-  {
-    id: 'UC-008',
-    name: 'Finalize Runbook and Monitoring Settings',
-    description: 'Operations engineer finalizes runbook URLs, etc. and passes the final gate',
-    actor: 'UC-ACTOR-004',
-    phase: 'OPS',
-    preconditions: [
-      'speckeeper is installed',
-      'Implementation phase is complete',
-    ],
-    postconditions: ['All TBDs in OPS phase are resolved'],
-    relatedRequirements: ['FR-012'],
-    mainFlow: [
-      { stepNumber: 1, type: 'user_action', description: 'Add runbook URLs, etc. to models under design/' },
-      { stepNumber: 2, type: 'user_action', description: 'Run speckeeper lint --phase OPS' },
-      { stepNumber: 3, type: 'system_response', description: 'Required items for OPS phase are verified' },
-      { stepNumber: 4, type: 'system_response', description: 'Report error if TBDs remain' },
-    ],
-  },
-
   // CI (Always Executed)
   {
     id: 'UC-010',

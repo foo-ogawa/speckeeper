@@ -61,6 +61,11 @@ After adding a model, register it in the `allModels` array in `design/_models/in
 **design/_models/index.ts (excerpt)**
 
 ```typescript
+  ArtifactModel.instance,
+  DirectoryEntryModel.instance,
+  CLICommandModel.instance,
+  TestRefModel.instance,
+];
 
 ```
 <!--@embedoc:end-->
