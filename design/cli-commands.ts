@@ -3,6 +3,7 @@
  */
 import type { CLICommand } from './_models/cli-command.ts';
 import { CLICommandModel } from './_models/cli-command.ts';
+import { defineSpecs } from '../dist/index.js';
 
 // ============================================================================
 // All Commands
@@ -174,6 +175,6 @@ export const commands: CLICommand[] = [
   },
 ];
 
-CLICommandModel.instance.register(commands);
-
-console.log(`CLI Commands loaded: ${commands.length} commands`);
+export default defineSpecs(
+  [CLICommandModel.instance, commands],
+);

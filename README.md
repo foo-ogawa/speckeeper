@@ -69,21 +69,23 @@ npx speckeeper scaffold --source requirements.md
 
 This generates:
 - `design/_models/` — Model classes with Zod schemas, lint rules, and exporters derived from your flowchart
+- `design/*.ts` — Spec data files using `defineSpecs()` for each model
+- `design/index.ts` — Entry point that aggregates all spec modules via `mergeSpecs()`
 - `design/_checkers/` — External checker skeletons for `implements` edges (e.g. OpenAPI, DDL)
-- `design/_models/index.ts` — Re-exports and `allModels` array
-- `speckeeper.config.ts` — Configuration wired to the generated models
 
 See [Scaffold Mermaid Specification](./docs/scaffold-mermaid-spec.md) for the full input format and built-in node mappings.
 
 ### 3. Fill in your specifications
 
-Edit files in `design/` to add your actual specification data:
+Edit spec data files in `design/` to add your actual specification data. Each file uses `defineSpecs()` to pair Model instances with data:
 
 ```typescript
 // design/requirements.ts
-import type { Requirement } from 'speckeeper';
+import { defineSpecs } from 'speckeeper';
+import type { Requirement } from './_models/requirement';
+import { FunctionalRequirementModel } from './_models/requirement';
 
-export const requirements: Requirement[] = [
+const requirements: Requirement[] = [
   {
     id: 'FR-001',
     name: 'User Authentication',
@@ -96,7 +98,13 @@ export const requirements: Requirement[] = [
     ],
   },
 ];
+
+export default defineSpecs(
+  [FunctionalRequirementModel.instance, requirements],
+);
 ```
+
+`design/index.ts` aggregates all spec files, and `speckeeper.config.ts` imports the result — no manual wiring needed beyond adding your spec file to `design/index.ts`.
 
 ### 4. Run validation
 

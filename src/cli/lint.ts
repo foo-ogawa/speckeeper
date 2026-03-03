@@ -6,7 +6,7 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { getAllModels, getSpecs, registerModelsFromConfig } from '../core/model.js';
+import { getAllModels, getSpecs, registerModelsFromConfig, registerSpecsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -56,6 +56,7 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
   try {
     console.log(chalk.blue('  Loading models...'));
     registerModelsFromConfig(config.models || []);
+    registerSpecsFromConfig(config.specs);
     
     const models = getAllModels();
     console.log(chalk.gray(`  Loaded: ${models.length} models`));

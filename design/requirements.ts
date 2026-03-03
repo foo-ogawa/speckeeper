@@ -15,6 +15,7 @@
  */
 import type { Requirement } from './_models/requirement.ts';
 import { FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel } from './_models/requirement.ts';
+import { defineSpecs } from '../dist/index.js';
 
 // ============================================================================
 // Functional Requirements - 8.1 Common Requirements
@@ -1140,11 +1141,8 @@ export function getTopLevelRequirements(): Requirement[] {
   return functionalRequirements.filter(r => !r.parentId);
 }
 
-FunctionalRequirementModel.instance.register(functionalRequirements);
-NonFunctionalRequirementModel.instance.register(nonFunctionalRequirements);
-ConstraintModel.instance.register(constraints);
-
-console.log(`Requirements loaded: ${allRequirements.length} items`);
-console.log(`  - Functional: ${functionalRequirements.length}`);
-console.log(`  - Non-functional: ${nonFunctionalRequirements.length}`);
-console.log(`  - Constraints: ${constraints.length}`);
+export default defineSpecs(
+  [FunctionalRequirementModel.instance, functionalRequirements],
+  [NonFunctionalRequirementModel.instance, nonFunctionalRequirements],
+  [ConstraintModel.instance, constraints],
+);

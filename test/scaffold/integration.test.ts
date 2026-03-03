@@ -106,14 +106,18 @@ describe('scaffold integration with app-skelton README.md', () => {
         '_models/usecase.ts',
         '_models/validation-constraint.ts',
       ]);
-      expect(specPaths.length).toBe(modelPaths.length);
+      const specDataPaths = specPaths.filter(p => p !== 'index.ts');
+      expect(specDataPaths.length).toBe(modelPaths.length);
       for (const sp of specPaths) {
         expect(sp).toMatch(/\.ts$/);
       }
-      const specDataFiles = modelFiles.filter(f => !f.relativePath.startsWith('_models/'));
+      const specDataFiles = modelFiles.filter(f => !f.relativePath.startsWith('_models/') && f.relativePath !== 'index.ts');
       for (const sf of specDataFiles) {
-        expect(sf.content).toContain('.instance.register(');
+        expect(sf.content).toContain('defineSpecs');
       }
+      const indexFile = modelFiles.find(f => f.relativePath === 'index.ts');
+      expect(indexFile).toBeDefined();
+      expect(indexFile!.content).toContain('mergeSpecs');
     });
 
     it('SR, FR, NFR all map to requirement (1 model file with 3 Model classes)', () => {

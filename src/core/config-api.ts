@@ -38,6 +38,8 @@ export interface SpeckeeperConfigInput {
   /** Custom model definitions (Model instances or ModelDefinition objects) */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   models?: any[];
+  /** Spec data entries from design/index.ts via mergeSpecs() */
+  specs?: import('../core/model.js').SpecEntry[];
   /** External SSOT configuration */
   externalSsot?: {
     openapi?: {

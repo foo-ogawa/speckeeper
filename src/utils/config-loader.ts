@@ -107,6 +107,9 @@ export interface SpeckeeperConfig {
   
   // Custom model definitions
   models?: unknown[];
+  
+  // Spec data entries (from design/index.ts via mergeSpecs())
+  specs?: import('../core/model.js').SpecEntry[];
 }
 
 // Default configuration
@@ -254,7 +257,6 @@ export async function loadConfig(
     }
     
     if (ext === 'ts' || ext === 'js') {
-      // Dynamic import for TS/JS config
       const module = await import(resolvedPath);
       const parsed = module.default ?? module;
       return { ...defaultConfig, ...parsed };

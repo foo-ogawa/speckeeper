@@ -62,14 +62,14 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   console.log('  Next steps:');
   if (packageJsonCreated) {
     console.log(chalk.gray('    1. Run `npm install` to install dependencies'));
-    console.log(chalk.gray('    2. Edit design/_models/ to customize your models'));
-    console.log(chalk.gray('    3. Add specifications in design/'));
+    console.log(chalk.gray('    2. Add spec data in design/*.ts using defineSpecs()'));
+    console.log(chalk.gray('    3. Import new spec files in design/index.ts'));
     console.log(chalk.gray('    4. Run `npx speckeeper lint` to validate'));
   } else {
     console.log(chalk.gray('    1. Add speckeeper and zod to your package.json dependencies'));
     console.log(chalk.gray('    2. Ensure "type": "module" is set in package.json'));
-    console.log(chalk.gray('    3. Edit design/_models/ to customize your models'));
-    console.log(chalk.gray('    4. Add specifications in design/'));
+    console.log(chalk.gray('    3. Add spec data in design/*.ts using defineSpecs()'));
+    console.log(chalk.gray('    4. Import new spec files in design/index.ts'));
     console.log(chalk.gray('    5. Run `npx speckeeper lint` to validate'));
   }
 }

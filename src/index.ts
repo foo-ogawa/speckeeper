@@ -9,6 +9,9 @@ export {
   getAllModels,
   clearModelRegistry,
   registerModelsFromConfig,
+  registerSpecsFromConfig,
+  defineSpecs,
+  mergeSpecs,
   getSpecStore,
   resetSpecStore,
   getSpecs,
@@ -35,6 +38,9 @@ export type {
   CoverageChecker,
   Renderer,
   RenderContext,
+  SpecEntry,
+  SpecModule,
+  MergedDesign,
 } from './core/model.js';
 
 // Relation utilities

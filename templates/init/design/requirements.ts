@@ -1,10 +1,11 @@
 /**
  * Requirements
  */
+import { defineSpecs } from 'speckeeper';
 import type { Requirement } from './_models/requirement.ts';
 import { RequirementModel } from './_models/requirement.ts';
 
-export const requirements: Requirement[] = [
+const requirements: Requirement[] = [
   {
     id: 'REQ-001',
     name: 'User Authentication',
@@ -18,6 +19,6 @@ export const requirements: Requirement[] = [
   },
 ];
 
-RequirementModel.instance.register(requirements);
-
-console.log(`Requirements loaded: ${requirements.length} items`);
+export default defineSpecs(
+  [RequirementModel.instance, requirements],
+);

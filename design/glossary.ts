@@ -6,6 +6,7 @@
  * in docs/framework_requirements_spec.md is generated from this file.
  */
 import type { Term } from './_models/term.ts';
+import { defineSpecs } from '../dist/index.js';
 import { TermModel } from './_models/term.ts';
 
 // ============================================================================
@@ -117,6 +118,6 @@ export const terms: Term[] = [
 
 export const allTerms: Term[] = [...acronyms, ...terms];
 
-TermModel.instance.register(allTerms);
-
-console.log('Glossary loaded successfully');
+export default defineSpecs(
+  [TermModel.instance, allTerms],
+);

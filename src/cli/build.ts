@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles, ensureDir } from '../utils/file-writer.js';
-import { getAllModels, getSpecs, registerModelsFromConfig } from '../core/model.js';
+import { getAllModels, getSpecs, registerModelsFromConfig, registerSpecsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Build Command Options
@@ -44,6 +44,7 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   try {
     console.log(chalk.blue('  Loading models...'));
     registerModelsFromConfig(config.models || []);
+    registerSpecsFromConfig(config.specs);
     console.log('');
     
     // Ensure base output directories exist

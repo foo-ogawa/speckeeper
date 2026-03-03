@@ -574,3 +574,88 @@ export function getSpecById(specId: string): { modelId: string; spec: unknown } 
   if (!modelId) return null;
   return { modelId, spec: specStore.get(modelId)!.get(specId) };
 }
+
+// ============================================================================
+// SpecModule: Common interface for spec data files
+// ============================================================================
+
+/**
+ * A single (Model, data[]) pair.
+ * Uses structural typing (not nominal Model<any>) so that
+ * compiled dist/ Model instances are compatible with src/ types.
+ */
+export interface SpecEntry {
+  model: { id: string; register: (data: unknown[]) => void };
+  data: unknown[];
+}
+
+/**
+ * Common export interface for spec data files.
+ * Each spec file exports a SpecModule via defineSpecs().
+ */
+export interface SpecModule {
+  entries: SpecEntry[];
+}
+
+/**
+ * Aggregated result from mergeSpecs().
+ */
+export interface MergedDesign {
+  models: SpecEntry['model'][];
+  specs: SpecEntry[];
+}
+
+/**
+ * Define spec data in a spec file. Returns a SpecModule.
+ *
+ * @example
+ * ```typescript
+ * export default defineSpecs(
+ *   [FunctionalRequirementModel.instance, functionalRequirements],
+ *   [NonFunctionalRequirementModel.instance, nonFunctionalRequirements],
+ * );
+ * ```
+ */
+export function defineSpecs(...entries: [SpecEntry['model'], unknown[]][]): SpecModule {
+  return {
+    entries: entries.map(([model, data]) => ({ model, data })),
+  };
+}
+
+/**
+ * Merge multiple SpecModules into a single MergedDesign.
+ * Models are deduplicated by model.id.
+ *
+ * @example
+ * ```typescript
+ * // design/index.ts
+ * export default mergeSpecs(requirements, usecases, glossary);
+ * ```
+ */
+export function mergeSpecs(...modules: SpecModule[]): MergedDesign {
+  const modelMap = new Map<string, SpecEntry['model']>();
+  const allSpecs: SpecEntry[] = [];
+
+  for (const mod of modules) {
+    for (const entry of mod.entries) {
+      modelMap.set(entry.model.id, entry.model);
+      allSpecs.push(entry);
+    }
+  }
+
+  return {
+    models: Array.from(modelMap.values()),
+    specs: allSpecs,
+  };
+}
+
+/**
+ * Register spec data from config.specs into specStore.
+ * Call this after registerModelsFromConfig().
+ */
+export function registerSpecsFromConfig(specs: SpecEntry[] | undefined): void {
+  if (!specs) return;
+  for (const entry of specs) {
+    entry.model.register(entry.data);
+  }
+}

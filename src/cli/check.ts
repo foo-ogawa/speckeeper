@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { getAllModels, getSpecs, getSpecStore, registerModelsFromConfig, type CoverageResult } from '../core/model.js';
+import { getAllModels, getSpecs, getSpecStore, registerModelsFromConfig, registerSpecsFromConfig, type CoverageResult } from '../core/model.js';
 import { parse as parseYaml } from 'yaml';
 
 // ============================================================================
@@ -57,6 +57,7 @@ export async function checkCommand(
   try {
     console.log(chalk.blue('  Loading models...'));
     registerModelsFromConfig(config.models || []);
+    registerSpecsFromConfig(config.specs);
     
     const results: CheckResult[] = [];
     const models = getAllModels();

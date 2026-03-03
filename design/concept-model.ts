@@ -5,6 +5,7 @@
  */
 import type { Entity, EntityRelation, Rule } from './_models/concept-model.ts';
 import { EntityModel } from './_models/concept-model.ts';
+import { defineSpecs } from '../dist/index.js';
 
 // ============================================================================
 // Core Entities
@@ -185,6 +186,6 @@ export const rules: Rule[] = [
   },
 ];
 
-EntityModel.instance.register(entities);
-
-console.log('Concept model loaded successfully');
+export default defineSpecs(
+  [EntityModel.instance, entities],
+);

@@ -5,6 +5,7 @@
  */
 import type { UseCase, Actor } from './_models/usecase.ts';
 import { ActorModel, UseCaseModel } from './_models/usecase.ts';
+import { defineSpecs } from '../dist/index.js';
 
 // ============================================================================
 // Actor Definitions
@@ -357,7 +358,7 @@ export const phaseConfig: Record<string, { order: number; label: string }> = {
   CI: { order: 6, label: 'CI (Always)' },
 };
 
-ActorModel.instance.register(actors);
-UseCaseModel.instance.register(useCases);
-
-console.log('Use cases loaded successfully');
+export default defineSpecs(
+  [ActorModel.instance, actors],
+  [UseCaseModel.instance, useCases],
+);

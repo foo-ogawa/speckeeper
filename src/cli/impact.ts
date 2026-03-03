@@ -6,7 +6,7 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { getSpecStore, registerModelsFromConfig, findModelTypeBySpecId } from '../core/model.js';
+import { getSpecStore, registerModelsFromConfig, registerSpecsFromConfig, findModelTypeBySpecId } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -56,6 +56,7 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
   try {
     console.log(chalk.blue('  Loading models...'));
     registerModelsFromConfig(config.models || []);
+    registerSpecsFromConfig(config.specs);
     
     const store = getSpecStore();
     

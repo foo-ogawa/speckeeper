@@ -2,10 +2,11 @@
  * speckeeper configuration file
  */
 import { defineConfig } from './dist/index.js';
-import { allModels } from './design/_models/index';
+import design from './design/index';
 
 export default defineConfig({
   projectName: 'speckeeper',
-  version: '0.1.0',
-  models: allModels,
+  version: '0.2.1',
+  models: design.models,
+  specs: design.specs,
 });

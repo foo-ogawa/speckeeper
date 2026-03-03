@@ -7,6 +7,7 @@
  */
 import type { TestRef, TestCasePattern } from './_models/test-ref.ts';
 import { TestRefModel } from './_models/test-ref.ts';
+import { defineSpecs } from '../dist/index.js';
 
 // ============================================================================
 // Helper Functions
@@ -554,6 +555,6 @@ export const testRefs: TestRef[] = [
   },
 ];
 
-TestRefModel.instance.register(testRefs);
-
-console.log(`Test References loaded: ${testRefs.length} refs`);
+export default defineSpecs(
+  [TestRefModel.instance, testRefs],
+);

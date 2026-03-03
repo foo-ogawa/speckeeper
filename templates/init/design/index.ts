@@ -1,8 +1,7 @@
 /**
- * Design specifications index
+ * Design entry point
  */
+import { mergeSpecs } from 'speckeeper';
+import requirements from './requirements.ts';
 
-// Requirements
-export { requirements } from './requirements.ts';
-
-console.log('Design specifications loaded!');
+export default mergeSpecs(requirements);
