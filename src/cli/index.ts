@@ -8,6 +8,7 @@ import { checkCommand } from './check.js';
 import { newCommand } from './new.js';
 import { impactCommand } from './impact.js';
 import { runInit } from './init.js';
+import { scaffoldCommand } from './scaffold.js';
 
 const program = new Command();
 
@@ -92,6 +93,16 @@ program
   .description('Initialize a new speckeeper project with starter templates')
   .option('-f, --force', 'Overwrite existing files')
   .action(runInit);
+
+// Scaffold command
+program
+  .command('scaffold')
+  .description('Generate _models/ and _checkers/ from a mermaid flowchart definition')
+  .requiredOption('-s, --source <path>', 'Path to Markdown file containing mermaid flowchart')
+  .option('-o, --output <path>', 'Output directory (default: design/)')
+  .option('-f, --force', 'Overwrite existing files')
+  .option('--dry-run', 'Preview generated files without writing')
+  .action(scaffoldCommand);
 
 // Parse arguments
 program.parse();
