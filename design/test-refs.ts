@@ -7,7 +7,7 @@
  */
 import type { TestRef, TestCasePattern } from './_models/test-ref.ts';
 import { TestRefModel } from './_models/test-ref.ts';
-import { defineSpecs } from '../dist/index.js';
+import { defineSpecs } from '../src/core/model.js';
 
 // ============================================================================
 // Helper Functions

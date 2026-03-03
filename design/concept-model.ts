@@ -5,7 +5,7 @@
  */
 import type { Entity, EntityRelation, Rule } from './_models/concept-model.ts';
 import { EntityModel } from './_models/concept-model.ts';
-import { defineSpecs } from '../dist/index.js';
+import { defineSpecs } from '../src/core/model.js';
 
 // ============================================================================
 // Core Entities

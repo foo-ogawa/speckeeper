@@ -1,7 +1,7 @@
 /**
  * Design entry point — aggregates all spec data via mergeSpecs()
  */
-import { mergeSpecs } from '../dist/index.js';
+import { mergeSpecs } from '../src/core/model.js';
 import glossary from './glossary';
 import requirements from './requirements';
 import conceptModel from './concept-model';
