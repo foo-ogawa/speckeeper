@@ -71,22 +71,29 @@ const modelClassExtends = {
     },
   },
   create(context) {
-    const modelClasses = new Set(); // Classes that extend Model
+    const modelClasses = new Set(); // Classes that extend Model (directly or indirectly)
     const exportedNames = new Set(); // Names exported via export { XXX }
+    
+    function isModelSubclass(superClassName) {
+      return superClassName === 'Model' || modelClasses.has(superClassName);
+    }
+    
+    function tryRegisterModelClass(className, superClass) {
+      if (!className.endsWith('Model') && !className.endsWith('ModelBase')) return false;
+      if (superClass?.type !== 'Identifier') return false;
+      if (isModelSubclass(superClass.name)) {
+        modelClasses.add(className);
+        return true;
+      }
+      return false;
+    }
     
     return {
       // Detect: export class XXXModel extends Model<...>
       ExportNamedDeclaration(node) {
         if (node.declaration?.type === 'ClassDeclaration') {
           const className = node.declaration.id?.name || '';
-          const superClass = node.declaration.superClass;
-          
-          if (
-            className.endsWith('Model') &&
-            superClass?.type === 'Identifier' &&
-            superClass.name === 'Model'
-          ) {
-            modelClasses.add(className);
+          if (tryRegisterModelClass(className, node.declaration.superClass)) {
             exportedNames.add(className);
           }
         }
@@ -99,18 +106,10 @@ const modelClassExtends = {
           }
         }
       },
-      // Detect: class XXXModel extends Model<...> (non-exported)
+      // Detect: class XXXModel extends Model<...> (non-exported, direct or indirect)
       ClassDeclaration(node) {
         const className = node.id?.name || '';
-        const superClass = node.superClass;
-        
-        if (
-          className.endsWith('Model') &&
-          superClass?.type === 'Identifier' &&
-          superClass.name === 'Model'
-        ) {
-          modelClasses.add(className);
-        }
+        tryRegisterModelClass(className, node.superClass);
       },
       'Program:exit'(node) {
         const filename = context.filename || context.getFilename();

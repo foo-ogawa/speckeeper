@@ -4,6 +4,7 @@
  * Defines the main use cases for speckeeper.
  */
 import type { UseCase, Actor } from './_models/usecase.ts';
+import { ActorModel, UseCaseModel } from './_models/usecase.ts';
 
 // ============================================================================
 // Actor Definitions
@@ -355,5 +356,8 @@ export const phaseConfig: Record<string, { order: number; label: string }> = {
   OPS: { order: 5, label: 'OPS Phase' },
   CI: { order: 6, label: 'CI (Always)' },
 };
+
+ActorModel.instance.register(actors);
+UseCaseModel.instance.register(useCases);
 
 console.log('Use cases loaded successfully');

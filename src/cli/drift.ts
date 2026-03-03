@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, type ModelRegistry } from '../utils/model-loader.js';
+import { loadAllModels, getSpecsFromRegistry } from '../utils/model-loader.js';
 import { getAllModels } from '../core/model.js';
 
 // ============================================================================
@@ -123,24 +123,6 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): unknown[] {
-  const registryMap: Record<string, keyof ModelRegistry> = {
-    'requirement': 'requirements',
-    'usecase': 'useCases',
-    'actor': 'actors',
-    'term': 'glossaryTerms',
-    'entity': 'entities',
-    'screen': 'screens',
-    'process-flow': 'processFlows',
-    'component': 'components',
-  };
-  
-  const key = registryMap[modelId];
-  if (!key || !registry[key]) return [];
-  
-  return Array.from((registry[key] as Map<string, unknown>).values());
-}
 
 function normalizeContent(content: string): string {
   return content.trim().replace(/\r\n/g, '\n');

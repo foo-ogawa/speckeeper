@@ -14,6 +14,7 @@
  * - FR-8xx: Export
  */
 import type { Requirement } from './_models/requirement.ts';
+import { FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel } from './_models/requirement.ts';
 
 // ============================================================================
 // Functional Requirements - 8.1 Common Requirements
@@ -1138,6 +1139,10 @@ export function getRequirementsByCategory(): Map<string, Requirement[]> {
 export function getTopLevelRequirements(): Requirement[] {
   return functionalRequirements.filter(r => !r.parentId);
 }
+
+FunctionalRequirementModel.instance.register(functionalRequirements);
+NonFunctionalRequirementModel.instance.register(nonFunctionalRequirements);
+ConstraintModel.instance.register(constraints);
 
 console.log(`Requirements loaded: ${allRequirements.length} items`);
 console.log(`  - Functional: ${functionalRequirements.length}`);

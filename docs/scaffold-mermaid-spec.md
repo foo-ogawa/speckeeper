@@ -1,276 +1,276 @@
-# speckeeper scaffold: mermaid 入力仕様
+# speckeeper scaffold: Mermaid Input Specification
 
-`speckeeper scaffold` コマンドは、mermaid flowchart で記述された仕様メタモデルを入力として、speckeeper の `design/_models/` および `design/_checkers/` のスケルトンコードを自動生成する。
+The `speckeeper scaffold` command takes a mermaid flowchart describing a specification metamodel as input and auto-generates skeleton code for `design/_models/` and `design/_checkers/`.
 
-本ドキュメントは、scaffold が受け付ける mermaid flowchart の書式・制約・語彙を定義する。
+This document defines the format, constraints, and vocabulary of the mermaid flowchart accepted by scaffold.
 
 ---
 
-## 1. 全体構造
+## 1. Overall Structure
 
-scaffold が処理する Markdown ファイルには、1 つ以上の mermaid コードブロックを含める。scaffold は最初に見つかった `flowchart` ブロックを処理対象とする。
+A Markdown file processed by scaffold must contain one or more mermaid code blocks. scaffold processes the first `flowchart` block found.
 
     ```mermaid
     flowchart TB
-      ノード定義
-      エッジ定義
-      classDef / class 定義
+      Node definitions
+      Edge definitions
+      classDef / class definitions
     ```
 
-- `flowchart` の方向指定（`TB`, `LR` 等）は任意。scaffold の動作には影響しない。
-- `graph` キーワードも `flowchart` と同等に扱う。
-- `%%` で始まる行はコメントとして無視される。
+- The direction specifier (`TB`, `LR`, etc.) is optional and does not affect scaffold behavior.
+- The `graph` keyword is treated equivalently to `flowchart`.
+- Lines starting with `%%` are ignored as comments.
 
 ---
 
-## 2. ノード定義
+## 2. Node Definitions
 
-### 2.1 書式
-
-```
-ID[ラベル]
-```
-
-| 要素 | 必須 | 説明 |
-|------|------|------|
-| `ID` | 必須 | 英数字とアンダースコアで構成。先頭は英字またはアンダースコア |
-| `[ラベル]` | 任意 | 角括弧で囲んだ表示テキスト。日本語可。省略時は ID がラベルとなる |
-
-### 2.2 ノードの出現場所
-
-ノードはエッジ定義の中で初出してもよい。同じ ID のノードが複数回出現した場合、最初にラベルが付与された定義が採用される。
+### 2.1 Syntax
 
 ```
-SR -->|refines| FR[機能要求]   %% FR のラベルはここで定義
-FR -->|includes| AT[受入基準]  %% FR は既に定義済み、ラベル無視
+ID[Label]
 ```
 
-### 2.3 ビルトインノード ID
+| Element | Required | Description |
+|---------|----------|-------------|
+| `ID` | Required | Alphanumeric characters and underscores. Must start with a letter or underscore |
+| `[Label]` | Optional | Display text enclosed in square brackets. May contain any characters. If omitted, the ID is used as the label |
 
-以下のノード ID は、scaffold が特定のモデルテンプレートにマッピングする予約 ID である。
+### 2.2 Node Declaration Locations
 
-| ノード ID | テンプレート | Model 名 | ID Prefix | Level | 説明 |
-|-----------|-------------|----------|-----------|-------|------|
-| `TERM` | term | Term | TERM | L0 | 用語（グロッサリー） |
-| `CDM` | entity | ConceptualDataModel | CDM | L0 | 概念データモデル |
-| `SR` | requirement | SystemRequirement | SR | L1 | システム要求 |
-| `FR` | requirement | FunctionalRequirement | FR | L1 | 機能要求 |
-| `NFR` | requirement | NonFunctionalRequirement | NFR | L1 | 非機能要求 |
-| `UC` | usecase | UseCase | UC | L1 | ユースケース |
-| `LDM` | logical-entity | LogicalDataModel | LDM | L2 | 論理データモデル |
-| `AT` | acceptance-test | AcceptanceTest | AT | L2 | 受入基準 |
-| `DT` | data-test | DataTest | DT | L2 | データ整合性テスト仕様 |
-| `VC` | validation-constraint | ValidationConstraint | VC | L2 | バリデーション制約 |
+Nodes may first appear within edge definitions. When the same ID appears multiple times, the first definition with a label takes precedence.
 
-同じテンプレートにマッピングされるノード ID（SR, FR, NFR → requirement）は、1 つのモデルファイルに集約される（1ファイル内に複数の Model クラスを定義）。
+```
+SR -->|refines| FR[Functional Requirement]   %% FR label defined here
+FR -->|includes| AT[Acceptance Test]          %% FR already defined, label ignored
+```
 
-ビルトイン ID に該当しないノードは `base` テンプレート（id, name, description, relations のみの最小構成）にフォールバックする。
+### 2.3 Built-in Node IDs
+
+The following node IDs are reserved IDs that scaffold maps to specific model templates.
+
+| Node ID | Template | Model Name | ID Prefix | Level | Description |
+|---------|----------|------------|-----------|-------|-------------|
+| `TERM` | term | Term | TERM | L0 | Glossary term |
+| `CDM` | entity | ConceptualDataModel | CDM | L0 | Conceptual data model |
+| `SR` | requirement | SystemRequirement | SR | L1 | System requirement |
+| `FR` | requirement | FunctionalRequirement | FR | L1 | Functional requirement |
+| `NFR` | requirement | NonFunctionalRequirement | NFR | L1 | Non-functional requirement |
+| `UC` | usecase | UseCase | UC | L1 | Use case |
+| `LDM` | logical-entity | LogicalDataModel | LDM | L2 | Logical data model |
+| `AT` | acceptance-test | AcceptanceTest | AT | L2 | Acceptance test |
+| `DT` | data-test | DataTest | DT | L2 | Data integrity test specification |
+| `VC` | validation-constraint | ValidationConstraint | VC | L2 | Validation constraint |
+
+Node IDs that map to the same template (e.g., SR, FR, NFR -> requirement) are consolidated into a single model file containing multiple Model classes.
+
+Node IDs not matching any built-in ID fall back to the `base` template (minimal structure with id, name, description, and relations only).
 
 ---
 
-## 3. speckeeper 管理ノードの宣言
+## 3. speckeeper-Managed Node Declaration
 
-scaffold が `_models/*.ts` を生成する対象は、`classDef` + `class` で **speckeeper 管理** と明示されたノードのみである。
+scaffold generates `_models/*.ts` files only for nodes explicitly declared as **speckeeper-managed** via `classDef` + `class`.
 
-### 3.1 書式
+### 3.1 Syntax
 
 ```
 classDef speckeeper fill:#2563EB,stroke:#1D4ED8,color:#fff,stroke-width:2px
 class TERM,SR,FR,NFR,CDM,UC,LDM,AT,DT,VC speckeeper
 ```
 
-| 行 | 必須 | 説明 |
-|----|------|------|
-| `classDef speckeeper ...` | 必須 | CSS スタイル定義。スタイル値は自由 |
-| `class ID1,ID2,... speckeeper` | 必須 | speckeeper 管理するノード ID をカンマ区切りで列挙 |
+| Line | Required | Description |
+|------|----------|-------------|
+| `classDef speckeeper ...` | Required | CSS style definition. Style values are arbitrary |
+| `class ID1,ID2,... speckeeper` | Required | Comma-separated list of speckeeper-managed node IDs |
 
-- クラス名は `speckeeper` 固定。scaffold はこのクラス名でフィルタリングする。
-- `class` 行に列挙されていないノードは「外部ノード」として扱われ、モデルファイルは生成されない。
-- 外部ノードへのエッジがある場合、そのエッジのラベルに応じてチェッカーファイルが生成される。
+- The class name must be `speckeeper`. scaffold filters by this class name.
+- Nodes not listed in the `class` line are treated as "external nodes" and no model files are generated for them.
+- If edges exist to external nodes, checker files are generated based on the edge labels.
 
 ---
 
-## 4. エッジ定義
+## 4. Edge Definitions
 
-### 4.1 書式
+### 4.1 Syntax
 
 ```
-SourceID -->|ラベル| TargetID[ラベル]
-SourceID <-->|ラベル| TargetID[ラベル]
+SourceID -->|Label| TargetID[Label]
+SourceID <-->|Label| TargetID[Label]
 ```
 
-| 矢印 | 名前 | 方向 |
-|-------|------|------|
-| `-->` | 単方向 | forward |
-| `<-->` | 双方向 | bidirectional |
-| `--->`, `---->` | 単方向（長い） | forward |
-| `<--->`, `<---->` | 双方向（長い） | bidirectional |
-| `-.->` | 点線・単方向 | forward |
-| `==>` | 太線・単方向 | forward |
+| Arrow | Name | Direction |
+|-------|------|-----------|
+| `-->` | Unidirectional | forward |
+| `<-->` | Bidirectional | bidirectional |
+| `--->`, `---->` | Unidirectional (long) | forward |
+| `<--->`, `<---->` | Bidirectional (long) | bidirectional |
+| `-.->` | Dotted unidirectional | forward |
+| `==>` | Thick unidirectional | forward |
 
-ラベル（`|...|`）は任意だが、scaffold はラベルに基づいて生成コードの種別を決定するため、**ラベルの付与を強く推奨する**。ラベルのないエッジは scaffold の生成対象外となる。
-
----
-
-## 5. エッジラベル仕様
-
-### 5.1 基本ルール
-
-speckeeper 管理ノードを含むエッジ（source または target の少なくとも一方が speckeeper 管理）のラベルは、**speckeeper の `RELATION_TYPES` と一致する文字列**でなければならない。
-
-**speckeeper 管理外のノード同士** のエッジラベルは自由（任意のテキストを使用可能）。
-
-### 5.2 使用可能なラベル（= speckeeper RELATION_TYPES）
-
-speckeeper 管理ノードを含むエッジで使用可能なラベル 7 種と、scaffold が生成するコードの対応:
-
-**カテゴリ A: speckeeper lint 対象（speckeeper ↔ speckeeper 参照整合性）**
-
-| ラベル | 矢印 | scaffold が生成するもの | 説明 |
-|--------|-------|----------------------|------|
-| `refines` | `-->` | lintRule（参照存在・level 制約チェック） | 上位項目を下位項目に詳細化する |
-| `relatedTo` | `<-->` | lintRule（双方向の参照存在チェック） | 双方向の関連・一貫性制約 |
-| `uses` | `-->` | lintRule（参照先存在チェック） | 参照・依存関係 |
-| `dependsOn` | `-->` | lintRule（依存先存在チェック） | 依存関係 |
-| `satisfies` | `-->` | lintRule（充足先存在チェック） | ビジネス・要件の充足 |
-
-**カテゴリ B: speckeeper check 対象（speckeeper → 外部ノード）**
-
-| ラベル | 矢印 | scaffold が生成するもの | 説明 |
-|--------|-------|----------------------|------|
-| `implements` | `-->` | ExternalChecker または coverageChecker | speckeeper 仕様を外部成果物・IF・テストとして実装する |
-
-- ターゲットがテスト系外部ノード → coverageChecker を生成（`check test --coverage`）
-- ターゲットが成果物系外部ノード → `_checkers/` に ExternalChecker を生成
-
-**カテゴリ C: speckeeper check --coverage 対象（speckeeper → speckeeper）**
-
-| ラベル | 矢印 | scaffold が生成するもの | 説明 |
-|--------|-------|----------------------|------|
-| `includes` | `-->` | coverageChecker（包含カバレッジ） | 親が子を包含する |
-| `traces` | `-->` | coverageChecker（導出追跡） | source から target を導出する |
-| `verifies` | `-->` | coverageChecker（テストカバレッジ） | テストが対象を検証する |
-
-**テスト系ノードの判定:** ノード ID が `UT`, `IT`, `DUT`, `E2ET` のいずれか、または ID に `TEST` を含む、またはラベルに「テスト」「test」を含む場合、テスト系と判定される。
-
-### 5.3 管理外ノード間のラベル（自由テキスト）
-
-speckeeper 管理外のノード同士のエッジには任意のラベルを使用できる。scaffold はこれらのエッジに対してバリデーションを行わない。
-
-よく使われる外部ラベル:
-
-| ラベル | 用途の例 |
-|--------|---------|
-| `generate` | 外部ツールによる自動生成（drift check の対象） |
-| `apply` | 外部システムへの適用 |
-| `deploy` | デプロイ |
-
-### 5.4 ラベル正規化
-
-speckeeper 管理ノードを含むエッジで、ラベルに修飾語が付いている場合、以下のロジックで正規化される:
-
-1. **完全一致**: ラベルが RelationType と完全一致（大文字小文字無視）
-2. **後方一致**: ラベルの末尾が RelationType と一致（長い語彙優先）
-3. **包含一致**: ラベル内に RelationType が含まれる（長い語彙優先）
-4. **フォールバック**: いずれにも該当しない場合、warning を出力し `relatedTo` として扱う
+Labels (`|...|`) are optional, but since scaffold determines the type of generated code based on labels, **labeling is strongly recommended**. Edges without labels are excluded from scaffold generation.
 
 ---
 
-## 6. チェッカーテンプレートマッピング
+## 5. Edge Label Specification
 
-speckeeper 管理ノードから外部ノードへの `implements` エッジに対して、ターゲットノード ID に基づくチェッカーテンプレートが適用される。
+### 5.1 Basic Rules
 
-**成果物系チェッカー（ExternalChecker）:**
+Labels on edges involving speckeeper-managed nodes (where at least one of source or target is speckeeper-managed) must be **strings matching speckeeper's `RELATION_TYPES`**.
 
-| ターゲットノード ID | チェッカーテンプレート | targetType | チェック内容 |
-|--------------------|----------------------|------------|-------------|
-| `DDL` | ddl-checker | ddl | 論理エンティティに対応するテーブル/カラムが schema.sql に存在するか |
-| `API` | openapi-checker | openapi | ユースケースに対応するエンドポイントが OpenAPI 仕様に存在するか |
+Edges **between non-managed nodes only** may use any free-form label text.
 
-**テスト系チェッカー（test-checker）:**
+### 5.2 Available Labels (= speckeeper RELATION_TYPES)
 
-| ターゲットノード ID | チェッカーファイル名 | targetType | チェック内容 |
-|--------------------|---------------------|------------|-------------|
-| `E2ET` | e2e-test-checker | test | テストファイルが存在し、仕様 ID を参照しているか |
-| `UT` | unit-test-checker | test | テストファイルが存在し、仕様 ID を参照しているか |
-| `DUT` | data-unit-test-checker | test | テストファイルが存在し、仕様 ID を参照しているか |
-| `IT` | integration-test-checker | test | テストファイルが存在し、仕様 ID を参照しているか |
+The 7 labels available for edges involving speckeeper-managed nodes and the corresponding code scaffold generates:
 
-test-checker は以下を検証する:
-1. テストコードファイルが所定のパスに存在すること
-2. テストコード内に仕様 ID が参照されていること（describe/it/test ブロック内、または embedoc マーカー）
+**Category A: speckeeper lint targets (speckeeper <-> speckeeper reference integrity)**
 
-**その他:**
+| Label | Arrow | scaffold generates | Description |
+|-------|-------|--------------------|-------------|
+| `refines` | `-->` | lintRule (reference existence + level constraint check) | Refines a higher-level item into lower-level detail |
+| `relatedTo` | `<-->` | lintRule (bidirectional reference existence check) | Bidirectional association / consistency constraint |
+| `uses` | `-->` | lintRule (referenced target existence check) | Reference / dependency relationship |
+| `dependsOn` | `-->` | lintRule (dependency target existence check) | Dependency relationship |
+| `satisfies` | `-->` | lintRule (satisfaction target existence check) | Business / requirement satisfaction |
 
-| ターゲットノード ID | チェッカーテンプレート | targetType |
-|--------------------|----------------------|------------|
-| 上記以外 | base-checker（汎用スケルトン） | ノード ID の小文字 |
+**Category B: speckeeper check targets (speckeeper -> external node)**
+
+| Label | Arrow | scaffold generates | Description |
+|-------|-------|--------------------|-------------|
+| `implements` | `-->` | ExternalChecker or coverageChecker | Implements a speckeeper spec as an external artifact / interface / test |
+
+- If the target is a test-related external node -> generates coverageChecker (`check test --coverage`)
+- If the target is an artifact-related external node -> generates ExternalChecker in `_checkers/`
+
+**Category C: speckeeper check --coverage targets (speckeeper -> speckeeper)**
+
+| Label | Arrow | scaffold generates | Description |
+|-------|-------|--------------------|-------------|
+| `includes` | `-->` | coverageChecker (containment coverage) | Parent includes child |
+| `traces` | `-->` | coverageChecker (derivation tracing) | Derives target from source |
+| `verifies` | `-->` | coverageChecker (test coverage) | Test verifies target |
+
+**Test-related node detection:** A node is classified as test-related if its ID is one of `UT`, `IT`, `DUT`, `E2ET`, or the ID contains `TEST`, or the label contains "test" (case-insensitive).
+
+### 5.3 Labels Between Non-Managed Nodes (Free Text)
+
+Edges between non-managed nodes may use any labels. scaffold does not validate these edges.
+
+Commonly used external labels:
+
+| Label | Example Usage |
+|-------|---------------|
+| `generate` | Auto-generation by external tools (drift check target) |
+| `apply` | Application to external systems |
+| `deploy` | Deployment |
+
+### 5.4 Label Normalization
+
+For edges involving speckeeper-managed nodes, labels with modifiers are normalized using the following logic:
+
+1. **Exact match**: Label matches a RelationType exactly (case-insensitive)
+2. **Suffix match**: Label ends with a RelationType (longest match wins)
+3. **Substring match**: Label contains a RelationType (longest match wins)
+4. **Fallback**: If none of the above match, a warning is emitted and the label is treated as `relatedTo`
 
 ---
 
-## 7. scaffold バリデーション
+## 6. Checker Template Mapping
 
-scaffold 実行時、mermaid 図自体の整合性を検証し、診断メッセージ（warning/error）を出力する。
+For `implements` edges from speckeeper-managed nodes to external nodes, a checker template is applied based on the target node ID.
 
-| ルール | 重要度 | 条件 |
-|--------|--------|------|
-| 不正なラベル | warning | speckeeper 管理ノードを含むエッジのラベルが RelationType に正規化できない |
-| 矢印方向の不一致 | warning | `relatedTo` が `-->` で書かれている、または `refines` 等が `<-->` で書かれている |
-| `implements` が speckeeper 間 | warning | speckeeper → speckeeper で `implements` が使われている（`refines` 等を推奨） |
-| `includes`/`traces` が外部ノード含む | warning | speckeeper → 外部ノード、または外部 → speckeeper で使われている |
-| speckeeper 管理ノード未宣言 | error | `class ... speckeeper` 行が存在しない |
+**Artifact Checkers (ExternalChecker):**
 
-管理外ノード間のエッジについてはバリデーションを行わない。
+| Target Node ID | Checker Template | targetType | Validation |
+|----------------|------------------|------------|------------|
+| `DDL` | ddl-checker | ddl | Verifies that tables/columns corresponding to logical entities exist in schema.sql |
+| `API` | openapi-checker | openapi | Verifies that endpoints corresponding to use cases exist in the OpenAPI specification |
+
+**Test Checkers (test-checker):**
+
+| Target Node ID | Checker Filename | targetType | Validation |
+|----------------|------------------|------------|------------|
+| `E2ET` | e2e-test-checker | test | Verifies that test files exist and reference spec IDs |
+| `UT` | unit-test-checker | test | Verifies that test files exist and reference spec IDs |
+| `DUT` | data-unit-test-checker | test | Verifies that test files exist and reference spec IDs |
+| `IT` | integration-test-checker | test | Verifies that test files exist and reference spec IDs |
+
+test-checker validates:
+1. Test code files exist at the designated paths
+2. Spec IDs are referenced within test code (inside describe/it/test blocks, or via embedoc markers)
+
+**Other:**
+
+| Target Node ID | Checker Template | targetType |
+|----------------|------------------|------------|
+| Any other | base-checker (generic skeleton) | Lowercase node ID |
 
 ---
 
-## 8. 生成物一覧
+## 7. scaffold Validation
 
-scaffold が生成するファイル:
+At execution time, scaffold validates the mermaid diagram's consistency and emits diagnostic messages (warning/error).
 
-| パス | 生成条件 | 内容 |
-|------|----------|------|
-| `_models/<template>.ts` | speckeeper 管理ノードごと（テンプレート単位で重複排除） | Model class, Zod schema, LintRule, Exporter |
-| `_models/index.ts` | 常に生成 | 全モデルの re-export + `allModels` 配列 |
-| `_checkers/<target>-checker.ts` | `implements`(→外部成果物) エッジごと（ターゲット単位で重複排除） | ExternalChecker スケルトン |
+| Rule | Severity | Condition |
+|------|----------|-----------|
+| Invalid label | warning | Edge label involving a speckeeper-managed node cannot be normalized to a RelationType |
+| Arrow direction mismatch | warning | `relatedTo` written with `-->`, or `refines` etc. written with `<-->` |
+| `implements` between speckeeper nodes | warning | `implements` used between speckeeper -> speckeeper (recommend `refines` etc.) |
+| `includes`/`traces` with external node | warning | Used between speckeeper -> external or external -> speckeeper |
+| No speckeeper-managed node declaration | error | No `class ... speckeeper` line exists |
+
+Edges between non-managed nodes are not validated.
 
 ---
 
-## 9. 完全な記述例
+## 8. Generated Outputs
+
+Files generated by scaffold:
+
+| Path | Generation Condition | Content |
+|------|---------------------|---------|
+| `_models/<template>.ts` | Per speckeeper-managed node (deduplicated by template) | Model class, Zod schema, LintRule, Exporter |
+| `_models/index.ts` | Always generated | Re-export of all models + `allModels` array |
+| `_checkers/<target>-checker.ts` | Per `implements` edge to external artifact (deduplicated by target) | ExternalChecker skeleton |
+
+---
+
+## 9. Complete Example
 
 ```mermaid
 flowchart TB
-  TERM[用語] <--->|relatedTo| SR[システム要求]
-  SR -->|refines| FR[機能要求]
-  SR -->|refines| NFR[非機能要求]
+  TERM[Term] <--->|relatedTo| SR[System Requirement]
+  SR -->|refines| FR[Functional Requirement]
+  SR -->|refines| NFR[Non-Functional Requirement]
 
-  TERM <-->|relatedTo| CDM[概念データモデル]
-  FR -->|refines| UC[ユースケース]
+  TERM <-->|relatedTo| CDM[Conceptual Data Model]
+  FR -->|refines| UC[Use Case]
   FR <-->|relatedTo| CDM
   UC -->|uses| CDM
 
-  UC -->|implements| API[API仕様]
-  CDM -->|refines| LDM[論理データモデル]
+  UC -->|implements| API[API Spec]
+  CDM -->|refines| LDM[Logical Data Model]
   LDM -->|implements| DDL[DDL]
 
-  FR -->|includes| AT[受入基準]
+  FR -->|includes| AT[Acceptance Test]
   UC -->|includes| AT
   NFR -->|includes| AT
-  FR -->|traces| VC[バリデーション制約]
+  FR -->|traces| VC[Validation Constraint]
   CDM -->|traces| VC
 
-  AT -->|implements| E2ET[E2Eテスト]
+  AT -->|implements| E2ET[E2E Test]
   UC -->|implements| IT[Integration Test]
-  VC -->|implements| UT[UnitTest]
+  VC -->|implements| UT[Unit Test]
 
   DDL -->|generate| DBS[schema.sql]
-  API -->|generate| COMPIF[コンポーネント設計]
+  API -->|generate| COMPIF[Component Design]
 
   classDef speckeeper fill:#2563EB,stroke:#1D4ED8,color:#fff,stroke-width:2px
   class TERM,SR,FR,NFR,CDM,UC,LDM,AT,DT,VC speckeeper
 ```
 
-この図から scaffold は以下を生成する:
+From this diagram, scaffold generates the following:
 
 **_models/**
 - `term.ts` (TERM)
@@ -284,22 +284,22 @@ flowchart TB
 - `index.ts`
 
 **_checkers/**
-- `openapi-checker.ts` (UC →|implements| API)
-- `ddl-checker.ts` (LDM →|implements| DDL)
+- `openapi-checker.ts` (UC ->|implements| API)
+- `ddl-checker.ts` (LDM ->|implements| DDL)
 
-`AT →|implements| E2ET` と `UC →|implements| IT` はターゲットがテスト系のため、ExternalChecker ではなく coverageChecker として model 内に設定される。
+`AT ->|implements| E2ET` and `UC ->|implements| IT` target test-related nodes, so they are configured as coverageCheckers within the model rather than ExternalCheckers.
 
 ---
 
-## 10. CLI リファレンス
+## 10. CLI Reference
 
 ```
 speckeeper scaffold --source <path> [--output <dir>] [--force] [--dry-run]
 ```
 
-| オプション | 必須 | デフォルト | 説明 |
-|-----------|------|-----------|------|
-| `--source`, `-s` | 必須 | - | mermaid flowchart を含む Markdown ファイルのパス |
-| `--output`, `-o` | 任意 | `design/` | 出力先ディレクトリ |
-| `--force`, `-f` | 任意 | false | 既存ファイルを上書き |
-| `--dry-run` | 任意 | false | ファイルを書き出さず、生成内容を標準出力に表示 |
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--source`, `-s` | Required | - | Path to the Markdown file containing a mermaid flowchart |
+| `--output`, `-o` | Optional | `design/` | Output directory |
+| `--force`, `-f` | Optional | false | Overwrite existing files |
+| `--dry-run` | Optional | false | Print generated content to stdout without writing files |

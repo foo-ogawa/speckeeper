@@ -7,6 +7,8 @@
  */
 import type { Artifact } from './_models/artifact.ts';
 import type { DirectoryEntry } from './_models/directory-entry.ts';
+import { ArtifactModel } from './_models/artifact.ts';
+import { DirectoryEntryModel } from './_models/directory-entry.ts';
 
 // ============================================================================
 // Artifact Definition
@@ -114,6 +116,9 @@ export const directoryStructure: DirectoryEntry[] = [
     artifactId: 'ART-004',
   },
 ];
+
+ArtifactModel.instance.register(artifacts);
+DirectoryEntryModel.instance.register(directoryStructure);
 
 // Re-export categoryLabels from _models for convenience
 export { categoryLabels } from './_models/artifact.ts';

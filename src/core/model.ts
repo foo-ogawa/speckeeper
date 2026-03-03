@@ -446,6 +446,40 @@ export abstract class Model<TSchema extends ZodType> {
   hasRenderer(format: string): boolean {
     return this.renderers.some(r => r.format === format);
   }
+  
+  /**
+   * Register spec instances for this model.
+   * Stores specs in the global specStore keyed by this model's id.
+   */
+  register(specs: z.infer<TSchema>[]): void {
+    if (!specStore.has(this.id)) {
+      specStore.set(this.id, new Map());
+    }
+    const map = specStore.get(this.id)!;
+    for (const spec of specs) {
+      map.set((spec as { id: string }).id, spec);
+    }
+  }
+}
+
+// ============================================================================
+// Spec Store
+// ============================================================================
+
+const specStore = new Map<string, Map<string, unknown>>();
+
+/**
+ * Get the global spec store (model ID → spec ID → spec data)
+ */
+export function getSpecStore(): Map<string, Map<string, unknown>> {
+  return specStore;
+}
+
+/**
+ * Reset the spec store (clears all registered specs)
+ */
+export function resetSpecStore(): void {
+  specStore.clear();
 }
 
 // ============================================================================

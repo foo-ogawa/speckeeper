@@ -4,6 +4,7 @@
  * Defines the domain model (entities, relations, rules) of speckeeper itself.
  */
 import type { Entity, EntityRelation, Rule } from './_models/concept-model.ts';
+import { EntityModel } from './_models/concept-model.ts';
 
 // ============================================================================
 // Core Entities
@@ -183,5 +184,7 @@ export const rules: Rule[] = [
     severity: 'warning',
   },
 ];
+
+EntityModel.instance.register(entities);
 
 console.log('Concept model loaded successfully');

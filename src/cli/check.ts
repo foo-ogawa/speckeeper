@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, type ModelRegistry } from '../utils/model-loader.js';
+import { loadAllModels, getSpecsFromRegistry, type ModelRegistry } from '../utils/model-loader.js';
 import { getAllModels, type CoverageResult } from '../core/model.js';
 import { parse as parseYaml } from 'yaml';
 
@@ -167,28 +167,6 @@ export async function checkCommand(
 // Helpers
 // ============================================================================
 
-function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): unknown[] {
-  const registryMap: Record<string, keyof ModelRegistry> = {
-    'requirement': 'requirements',
-    'usecase': 'useCases',
-    'actor': 'actors',
-    'term': 'glossaryTerms',
-    'entity': 'entities',
-    'screen': 'screens',
-    'process-flow': 'processFlows',
-    'component': 'components',
-    'api-ref': 'apiRefs',
-    'table-ref': 'tableRefs',
-    'test-ref': 'testRefs',
-    'artifact': 'artifacts',
-  };
-  
-  const key = registryMap[modelId];
-  if (!key || !registry[key]) return [];
-  
-  return Array.from((registry[key] as Map<string, unknown>).values());
-}
-
 function loadExternalData(filePath: string): unknown {
   const content = readFileSync(filePath, 'utf-8');
   
@@ -253,20 +231,12 @@ function runAllCoverageChecks(registry: ModelRegistry): CoverageCheckResult[] {
   const models = getAllModels();
   const results: CoverageCheckResult[] = [];
   
-  // Convert registry to Record format
-  const registryRecord: Record<string, Map<string, unknown>> = {};
-  for (const [key, value] of Object.entries(registry)) {
-    if (value instanceof Map) {
-      registryRecord[key] = value;
-    }
-  }
-  
   // Search for models with coverageChecker and execute
   for (const model of models) {
     const checker = model.getCoverageChecker();
     if (checker) {
       const specs = getSpecsFromRegistry(registry, model.id);
-      const result = model.checkCoverage(specs, registryRecord);
+      const result = model.checkCoverage(specs, registry);
       
       if (result) {
         results.push({

@@ -11,7 +11,9 @@
 Requirements and design documents often drift from implementation. **speckeeper** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
 
 ```
-design/*.ts  ──────►  Validation & Consistency Checks
+Mermaid flowchart ──► speckeeper scaffold ──► design/_models/ & _checkers/
+                                                     │
+design/*.ts  ─────────────────────────────► Validation & Consistency Checks
     │
     ├─► speckeeper lint    → Design integrity (IDs, references, phase gates)
     ├─► speckeeper check   → External SSOT validation (test coverage, etc.)
@@ -24,6 +26,7 @@ design/*.ts  ──────►  Validation & Consistency Checks
 - **Design validation** — Lint rules for ID uniqueness, reference integrity, circular dependencies, and phase gates
 - **External SSOT validation** — Check consistency with test files, and custom checkers for OpenAPI, DDL, etc.
 - **Traceability** — Track relationships across model levels (L0-L3) with impact analysis
+- **Scaffold from Mermaid** — Generate `_models/` and `_checkers/` skeletons from a mermaid flowchart
 - **Custom models** — Extend with domain-specific models (Runbooks, Policies, etc.)
 - **CI-ready** — Built-in lint, drift detection, and coverage checks
 
@@ -38,34 +41,43 @@ npx speckeeper --help
 
 ## Quick Start
 
-### 1. Initialize project
+### 1. Define your metamodel as a Mermaid flowchart
+
+Create a Markdown file (e.g. `requirements.md`) containing a mermaid flowchart that describes the relationships between your specification entities:
+
+```mermaid
+flowchart TB
+  TERM[Term] <-->|relatedTo| SR[System Requirement]
+  SR -->|refines| FR[Functional Requirement]
+  SR -->|refines| NFR[Non-Functional Requirement]
+  FR -->|refines| UC[Use Case]
+  FR -->|includes| AT[Acceptance Test]
+  UC -->|implements| API[API Spec]
+  AT -->|implements| E2ET[E2E Test]
+
+  classDef speckeeper fill:#2563EB,stroke:#1D4ED8,color:#fff,stroke-width:2px
+  class TERM,SR,FR,NFR,UC,AT speckeeper
+```
+
+Nodes marked with `class ... speckeeper` become managed models. Edges define lint rules (reference integrity) and checkers (external validation) automatically.
+
+### 2. Scaffold models and checkers
 
 ```bash
-npx speckeeper init
+npx speckeeper scaffold --source requirements.md
 ```
 
-This creates:
-- `speckeeper.config.ts` — Configuration file
-- `design/_models/` — Model definitions (Requirement, UseCase, Term, Entity, Component)
-- `design/requirements.ts` — Sample specification file
+This generates:
+- `design/_models/` — Model classes with Zod schemas, lint rules, and exporters derived from your flowchart
+- `design/_checkers/` — External checker skeletons for `implements` edges (e.g. OpenAPI, DDL)
+- `design/_models/index.ts` — Re-exports and `allModels` array
+- `speckeeper.config.ts` — Configuration wired to the generated models
 
-The generated `speckeeper.config.ts`:
+See [Scaffold Mermaid Specification](./docs/scaffold-mermaid-spec.md) for the full input format and built-in node mappings.
 
-```typescript
-import { defineConfig } from 'speckeeper';
-import { allModels } from './design/_models/index';
+### 3. Fill in your specifications
 
-export default defineConfig({
-  projectName: 'my-project',
-  models: allModels,
-});
-```
-
-See [Model Definition Guide](./docs/model-guide.md) for customization details.
-
-### 2. Define your specifications
-
-Edit files in `design/` to add your specifications:
+Edit files in `design/` to add your actual specification data:
 
 ```typescript
 // design/requirements.ts
@@ -86,7 +98,7 @@ export const requirements: Requirement[] = [
 ];
 ```
 
-### 3. Run validation
+### 4. Run validation
 
 ```bash
 # Validate design integrity
@@ -99,6 +111,8 @@ npx speckeeper check test --coverage
 npx speckeeper impact FR-001
 ```
 
+> **Alternative**: `npx speckeeper init` creates a minimal project with generic starter templates. Use this if you prefer to build models from scratch. See [Model Definition Guide](./docs/model-guide.md) for details.
+
 ## CLI Commands
 
 | Command | Description |
@@ -107,6 +121,7 @@ npx speckeeper impact FR-001
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
 | `speckeeper check test --coverage` | Verify test coverage for requirements |
+| `speckeeper scaffold` | Generate model/checker skeletons from a mermaid flowchart |
 | `speckeeper drift` | Detect manual edits to generated `specs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 

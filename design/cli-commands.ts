@@ -2,6 +2,7 @@
  * speckeeper CLI Commands - CLI Command Specifications
  */
 import type { CLICommand } from './_models/cli-command.ts';
+import { CLICommandModel } from './_models/cli-command.ts';
 
 // ============================================================================
 // All Commands
@@ -172,5 +173,7 @@ export const commands: CLICommand[] = [
     exitCodes: [{ code: 0, description: 'Analysis successful' }, { code: 1, description: 'Target ID not found' }],
   },
 ];
+
+CLICommandModel.instance.register(commands);
 
 console.log(`CLI Commands loaded: ${commands.length} commands`);

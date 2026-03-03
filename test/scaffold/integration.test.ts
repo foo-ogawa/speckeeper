@@ -11,7 +11,7 @@ import { generateAllCheckerFiles } from '../../src/scaffold/checker-generator.js
 import { generateModelsIndex } from '../../src/scaffold/index-generator.js';
 import type { MermaidNode } from '../../src/scaffold/types.js';
 
-const README_PATH = join(__dirname, '../../../app-skelton/example/README.md');
+const README_PATH = join(__dirname, 'fixtures/app-skelton-example.md');
 const SPECKEEPER_CLASS = 'speckeeper';
 
 function loadFlowchart() {
@@ -24,8 +24,8 @@ describe('scaffold integration with app-skelton README.md', () => {
 
   it('parses the flowchart', () => {
     expect(flowchart).not.toBeNull();
-    expect(flowchart.nodes.size).toBe(23);
-    expect(flowchart.edges.length).toBe(34);
+    expect(flowchart.nodes.size).toBe(22);
+    expect(flowchart.edges.length).toBe(32);
   });
 
   describe('speckeeper-managed nodes', () => {
@@ -46,7 +46,7 @@ describe('scaffold integration with app-skelton README.md', () => {
     const { resolved, diagnostics } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
 
     it('resolves all edges', () => {
-      expect(resolved.length).toBe(34);
+      expect(resolved.length).toBe(32);
     });
 
     it('resolves speckeeper labels as exact RelationType matches', () => {
@@ -93,9 +93,10 @@ describe('scaffold integration with app-skelton README.md', () => {
     const { resolved } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
     const modelFiles = generateAllModelFiles(spkNodes, resolved);
 
-    it('generates de-duplicated model files', () => {
-      const paths = modelFiles.map(f => f.relativePath).sort();
-      expect(paths).toEqual([
+    it('generates de-duplicated model files and spec data files', () => {
+      const modelPaths = modelFiles.map(f => f.relativePath).filter(p => p.startsWith('_models/')).sort();
+      const specPaths = modelFiles.map(f => f.relativePath).filter(p => !p.startsWith('_models/')).sort();
+      expect(modelPaths).toEqual([
         '_models/acceptance-test.ts',
         '_models/data-test.ts',
         '_models/entity.ts',
@@ -105,21 +106,29 @@ describe('scaffold integration with app-skelton README.md', () => {
         '_models/usecase.ts',
         '_models/validation-constraint.ts',
       ]);
+      expect(specPaths.length).toBe(modelPaths.length);
+      for (const sp of specPaths) {
+        expect(sp).toMatch(/\.ts$/);
+      }
+      const specDataFiles = modelFiles.filter(f => !f.relativePath.startsWith('_models/'));
+      for (const sf of specDataFiles) {
+        expect(sf.content).toContain('.instance.register(');
+      }
     });
 
-    it('SR, FR, NFR all map to requirement (1 file with 3 Model classes)', () => {
-      const reqFiles = modelFiles.filter(f => f.relativePath.includes('requirement'));
-      expect(reqFiles).toHaveLength(1);
-      expect(reqFiles[0].content).toContain('SystemRequirementModel');
-      expect(reqFiles[0].content).toContain('FunctionalRequirementModel');
-      expect(reqFiles[0].content).toContain('NonFunctionalRequirementModel');
-      expect(reqFiles[0].content).toContain("idPrefix = 'SR'");
-      expect(reqFiles[0].content).toContain("idPrefix = 'FR'");
-      expect(reqFiles[0].content).toContain("idPrefix = 'NFR'");
+    it('SR, FR, NFR all map to requirement (1 model file with 3 Model classes)', () => {
+      const reqModelFiles = modelFiles.filter(f => f.relativePath === '_models/requirement.ts');
+      expect(reqModelFiles).toHaveLength(1);
+      expect(reqModelFiles[0].content).toContain('SystemRequirementModel');
+      expect(reqModelFiles[0].content).toContain('FunctionalRequirementModel');
+      expect(reqModelFiles[0].content).toContain('NonFunctionalRequirementModel');
+      expect(reqModelFiles[0].content).toContain("idPrefix = 'SR'");
+      expect(reqModelFiles[0].content).toContain("idPrefix = 'FR'");
+      expect(reqModelFiles[0].content).toContain("idPrefix = 'NFR'");
     });
 
     it('requirement template includes acceptance criteria', () => {
-      const req = modelFiles.find(f => f.relativePath.includes('requirement'))!;
+      const req = modelFiles.find(f => f.relativePath === '_models/requirement.ts')!;
       expect(req.content).toContain('AcceptanceCriteriaSchema');
       expect(req.content).toContain('req-acceptance-not-empty');
     });
@@ -170,11 +179,14 @@ describe('scaffold integration with app-skelton README.md', () => {
       expect(api.content).toContain("targetType: 'openapi'");
     });
 
-    it('generates base-checker for BJIF (no dedicated template)', () => {
-      const bjif = checkerFiles.find(f => f.relativePath.includes('bjif-checker'))!;
-      expect(bjif).toBeDefined();
-      expect(bjif.content).toContain('UseCase');
-      expect(bjif.content).toContain("targetType: 'bjif'");
+    it('generates expected checker files matching flowchart edges', () => {
+      const paths = checkerFiles.map(f => f.relativePath).sort();
+      expect(paths).toContain('_checkers/ddl-checker.ts');
+      expect(paths).toContain('_checkers/openapi-checker.ts');
+      expect(paths).toContain('_checkers/unit-test-checker.ts');
+      expect(paths).toContain('_checkers/e2e-test-checker.ts');
+      expect(paths).toContain('_checkers/data-unit-test-checker.ts');
+      expect(paths).toContain('_checkers/integration-test-checker.ts');
     });
   });
 

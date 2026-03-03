@@ -1,92 +1,33 @@
 /**
  * Model Loader
  * 
- * Load models defined in TypeScript and convert to usable format for build command
+ * Load models and specs from design/ directory.
+ * Spec registration is done explicitly via Model.register() in each spec file.
  */
 
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, extname, basename } from 'node:path';
 import type { SpeckeeperConfig } from './config-loader.js';
-import { registerModel as coreRegisterModel } from '../core/model.js';
+import {
+  registerModel as coreRegisterModel,
+  clearModelRegistry,
+  getSpecStore,
+  resetSpecStore,
+} from '../core/model.js';
 
 // ============================================================================
 // Registry Types
 // ============================================================================
 
 /**
- * Model registry - stores all loaded models
+ * Model registry - stores all loaded spec data.
+ * Keys are model IDs (e.g. 'functional-requirement', 'usecase').
+ * Values are Maps of spec ID -> spec data.
  */
-export interface ModelRegistry {
-  requirements: Map<string, unknown>;
-  useCases: Map<string, unknown>;
-  actors: Map<string, unknown>;
-  components: Map<string, unknown>;
-  entities: Map<string, unknown>;
-  relations: Map<string, unknown>;
-  rules: Map<string, unknown>;
-  screens: Map<string, unknown>;
-  transitions: Map<string, unknown>;
-  forms: Map<string, unknown>;
-  processFlows: Map<string, unknown>;
-  glossaryTerms: Map<string, unknown>;
-  apiRefs: Map<string, unknown>;
-  tableRefs: Map<string, unknown>;
-  testRefs: Map<string, unknown>;
-  layers: Map<string, unknown>;
-  boundaries: Map<string, unknown>;
-  artifacts: Map<string, unknown>;
-}
-
-export function createEmptyRegistry(): ModelRegistry {
-  return {
-    requirements: new Map(),
-    useCases: new Map(),
-    actors: new Map(),
-    components: new Map(),
-    entities: new Map(),
-    relations: new Map(),
-    rules: new Map(),
-    screens: new Map(),
-    transitions: new Map(),
-    forms: new Map(),
-    processFlows: new Map(),
-    glossaryTerms: new Map(),
-    apiRefs: new Map(),
-    tableRefs: new Map(),
-    testRefs: new Map(),
-    layers: new Map(),
-    boundaries: new Map(),
-    artifacts: new Map(),
-  };
-}
+export type ModelRegistry = Record<string, Map<string, unknown>>;
 
 // ============================================================================
-// Global Registry (shared registry for DSL functions to register to)
-// ============================================================================
-
-let globalRegistry: ModelRegistry = createEmptyRegistry();
-
-export function getGlobalRegistry(): ModelRegistry {
-  return globalRegistry;
-}
-
-export function resetGlobalRegistry(): void {
-  globalRegistry = createEmptyRegistry();
-}
-
-/**
- * Function for DSL functions to register models
- */
-export function registerModel(
-  type: keyof ModelRegistry,
-  id: string,
-  model: unknown
-): void {
-  globalRegistry[type].set(id, model);
-}
-
-// ============================================================================
-// Model Registration from Exports
+// Model Instance Detection
 // ============================================================================
 
 /**
@@ -106,283 +47,76 @@ function isModelInstance(value: unknown): value is { id: string; name: string; i
 }
 
 /**
- * Detect models from imported module exports and register to globalRegistry
+ * Detect and register Model class instances from module exports.
+ * Only registers Model instances to the core model registry.
+ * Spec data registration is handled by Model.register() calls in spec files.
  */
-function registerExportedModels(module: Record<string, unknown>): void {
-  for (const [exportName, exportValue] of Object.entries(module)) {
+function registerExportedModelInstances(module: Record<string, unknown>): void {
+  for (const [, exportValue] of Object.entries(module)) {
     if (!exportValue || typeof exportValue !== 'object') continue;
-    
-    // Detect and register Model class instances
     if (isModelInstance(exportValue)) {
-      // Register to core model registry
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       coreRegisterModel(exportValue as any);
-      continue;
-    }
-    
-    // Process arrays
-    if (Array.isArray(exportValue)) {
-      registerArrayItems(exportName, exportValue);
-      continue;
-    }
-    
-    const value = exportValue as Record<string, unknown>;
-    
-    // Detect ArchitectureModel (has components, layers, boundaries, relations)
-    if (value.components && value.layers && value.boundaries && value.relations) {
-      const arch = value as { 
-        name?: string;
-        components: { id?: string }[]; 
-        layers: { id?: string }[]; 
-        boundaries: { id?: string }[];
-        relations: { id?: string }[];
-      };
-      for (const comp of arch.components) {
-        if (comp.id) globalRegistry.components.set(comp.id, comp);
-      }
-      for (const layer of arch.layers) {
-        if (layer.id) globalRegistry.layers.set(layer.id, layer);
-      }
-      for (const boundary of arch.boundaries) {
-        if (boundary.id) globalRegistry.boundaries.set(boundary.id, boundary);
-      }
-      for (const rel of arch.relations) {
-        if (rel.id) globalRegistry.relations.set(rel.id, rel);
-      }
-      continue;
-    }
-    
-    // Detect ConceptModel (has entities, relations, rules)
-    if (value.entities && value.relations && Array.isArray(value.entities)) {
-      const concept = value as { 
-        entities: { id?: string }[]; 
-        relations: { id?: string }[];
-        rules?: { id?: string }[];
-      };
-      for (const entity of concept.entities) {
-        if (entity.id) globalRegistry.entities.set(entity.id, entity);
-      }
-      for (const rel of concept.relations) {
-        if (rel.id) globalRegistry.relations.set(rel.id, rel);
-      }
-      for (const rule of concept.rules || []) {
-        if (rule.id) globalRegistry.rules.set(rule.id, rule);
-      }
-      continue;
-    }
-    
-    // Detect UseCaseModel (has useCases, actors)
-    if (value.useCases && value.actors) {
-      const ucModel = value as { 
-        useCases: { id?: string }[]; 
-        actors: { id?: string }[];
-      };
-      for (const uc of ucModel.useCases) {
-        if (uc.id) globalRegistry.useCases.set(uc.id, uc);
-      }
-      for (const actor of ucModel.actors) {
-        if (actor.id) globalRegistry.actors.set(actor.id, actor);
-      }
-      continue;
-    }
-    
-    // Detect Glossary (array with terms or {terms: []} format)
-    if (value.terms && Array.isArray(value.terms)) {
-      const glossary = value as { terms: { id?: string }[] };
-      for (const term of glossary.terms) {
-        if (term.id) globalRegistry.glossaryTerms.set(term.id, term);
-      }
-      continue;
-    }
-    
-    // Detect single Requirement
-    if (value.id && value.title && (value.kind || value.type || value.acceptance)) {
-      globalRegistry.requirements.set(value.id as string, value);
-      continue;
-    }
-    
-    // Detect single Entity
-    if (value.id && value.name && value.attributes && Array.isArray(value.attributes)) {
-      globalRegistry.entities.set(value.id as string, value);
-      continue;
-    }
-    
-    // Detect single UseCase
-    if (value.id && value.name && value.actor && value.mainFlow) {
-      globalRegistry.useCases.set(value.id as string, value);
-      continue;
-    }
-    
-    // Detect single Actor
-    if (value.id && value.name && value.type && ['human', 'system', 'external'].includes(value.type as string)) {
-      globalRegistry.actors.set(value.id as string, value);
-      continue;
-    }
-    
-    // Detect single Term
-    if (value.id && (value.term || value.abbreviation) && value.definition) {
-      globalRegistry.glossaryTerms.set(value.id as string, value);
-      continue;
-    }
-  }
-}
-
-/**
- * Detect items from array and register to registry
- */
-function registerArrayItems(exportName: string, items: unknown[]): void {
-  for (const item of items) {
-    if (!item || typeof item !== 'object') continue;
-    const obj = item as Record<string, unknown>;
-    if (!obj.id || typeof obj.id !== 'string') continue;
-    
-    // Infer type from export name or object structure
-    // requirements / allRequirements / functionalRequirements etc.
-    if (exportName.toLowerCase().includes('requirement') || 
-        exportName.toLowerCase().includes('constraints') ||
-        (obj.type && obj.acceptanceCriteria)) {
-      globalRegistry.requirements.set(obj.id, item);
-      continue;
-    }
-    
-    // useCases / usecases
-    if (exportName.toLowerCase().includes('usecase') || 
-        (obj.actor && obj.mainFlow)) {
-      globalRegistry.useCases.set(obj.id, item);
-      continue;
-    }
-    
-    // actors
-    if (exportName.toLowerCase().includes('actor') ||
-        (obj.type && ['human', 'system', 'external'].includes(obj.type as string) && !obj.mainFlow)) {
-      globalRegistry.actors.set(obj.id, item);
-      continue;
-    }
-    
-    // components / containers
-    if (exportName.toLowerCase().includes('component') ||
-        exportName.toLowerCase().includes('container') ||
-        (obj.type && ['person', 'system', 'container', 'component'].includes(obj.type as string))) {
-      globalRegistry.components.set(obj.id, item);
-      continue;
-    }
-    
-    // entities
-    if (exportName.toLowerCase().includes('entit') ||
-        (obj.name && obj.attributes && Array.isArray(obj.attributes))) {
-      globalRegistry.entities.set(obj.id, item);
-      continue;
-    }
-    
-    // terms / acronyms / glossary
-    if (exportName.toLowerCase().includes('term') ||
-        exportName.toLowerCase().includes('acronym') ||
-        exportName.toLowerCase().includes('glossary') ||
-        (obj.term && obj.definition)) {
-      globalRegistry.glossaryTerms.set(obj.id, item);
-      continue;
-    }
-    
-    // relations
-    if (exportName.toLowerCase().includes('relation') ||
-        (obj.from && obj.to && obj.label)) {
-      globalRegistry.relations.set(obj.id, item);
-      continue;
-    }
-    
-    // layers
-    if (exportName.toLowerCase().includes('layer') ||
-        (obj.name && typeof obj.order === 'number')) {
-      globalRegistry.layers.set(obj.id, item);
-      continue;
-    }
-    
-    // boundaries
-    if (exportName.toLowerCase().includes('boundar') ||
-        (obj.type && ['system', 'context', 'container', 'deployment'].includes(obj.type as string) && obj.description)) {
-      globalRegistry.boundaries.set(obj.id, item);
-      continue;
-    }
-    
-    // screens
-    if (exportName.toLowerCase().includes('screen') ||
-        (obj.type && ['page', 'modal', 'drawer', 'panel', 'wizard'].includes(obj.type as string) && obj.auth)) {
-      globalRegistry.screens.set(obj.id, item);
-      continue;
-    }
-    
-    // testRefs
-    if (exportName.toLowerCase().includes('testref') ||
-        exportName.toLowerCase().includes('test-ref') ||
-        (obj.source && obj.verifiesRequirements && Array.isArray(obj.verifiesRequirements))) {
-      globalRegistry.testRefs.set(obj.id, item);
-      continue;
-    }
-    
-    // artifacts
-    if (exportName.toLowerCase().includes('artifact') ||
-        (obj.category && obj.location && obj.purpose &&
-         ['ssot', 'human-readable', 'machine-readable', 'implementation'].includes(obj.category as string))) {
-      globalRegistry.artifacts.set(obj.id, item);
-      continue;
     }
   }
 }
 
 // ============================================================================
-// Model Loading
+// File Loading
 // ============================================================================
 
 /**
- * Dynamically import TS files from specified directory and collect models
+ * Dynamically import TS files from specified directory.
+ * Model class instances found in exports are registered to core registry.
+ * Spec data is registered via Model.register() side effects during import.
  */
 export async function loadModelsFromDirectory(
   dirPath: string,
   options: { recursive?: boolean } = {}
 ): Promise<string[]> {
   const loadedFiles: string[] = [];
-  
+
   if (!existsSync(dirPath)) {
     return loadedFiles;
   }
-  
+
   const entries = readdirSync(dirPath);
-  
+
   for (const entry of entries) {
     const fullPath = join(dirPath, entry);
     const stat = statSync(fullPath);
-    
+
     if (stat.isDirectory() && options.recursive) {
       const subFiles = await loadModelsFromDirectory(fullPath, options);
       loadedFiles.push(...subFiles);
     } else if (stat.isFile()) {
       const ext = extname(entry);
-      // Target .ts, .js, .mts, .mjs files
       if (['.ts', '.js', '.mts', '.mjs'].includes(ext) && !entry.endsWith('.d.ts')) {
-        // Exclude index.ts (possibly a re-export file)
         if (basename(entry, ext) === 'index') {
           continue;
         }
-        
+
         try {
-          // Dynamic import
           const module = await import(fullPath);
           loadedFiles.push(fullPath);
-          
-          // Register exported models to globalRegistry
-          registerExportedModels(module);
+          registerExportedModelInstances(module);
         } catch (error) {
-          console.error(`Failed to load model from ${fullPath}:`, error);
+          console.error(`Failed to load from ${fullPath}:`, error);
         }
       }
     }
   }
-  
+
   return loadedFiles;
 }
 
 /**
- * Load all models based on configuration
+ * Load all models and specs based on configuration.
+ * 
+ * 1. Reset spec store and model registry
+ * 2. Register Model class instances from config.models
+ * 3. Scan design/ files (triggers Model.register() calls as side effects)
+ * 4. Build registry from specStore
  */
 export async function loadAllModels(
   config: SpeckeeperConfig,
@@ -392,44 +126,13 @@ export async function loadAllModels(
   loadedFiles: string[];
   errors: Array<{ file: string; error: unknown }>;
 }> {
-  // Reset registry
-  resetGlobalRegistry();
-  
+  resetSpecStore();
+  clearModelRegistry();
+
   const loadedFiles: string[] = [];
   const errors: Array<{ file: string; error: unknown }> = [];
-  
-  // Load from design/ directory (compliant with spec section 7.1)
-  const designDir = resolve(cwd, config.designDir || 'design');
-  
-  // Standard directory structure (compliant with spec section 7.1)
-  const modelDirs = [
-    { path: join(designDir, 'requirements') },
-    { path: join(designDir, 'usecases') },
-    { path: join(designDir, 'architecture') },
-    { path: join(designDir, 'data-model') },
-    { path: join(designDir, 'screens') },
-    { path: join(designDir, 'flows') },
-    { path: join(designDir, 'glossary') },
-    // Also load files directly under design/ by default (index.ts, etc.)
-    { path: designDir },
-  ];
-  
-  for (const { path: dirPath } of modelDirs) {
-    if (!existsSync(dirPath)) {
-      continue;
-    }
-    
-    try {
-      const files = await loadModelsFromDirectory(dirPath, { recursive: true });
-      loadedFiles.push(...files);
-    } catch (error) {
-      errors.push({ file: dirPath, error });
-    }
-  }
-  
-  // Register Model instances from config.models
-  // (index.ts is skipped by the file scanner, so Model instances defined in
-  //  allModels via config.models need to be registered explicitly)
+
+  // Register Model class instances from config.models first
   if (config.models && Array.isArray(config.models)) {
     for (const model of config.models) {
       if (isModelInstance(model)) {
@@ -437,9 +140,43 @@ export async function loadAllModels(
       }
     }
   }
-  
+
+  const designDir = resolve(cwd, config.designDir || 'design');
+
+  const modelDirs = [
+    { path: join(designDir, '_models') },
+    { path: join(designDir, 'requirements') },
+    { path: join(designDir, 'usecases') },
+    { path: join(designDir, 'architecture') },
+    { path: join(designDir, 'data-model') },
+    { path: join(designDir, 'screens') },
+    { path: join(designDir, 'flows') },
+    { path: join(designDir, 'glossary') },
+    { path: designDir },
+  ];
+
+  for (const { path: dirPath } of modelDirs) {
+    if (!existsSync(dirPath)) {
+      continue;
+    }
+
+    try {
+      const files = await loadModelsFromDirectory(dirPath, { recursive: true });
+      loadedFiles.push(...files);
+    } catch (error) {
+      errors.push({ file: dirPath, error });
+    }
+  }
+
+  // Build registry from specStore (populated by Model.register() calls)
+  const store = getSpecStore();
+  const registry: ModelRegistry = {};
+  for (const [modelId, specMap] of store) {
+    registry[modelId] = specMap;
+  }
+
   return {
-    registry: getGlobalRegistry(),
+    registry,
     loadedFiles,
     errors,
   };
@@ -449,35 +186,13 @@ export async function loadAllModels(
 // Registry Helpers
 // ============================================================================
 
-/** Map model ID to registry key */
-const MODEL_ID_TO_REGISTRY_KEY: Record<string, keyof ModelRegistry> = {
-  'requirement': 'requirements',
-  'usecase': 'useCases',
-  'actor': 'actors',
-  'term': 'glossaryTerms',
-  'entity': 'entities',
-  'screen': 'screens',
-  'process-flow': 'processFlows',
-  'component': 'components',
-  'boundary': 'boundaries',
-  'layer': 'layers',
-  'relation': 'relations',
-  'rule': 'rules',
-  'transition': 'transitions',
-  'form': 'forms',
-  'api-ref': 'apiRefs',
-  'table-ref': 'tableRefs',
-  'test-ref': 'testRefs',
-  'artifact': 'artifacts',
-};
-
 /**
  * Get specs from registry for a given model ID
  */
 export function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): unknown[] {
-  const key = MODEL_ID_TO_REGISTRY_KEY[modelId];
-  if (!key || !registry[key]) return [];
-  return Array.from((registry[key] as Map<string, unknown>).values());
+  const map = registry[modelId];
+  if (!map) return [];
+  return Array.from(map.values());
 }
 
 /**
@@ -485,11 +200,11 @@ export function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): 
  */
 export function getRegistryStats(registry: ModelRegistry): Record<string, number> {
   const stats: Record<string, number> = {};
-  
+
   for (const [key, map] of Object.entries(registry)) {
-    stats[key] = (map as Map<string, unknown>).size;
+    stats[key] = map.size;
   }
-  
+
   return stats;
 }
 
@@ -498,13 +213,13 @@ export function getRegistryStats(registry: ModelRegistry): Record<string, number
  */
 export function getAllIds(registry: ModelRegistry): Set<string> {
   const allIds = new Set<string>();
-  
+
   for (const map of Object.values(registry)) {
-    for (const id of (map as Map<string, unknown>).keys()) {
+    for (const id of map.keys()) {
       allIds.add(id);
     }
   }
-  
+
   return allIds;
 }
 
@@ -514,10 +229,10 @@ export function getAllIds(registry: ModelRegistry): Set<string> {
 export function findModelType(
   registry: ModelRegistry,
   id: string
-): keyof ModelRegistry | null {
+): string | null {
   for (const [type, map] of Object.entries(registry)) {
-    if ((map as Map<string, unknown>).has(id)) {
-      return type as keyof ModelRegistry;
+    if (map.has(id)) {
+      return type;
     }
   }
   return null;
@@ -529,10 +244,10 @@ export function findModelType(
 export function getModelById(
   registry: ModelRegistry,
   id: string
-): { type: keyof ModelRegistry; model: unknown } | null {
+): { type: string; model: unknown } | null {
   const type = findModelType(registry, id);
   if (!type) return null;
-  
+
   return {
     type,
     model: registry[type].get(id),

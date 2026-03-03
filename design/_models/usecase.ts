@@ -84,7 +84,7 @@ export type UseCase = z.input<typeof UseCaseFlowSchema>;
 class ActorModel extends Model<typeof ActorSchema> {
   readonly id = 'actor';
   readonly name = 'Actor';
-  readonly idPrefix = 'ACT';
+  readonly idPrefix = 'UC-ACTOR';
   readonly schema = ActorSchema;
   readonly description = 'Defines actors';
   protected modelLevel: ModelLevel = 'L0';

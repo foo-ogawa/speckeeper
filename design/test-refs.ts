@@ -6,6 +6,7 @@
  * speckeeper check test verifies test file existence and acceptance criteria ID mentions.
  */
 import type { TestRef, TestCasePattern } from './_models/test-ref.ts';
+import { TestRefModel } from './_models/test-ref.ts';
 
 // ============================================================================
 // Helper Functions
@@ -552,5 +553,7 @@ export const testRefs: TestRef[] = [
     relations: deriveRelations(initTestPatterns, 'CMD-INIT'),
   },
 ];
+
+TestRefModel.instance.register(testRefs);
 
 console.log(`Test References loaded: ${testRefs.length} refs`);

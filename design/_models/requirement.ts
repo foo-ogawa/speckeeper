@@ -76,12 +76,12 @@ export type Requirement = z.input<typeof RequirementSchema>;
 // Model Class
 // ============================================================================
 
-class RequirementModel extends Model<typeof RequirementSchema> {
-  readonly id = 'requirement';
-  readonly name = 'Requirement';
-  readonly idPrefix = 'REQ';
+class RequirementModelBase extends Model<typeof RequirementSchema> {
+  readonly id: string = 'requirement';
+  readonly name: string = 'Requirement';
+  readonly idPrefix: string = 'REQ';
   readonly schema = RequirementSchema;
-  readonly description = 'Defines functional requirements, non-functional requirements, and constraints';
+  readonly description: string = 'Defines requirements';
   protected modelLevel: ModelLevel = 'L1';
 
   protected lintRules: LintRule<Requirement>[] = [
@@ -103,8 +103,8 @@ class RequirementModel extends Model<typeof RequirementSchema> {
     {
       id: 'req-id-format',
       severity: 'warning',
-      message: 'Requirement ID should follow naming convention (e.g., FR-001, NFR-002, CR-001)',
-      check: (spec) => !/^(FR|NFR|CR)-\d{3}$/.test(spec.id),
+      message: 'Requirement ID should follow naming convention ({PREFIX}-NNN)',
+      check: (spec) => !new RegExp(`^${this.idPrefix}-\\d{3}$`).test(spec.id),
     },
     {
       id: 'req-has-rationale',
@@ -185,7 +185,7 @@ class RequirementModel extends Model<typeof RequirementSchema> {
     targetModel: 'usecase',
     description: 'Verifies UseCases are satisfied by Requirements',
     check: (specs, registry): CoverageResult => {
-      const useCases = registry.useCases;
+      const useCases = registry['usecase'];
       if (!useCases) {
         return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
       }
@@ -259,7 +259,28 @@ class RequirementModel extends Model<typeof RequirementSchema> {
   ];
 }
 
-export { RequirementModel };
+class FunctionalRequirementModel extends RequirementModelBase {
+  readonly id = 'functional-requirement';
+  readonly name = 'Functional Requirement';
+  readonly idPrefix = 'FR';
+  readonly description = 'Defines functional requirements';
+}
+
+class NonFunctionalRequirementModel extends RequirementModelBase {
+  readonly id = 'nonfunctional-requirement';
+  readonly name = 'Non-Functional Requirement';
+  readonly idPrefix = 'NFR';
+  readonly description = 'Defines non-functional requirements (quality attributes)';
+}
+
+class ConstraintModel extends RequirementModelBase {
+  readonly id = 'constraint';
+  readonly name = 'Constraint';
+  readonly idPrefix = 'CR';
+  readonly description = 'Defines constraints';
+}
+
+export { RequirementModelBase as RequirementModel, FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel };
 
 // ============================================================================
 // Rendering Helper Functions

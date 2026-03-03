@@ -4,6 +4,7 @@
  * Defines the logical architecture of speckeeper itself.
  */
 import type { Component, Boundary, Layer, ArchitectureRelation } from './_models/architecture.ts';
+import { ActorComponentModel, ExternalSystemModel, ContainerModel, BoundaryModel, LayerModel, RelationModel } from './_models/architecture.ts';
 
 // ============================================================================
 // Actors (People) and External Systems
@@ -176,5 +177,12 @@ export const relations: ArchitectureRelation[] = [
 // ============================================================================
 
 export const allComponents: Component[] = [...actors, ...externalSystems, ...containers];
+
+ActorComponentModel.instance.register(actors);
+ExternalSystemModel.instance.register(externalSystems);
+ContainerModel.instance.register(containers);
+BoundaryModel.instance.register(boundaries);
+LayerModel.instance.register(layers);
+RelationModel.instance.register(relations);
 
 console.log('Architecture loaded successfully');

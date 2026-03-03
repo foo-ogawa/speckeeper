@@ -88,7 +88,7 @@ export type Rule = z.input<typeof RuleSchema>;
 class EntityModel extends Model<typeof EntitySchema> {
   readonly id = 'entity';
   readonly name = 'Entity';
-  readonly idPrefix = 'ENT';
+  readonly idPrefix = 'E';
   readonly schema = EntitySchema;
   readonly description = 'Defines conceptual entities (domain model)';
   protected modelLevel: ModelLevel = 'L2';
@@ -148,7 +148,7 @@ class EntityModel extends Model<typeof EntitySchema> {
     targetModel: 'artifact',
     description: 'Verifies concept model (Entity) is documented/implemented in Artifacts',
     check: (specs, registry): CoverageResult => {
-      const artifacts = registry.artifacts;
+      const artifacts = registry['artifact'];
       if (!artifacts) {
         return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
       }

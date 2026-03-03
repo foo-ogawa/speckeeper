@@ -85,12 +85,12 @@ export type ArchitectureRelation = z.input<typeof ArchitectureRelationSchema>;
 // Component Model Class
 // ============================================================================
 
-class ComponentModel extends Model<typeof ComponentSchema> {
-  readonly id = 'component';
-  readonly name = 'Component';
-  readonly idPrefix = 'COMP';
+class ComponentModelBase extends Model<typeof ComponentSchema> {
+  readonly id: string = 'component';
+  readonly name: string = 'Component';
+  readonly idPrefix: string = 'COMP';
   readonly schema = ComponentSchema;
-  readonly description = 'Defines architecture components';
+  readonly description: string = 'Defines architecture components';
   protected modelLevel: ModelLevel = 'L2';
 
   protected lintRules: LintRule<Component>[] = [
@@ -141,20 +141,17 @@ class ComponentModel extends Model<typeof ComponentSchema> {
     targetModel: 'requirement',
     description: 'Verifies functional requirements (FR-*) are implemented by Components',
     check: (specs, registry): CoverageResult => {
-      const requirements = registry.requirements;
+      const requirements = registry['functional-requirement'];
       if (!requirements) {
         return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
       }
 
-      // Get list of functional requirement (FR-*) IDs
       interface RequirementSpec { id: string; name: string; type: string }
       const functionalReqIds = new Set<string>();
       const reqMap = new Map<string, RequirementSpec>();
       for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
-        if (req.id.startsWith('FR-')) {
-          functionalReqIds.add(req.id);
-          reqMap.set(req.id, req);
-        }
+        functionalReqIds.add(req.id);
+        reqMap.set(req.id, req);
       }
 
       // Collect Requirements implemented via Component.relations
@@ -244,4 +241,33 @@ class RelationModel extends Model<typeof ArchitectureRelationSchema> {
   protected exporters: Exporter<ArchitectureRelation>[] = [];
 }
 
-export { ComponentModel, BoundaryModel, LayerModel, RelationModel };
+class ActorComponentModel extends ComponentModelBase {
+  readonly id = 'actor-component';
+  readonly name = 'Actor (Architecture)';
+  readonly idPrefix = 'ACTOR';
+  readonly description = 'Defines actors (people) in the architecture';
+}
+
+class ExternalSystemModel extends ComponentModelBase {
+  readonly id = 'external-system';
+  readonly name = 'External System';
+  readonly idPrefix = 'EXT';
+  readonly description = 'Defines external systems';
+}
+
+class ContainerModel extends ComponentModelBase {
+  readonly id = 'container';
+  readonly name = 'Container';
+  readonly idPrefix = 'CONT';
+  readonly description = 'Defines containers (deployable units)';
+}
+
+export {
+  ComponentModelBase as ComponentModel,
+  ActorComponentModel,
+  ExternalSystemModel,
+  ContainerModel,
+  BoundaryModel,
+  LayerModel,
+  RelationModel,
+};
