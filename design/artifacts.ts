@@ -9,7 +9,7 @@ import type { Artifact } from './_models/artifact.ts';
 import type { DirectoryEntry } from './_models/directory-entry.ts';
 import { ArtifactModel } from './_models/artifact.ts';
 import { DirectoryEntryModel } from './_models/directory-entry.ts';
-import { defineSpecs } from '../src/core/model.js';
+import { defineSpecs } from '../src/core/model.ts';
 
 // ============================================================================
 // Artifact Definition
