@@ -6,7 +6,7 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, type ModelRegistry } from '../utils/model-loader.js';
+import { getSpecStore, registerModelsFromConfig, findModelTypeBySpecId } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -46,7 +46,6 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
     process.exit(1);
   }
   
-  const cwd = process.cwd();
   const config = await loadConfig(options.config);
   const maxDepth = options.depth ? parseInt(options.depth, 10) : 3;
   
@@ -55,20 +54,19 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
   console.log('');
   
   try {
-    // Load all models
     console.log(chalk.blue('  Loading models...'));
-    const { registry } = await loadAllModels(config, cwd);
+    registerModelsFromConfig(config.models || []);
     
-    // Find target
-    const target = findById(registry, targetId);
-    if (!target) {
+    const store = getSpecStore();
+    
+    const targetType = findModelTypeBySpecId(targetId);
+    if (!targetType) {
       console.error(chalk.red(`  Error: Target '${targetId}' not found`));
       process.exit(1);
     }
     
-    // Analyze impact
     console.log(chalk.blue('  Analyzing impact...'));
-    const result = analyzeImpact(registry, targetId, target.type, maxDepth);
+    const result = analyzeImpact(store, targetId, targetType, maxDepth);
     
     // Output results
     outputImpactResults(result, options);
@@ -83,17 +81,8 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
 // Impact Analysis
 // ============================================================================
 
-function findById(registry: ModelRegistry, id: string): { type: string; data: unknown } | null {
-  for (const [type, map] of Object.entries(registry)) {
-    if (map instanceof Map && map.has(id)) {
-      return { type, data: map.get(id) };
-    }
-  }
-  return null;
-}
-
 function analyzeImpact(
-  registry: ModelRegistry,
+  store: Map<string, Map<string, unknown>>,
   targetId: string,
   targetType: string,
   maxDepth: number
@@ -101,13 +90,10 @@ function analyzeImpact(
   const impactedNodes: ImpactNode[] = [];
   const visited = new Set<string>([targetId]);
   
-  // Find references to the target
   function findReferences(id: string, depth: number): void {
     if (depth > maxDepth) return;
     
-    for (const [type, map] of Object.entries(registry)) {
-      if (!(map instanceof Map)) continue;
-      
+    for (const [type, map] of store) {
       for (const [itemId, item] of map) {
         if (visited.has(itemId)) continue;
         

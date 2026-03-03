@@ -8,8 +8,13 @@ export {
   getModel,
   getAllModels,
   clearModelRegistry,
+  registerModelsFromConfig,
   getSpecStore,
   resetSpecStore,
+  getSpecs,
+  getAllSpecIds,
+  findModelTypeBySpecId,
+  getSpecById,
   // Re-exported from relation.ts
   RELATION_TYPES,
   RELATION_CONSTRAINTS,

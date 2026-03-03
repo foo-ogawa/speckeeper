@@ -8,8 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, getSpecsFromRegistry, type ModelRegistry } from '../utils/model-loader.js';
-import { getAllModels, type CoverageResult } from '../core/model.js';
+import { getAllModels, getSpecs, getSpecStore, registerModelsFromConfig, type CoverageResult } from '../core/model.js';
 import { parse as parseYaml } from 'yaml';
 
 // ============================================================================
@@ -56,9 +55,8 @@ export async function checkCommand(
   console.log('');
   
   try {
-    // Load all models
     console.log(chalk.blue('  Loading models...'));
-    const { registry } = await loadAllModels(config, cwd);
+    registerModelsFromConfig(config.models || []);
     
     const results: CheckResult[] = [];
     const models = getAllModels();
@@ -69,7 +67,7 @@ export async function checkCommand(
     
     // Run checks for each model that has an external checker
     for (const model of models) {
-      const specs = getSpecsFromRegistry(registry, model.id);
+      const specs = getSpecs(model.id);
       if (specs.length === 0) continue;
       
       for (const spec of specs) {
@@ -116,7 +114,7 @@ export async function checkCommand(
     if (options.coverage) {
       console.log('');
       console.log(chalk.blue('  Coverage checks...'));
-      const coverageResults = runAllCoverageChecks(registry);
+      const coverageResults = runAllCoverageChecks();
       
       if (coverageResults.length > 0) {
         outputAllCoverageResults(coverageResults);
@@ -227,15 +225,15 @@ interface CoverageCheckResult {
  * Detect all models with coverageChecker and run coverage checks.
  * Logic is defined in each model (design/_models/).
  */
-function runAllCoverageChecks(registry: ModelRegistry): CoverageCheckResult[] {
+function runAllCoverageChecks(): CoverageCheckResult[] {
   const models = getAllModels();
   const results: CoverageCheckResult[] = [];
+  const registry = Object.fromEntries(getSpecStore());
   
-  // Search for models with coverageChecker and execute
   for (const model of models) {
     const checker = model.getCoverageChecker();
     if (checker) {
-      const specs = getSpecsFromRegistry(registry, model.id);
+      const specs = getSpecs(model.id);
       const result = model.checkCoverage(specs, registry);
       
       if (result) {

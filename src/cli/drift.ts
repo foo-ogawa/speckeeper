@@ -8,8 +8,7 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, getSpecsFromRegistry } from '../utils/model-loader.js';
-import { getAllModels } from '../core/model.js';
+import { getAllModels, getSpecs, registerModelsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -44,16 +43,15 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
   console.log('');
   
   try {
-    // Load all models
     console.log(chalk.blue('  Loading models...'));
-    const { registry } = await loadAllModels(config, cwd);
+    registerModelsFromConfig(config.models || []);
     
     const results: DriftResult[] = [];
     const models = getAllModels();
     
     // Check each model's generated files
     for (const model of models) {
-      const specs = getSpecsFromRegistry(registry, model.id);
+      const specs = getSpecs(model.id);
       if (specs.length === 0) continue;
       
       for (const exporter of model.getExporters()) {

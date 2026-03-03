@@ -520,3 +520,57 @@ export function getAllModels(): Model<any>[] {
 export function clearModelRegistry(): void {
   modelRegistry.clear();
 }
+
+/**
+ * Register model instances from config.models array.
+ * Filters out non-Model values. Call this once after config is loaded.
+ */
+export function registerModelsFromConfig(models: unknown[]): void {
+  for (const model of models) {
+    if (model && typeof model === 'object' && 'id' in model && 'schema' in model) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      registerModel(model as Model<any>);
+    }
+  }
+}
+
+/**
+ * Get specs for a given model ID from specStore
+ */
+export function getSpecs(modelId: string): unknown[] {
+  const map = specStore.get(modelId);
+  if (!map) return [];
+  return Array.from(map.values());
+}
+
+/**
+ * Get all spec IDs across all models
+ */
+export function getAllSpecIds(): Set<string> {
+  const ids = new Set<string>();
+  for (const map of specStore.values()) {
+    for (const id of map.keys()) {
+      ids.add(id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Find which model type a spec ID belongs to
+ */
+export function findModelTypeBySpecId(specId: string): string | null {
+  for (const [modelId, map] of specStore) {
+    if (map.has(specId)) return modelId;
+  }
+  return null;
+}
+
+/**
+ * Get a spec by ID (searches all models)
+ */
+export function getSpecById(specId: string): { modelId: string; spec: unknown } | null {
+  const modelId = findModelTypeBySpecId(specId);
+  if (!modelId) return null;
+  return { modelId, spec: specStore.get(modelId)!.get(specId) };
+}

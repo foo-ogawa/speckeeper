@@ -5,11 +5,10 @@
  */
 
 import chalk from 'chalk';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles, ensureDir } from '../utils/file-writer.js';
-import { getAllModels } from '../core/model.js';
-import { loadAllModels, getSpecsFromRegistry } from '../utils/model-loader.js';
+import { getAllModels, getSpecs, registerModelsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Build Command Options
@@ -43,18 +42,8 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log('');
   
   try {
-    // Load all models from design/ and config
     console.log(chalk.blue('  Loading models...'));
-    const { registry, loadedFiles, errors: loadErrors } = await loadAllModels(config, cwd);
-    
-    if (loadErrors.length > 0) {
-      console.log(chalk.yellow(`  ⚠ ${loadErrors.length} file(s) failed to load`));
-      for (const { file, error } of loadErrors) {
-        console.log(chalk.yellow(`    - ${relative(cwd, file)}: ${error}`));
-      }
-    }
-    
-    console.log(chalk.gray(`  Loaded: ${loadedFiles.length} files`));
+    registerModelsFromConfig(config.models || []);
     console.log('');
     
     // Ensure base output directories exist
@@ -82,7 +71,7 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
         continue;
       }
       
-      const specs = getSpecsFromRegistry(registry, model.id);
+      const specs = getSpecs(model.id);
       
       if (specs.length === 0) {
         if (options.verbose) {

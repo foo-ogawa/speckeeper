@@ -5,10 +5,8 @@
  */
 
 import chalk from 'chalk';
-import { relative } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, getSpecsFromRegistry, type ModelRegistry } from '../utils/model-loader.js';
-import { getAllModels } from '../core/model.js';
+import { getAllModels, getSpecs, registerModelsFromConfig } from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -47,7 +45,6 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
   console.log(chalk.blue('speckeeper lint'));
   console.log('');
   
-  const cwd = process.cwd();
   const config = await loadConfig(options.config);
   
   console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
@@ -57,23 +54,15 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
   console.log('');
   
   try {
-    // Load all models from design/
     console.log(chalk.blue('  Loading models...'));
-    const { registry, loadedFiles, errors: loadErrors } = await loadAllModels(config, cwd);
+    registerModelsFromConfig(config.models || []);
     
-    if (loadErrors.length > 0) {
-      console.log(chalk.yellow(`  ⚠ ${loadErrors.length} file(s) failed to load`));
-      for (const { file, error } of loadErrors) {
-        console.log(chalk.yellow(`    - ${relative(cwd, file)}: ${error}`));
-      }
-    }
-    
-    console.log(chalk.gray(`  Loaded: ${loadedFiles.length} files`));
+    const models = getAllModels();
+    console.log(chalk.gray(`  Loaded: ${models.length} models`));
     console.log('');
     
-    // Run lint using model classes
     console.log(chalk.blue('  Running lint checks...'));
-    const result = runModelLint(registry, options);
+    const result = runModelLint(options);
     
     // Output results
     console.log('');
@@ -94,13 +83,12 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
 // Lint Runner
 // ============================================================================
 
-function runModelLint(registry: ModelRegistry, options: LintCommandOptions): LintResult {
+function runModelLint(options: LintCommandOptions): LintResult {
   const issues: LintIssue[] = [];
   const models = getAllModels();
   
   for (const model of models) {
-    // Get specs from registry for this model type
-    const specs = getSpecsFromRegistry(registry, model.id);
+    const specs = getSpecs(model.id);
     
     if (specs.length === 0) continue;
     
