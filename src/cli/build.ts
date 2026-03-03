@@ -5,10 +5,11 @@
  */
 
 import chalk from 'chalk';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles, ensureDir } from '../utils/file-writer.js';
 import { getAllModels } from '../core/model.js';
+import { loadAllModels, getSpecsFromRegistry } from '../utils/model-loader.js';
 
 // ============================================================================
 // Build Command Options
@@ -42,6 +43,20 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log('');
   
   try {
+    // Load all models from design/ and config
+    console.log(chalk.blue('  Loading models...'));
+    const { registry, loadedFiles, errors: loadErrors } = await loadAllModels(config, cwd);
+    
+    if (loadErrors.length > 0) {
+      console.log(chalk.yellow(`  ⚠ ${loadErrors.length} file(s) failed to load`));
+      for (const { file, error } of loadErrors) {
+        console.log(chalk.yellow(`    - ${relative(cwd, file)}: ${error}`));
+      }
+    }
+    
+    console.log(chalk.gray(`  Loaded: ${loadedFiles.length} files`));
+    console.log('');
+    
     // Ensure base output directories exist
     ensureDir(join(cwd, config.docsDir));
     ensureDir(join(cwd, config.specsDir));
@@ -50,7 +65,7 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
     const models = getAllModels();
     
     if (models.length === 0) {
-      console.log(chalk.yellow('  No models registered. Run model registration first.'));
+      console.log(chalk.yellow('  No models registered. Add models to speckeeper.config.ts.'));
       return;
     }
     
@@ -67,10 +82,7 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
         continue;
       }
       
-      // TODO: Load specs for this model from design/ directory
-      // For now, this is a placeholder - actual implementation needs
-      // to load specs from the appropriate design/*.ts files
-      const specs: unknown[] = [];
+      const specs = getSpecsFromRegistry(registry, model.id);
       
       if (specs.length === 0) {
         if (options.verbose) {

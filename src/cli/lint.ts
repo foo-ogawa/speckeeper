@@ -7,7 +7,7 @@
 import chalk from 'chalk';
 import { relative } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
-import { loadAllModels, type ModelRegistry } from '../utils/model-loader.js';
+import { loadAllModels, getSpecsFromRegistry, type ModelRegistry } from '../utils/model-loader.js';
 import { getAllModels } from '../core/model.js';
 
 // ============================================================================
@@ -134,28 +134,6 @@ function runModelLint(registry: ModelRegistry, options: LintCommandOptions): Lin
   }
   
   return { issues, errors, warnings, infos };
-}
-
-function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): unknown[] {
-  // Map model IDs to registry keys
-  const registryMap: Record<string, keyof ModelRegistry> = {
-    'requirement': 'requirements',
-    'usecase': 'useCases',
-    'actor': 'actors',
-    'term': 'glossaryTerms',
-    'entity': 'entities',
-    'screen': 'screens',
-    'process-flow': 'processFlows',
-    'component': 'components',
-    'boundary': 'boundaries',
-    'layer': 'layers',
-    'relation': 'relations',
-  };
-  
-  const key = registryMap[modelId];
-  if (!key || !registry[key]) return [];
-  
-  return Array.from((registry[key] as Map<string, unknown>).values());
 }
 
 // ============================================================================

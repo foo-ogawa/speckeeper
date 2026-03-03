@@ -449,6 +449,37 @@ export async function loadAllModels(
 // Registry Helpers
 // ============================================================================
 
+/** Map model ID to registry key */
+const MODEL_ID_TO_REGISTRY_KEY: Record<string, keyof ModelRegistry> = {
+  'requirement': 'requirements',
+  'usecase': 'useCases',
+  'actor': 'actors',
+  'term': 'glossaryTerms',
+  'entity': 'entities',
+  'screen': 'screens',
+  'process-flow': 'processFlows',
+  'component': 'components',
+  'boundary': 'boundaries',
+  'layer': 'layers',
+  'relation': 'relations',
+  'rule': 'rules',
+  'transition': 'transitions',
+  'form': 'forms',
+  'api-ref': 'apiRefs',
+  'table-ref': 'tableRefs',
+  'test-ref': 'testRefs',
+  'artifact': 'artifacts',
+};
+
+/**
+ * Get specs from registry for a given model ID
+ */
+export function getSpecsFromRegistry(registry: ModelRegistry, modelId: string): unknown[] {
+  const key = MODEL_ID_TO_REGISTRY_KEY[modelId];
+  if (!key || !registry[key]) return [];
+  return Array.from((registry[key] as Map<string, unknown>).values());
+}
+
 /**
  * Get registry statistics
  */
