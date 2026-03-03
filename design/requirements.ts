@@ -15,7 +15,7 @@
  */
 import type { Requirement } from './_models/requirement.ts';
 import { FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel } from './_models/requirement.ts';
-import { defineSpecs } from '../src/core/model.ts';
+import { defineSpecs } from '../src/core/model';
 
 // ============================================================================
 // Functional Requirements - 8.1 Common Requirements

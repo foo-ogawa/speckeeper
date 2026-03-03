@@ -5,7 +5,7 @@
  */
 import type { UseCase, Actor } from './_models/usecase.ts';
 import { ActorModel, UseCaseModel } from './_models/usecase.ts';
-import { defineSpecs } from '../src/core/model.ts';
+import { defineSpecs } from '../src/core/model';
 
 // ============================================================================
 // Actor Definitions

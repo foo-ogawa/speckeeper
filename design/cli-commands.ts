@@ -3,7 +3,7 @@
  */
 import type { CLICommand } from './_models/cli-command.ts';
 import { CLICommandModel } from './_models/cli-command.ts';
-import { defineSpecs } from '../src/core/model.ts';
+import { defineSpecs } from '../src/core/model';
 
 // ============================================================================
 // All Commands

@@ -5,7 +5,7 @@
  */
 import type { Component, Boundary, Layer, ArchitectureRelation } from './_models/architecture.ts';
 import { ActorComponentModel, ExternalSystemModel, ContainerModel, BoundaryModel, LayerModel, RelationModel } from './_models/architecture.ts';
-import { defineSpecs } from '../src/core/model.ts';
+import { defineSpecs } from '../src/core/model';
 
 // ============================================================================
 // Actors (People) and External Systems

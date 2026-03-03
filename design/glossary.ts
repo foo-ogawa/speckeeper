@@ -6,7 +6,7 @@
  * in docs/framework_requirements_spec.md is generated from this file.
  */
 import type { Term } from './_models/term.ts';
-import { defineSpecs } from '../src/core/model.ts';
+import { defineSpecs } from '../src/core/model';
 import { TermModel } from './_models/term.ts';
 
 // ============================================================================

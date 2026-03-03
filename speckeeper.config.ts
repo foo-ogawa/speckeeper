@@ -1,7 +1,7 @@
 /**
  * speckeeper configuration file
  */
-import { defineConfig } from './src/core/config-api.ts';
+import { defineConfig } from './src/core/config-api';
 import design from './design/index';
 
 export default defineConfig({
