@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Type check
         run: npm run typecheck
 
@@ -33,9 +36,6 @@ jobs:
 
       - name: Lint design files
         run: npm run lint:design
-
-      - name: Build
-        run: npm run build
 
       - name: Run speckeeper lint
         run: npx speckeeper lint
