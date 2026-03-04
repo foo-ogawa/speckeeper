@@ -42,6 +42,7 @@ export const RELATION_TYPES = [
   'implements',
   'refines',
   'verifies',
+  'verifiedBy',
   'satisfies',
   'traces',
   'relatedTo',
@@ -136,6 +137,12 @@ export const RELATION_CONSTRAINTS: Record<RelationType, RelationConstraint> = {
   'traces': {
     levelRule: 'any',
     propagation: 'both',
+  },
+  // Spec→Test (verification relationship: spec is verified by test code)
+  'verifiedBy': {
+    allowedTargetLevels: ['L2', 'L3'],
+    levelRule: 'any',
+    propagation: 'backward',
   },
   // General relation
   'relatedTo': {

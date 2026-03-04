@@ -3,7 +3,8 @@
  */
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
-import type { LintRule, Exporter, CoverageChecker, CoverageResult, ModelLevel } from '../../src/core/model.ts';
+import type { LintRule, Exporter, ModelLevel } from '../../src/core/model.ts';
+import { requireField, relationCoverage } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -94,12 +95,7 @@ class ComponentModelBase extends Model<typeof ComponentSchema> {
   protected modelLevel: ModelLevel = 'L2';
 
   protected lintRules: LintRule<Component>[] = [
-    {
-      id: 'component-has-description',
-      severity: 'warning',
-      message: 'Component should have a description',
-      check: (spec) => !spec.description || spec.description.trim() === '',
-    },
+    requireField<Component>('description'),
   ];
 
   protected exporters: Exporter<Component>[] = [
@@ -208,52 +204,11 @@ class ContainerModel extends ComponentModelBase {
   readonly idPrefix = 'CONT';
   readonly description = 'Defines containers (deployable units)';
 
-  protected coverageChecker: CoverageChecker<Component> = {
-    targetModel: 'requirement',
+  protected coverageChecker = relationCoverage<Component>({
+    targetModel: 'functional-requirement',
     description: 'Verifies functional requirements (FR-*) are implemented by Containers',
-    check: (specs, registry): CoverageResult => {
-      const requirements = registry['functional-requirement'];
-      if (!requirements) {
-        return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
-      }
-
-      interface RequirementSpec { id: string; name: string; type: string }
-      const functionalReqIds = new Set<string>();
-      const reqMap = new Map<string, RequirementSpec>();
-      for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
-        functionalReqIds.add(req.id);
-        reqMap.set(req.id, req);
-      }
-
-      const implementedReqIds = new Set<string>();
-      for (const comp of specs) {
-        if (!comp.relations) continue;
-        for (const rel of comp.relations) {
-          if (rel.type === 'implements' && rel.target.startsWith('FR-')) {
-            implementedReqIds.add(rel.target);
-          }
-        }
-      }
-
-      const coveredItems: CoverageResult['coveredItems'] = [];
-      const uncoveredItems: CoverageResult['uncoveredItems'] = [];
-      for (const reqId of functionalReqIds) {
-        const req = reqMap.get(reqId);
-        if (implementedReqIds.has(reqId)) {
-          coveredItems.push({ id: reqId, description: req?.name });
-        } else {
-          uncoveredItems.push({ id: reqId, description: req?.name });
-        }
-      }
-
-      const total = functionalReqIds.size;
-      const covered = coveredItems.length;
-      const uncovered = uncoveredItems.length;
-      const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
-
-      return { total, covered, uncovered, coveragePercent, coveredItems, uncoveredItems };
-    },
-  };
+    relationType: 'implements',
+  });
 }
 
 export {

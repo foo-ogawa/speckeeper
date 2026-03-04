@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { Model } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { requireField } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -43,12 +44,7 @@ class ArtifactModel extends Model<typeof ArtifactSchema> {
   protected modelLevel: ModelLevel = 'L3';
 
   protected lintRules: LintRule<Artifact>[] = [
-    {
-      id: 'artifact-has-purpose',
-      severity: 'error',
-      message: 'Artifact must have a purpose',
-      check: (spec) => !spec.purpose || spec.purpose.trim() === '',
-    },
+    requireField<Artifact>('purpose', 'error'),
     {
       id: 'artifact-id-format',
       severity: 'error',

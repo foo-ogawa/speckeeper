@@ -1,11 +1,10 @@
 /**
  * Template registry
  *
- * Maps mermaid node IDs to model template names and
- * external target node IDs to checker template names.
- *
- * Rule: Node ID = ID Prefix. Multiple node IDs can map to the same
- * template file (e.g. SR/FR/NFR → requirement.ts with 3 Model classes).
+ * Resolves mermaid node classes to model template info.
+ * All classes use the common base template (FR-SCF-028).
+ * Class name is used only for model name / file name derivation
+ * and node grouping — no class-specific templates exist.
  */
 
 import type { ModelLevel } from '../core/relation.js';
@@ -15,9 +14,9 @@ import type { ModelLevel } from '../core/relation.js';
 // ---------------------------------------------------------------------------
 
 export interface ModelTemplateInfo {
-  /** Template identifier */
-  templateName: string;
-  /** Default model level */
+  /** Template identifier — always 'base' (FR-SCF-028) */
+  templateName: 'base';
+  /** Default model level (inferred from subgraph) */
   defaultLevel: ModelLevel;
   /** ID prefix for spec instances (= node ID) */
   defaultIdPrefix: string;
@@ -28,113 +27,64 @@ export interface ModelTemplateInfo {
 }
 
 // ---------------------------------------------------------------------------
-// Node ID → template alias mapping
+// Subgraph → Level inference
 // ---------------------------------------------------------------------------
 
-const NODE_ALIAS: Record<string, string> = {
-  // L0
-  TERM: 'term',
-  CDM: 'entity',
-  // L1
-  SR: 'requirement',
-  FR: 'requirement',
-  NFR: 'requirement',
-  UC: 'usecase',
-  // L2
-  LDM: 'logical-entity',
-  AT: 'acceptance-test',
-  DT: 'data-test',
-  VC: 'validation-constraint',
-};
+const LEVEL_PATTERNS: Array<{ pattern: RegExp; level: ModelLevel }> = [
+  { pattern: /^L0$|business|domain/i, level: 'L0' },
+  { pattern: /^L1$|requirement/i, level: 'L1' },
+  { pattern: /^L2$|design|architecture/i, level: 'L2' },
+  { pattern: /^L3$|implementation|external/i, level: 'L3' },
+];
 
-/** Metadata per template (used for the file-level info, not per-node) */
-const TEMPLATE_META: Record<string, { level: ModelLevel; fileName: string; primaryTypeName: string }> = {
-  term:                    { level: 'L0', fileName: 'term', primaryTypeName: 'Term' },
-  entity:                  { level: 'L0', fileName: 'entity', primaryTypeName: 'Entity' },
-  requirement:             { level: 'L1', fileName: 'requirement', primaryTypeName: 'Requirement' },
-  usecase:                 { level: 'L1', fileName: 'usecase', primaryTypeName: 'UseCase' },
-  'logical-entity':        { level: 'L2', fileName: 'logical-entity', primaryTypeName: 'LogicalEntity' },
-  'acceptance-test':       { level: 'L2', fileName: 'acceptance-test', primaryTypeName: 'AcceptanceTest' },
-  'data-test':             { level: 'L2', fileName: 'data-test', primaryTypeName: 'DataTest' },
-  'validation-constraint': { level: 'L2', fileName: 'validation-constraint', primaryTypeName: 'ValidationConstraint' },
-};
+export function inferLevelFromSubgraph(subgraphId: string | undefined): ModelLevel {
+  if (!subgraphId) return 'L0';
+  for (const { pattern, level } of LEVEL_PATTERNS) {
+    if (pattern.test(subgraphId)) return level;
+  }
+  return 'L0';
+}
+
+// ---------------------------------------------------------------------------
+// Class-based resolution
+// ---------------------------------------------------------------------------
+
+const SPECKEEPER_CLASS = 'speckeeper';
 
 /**
- * Resolve a mermaid node ID to a model template.
- * Node ID = ID Prefix.
- * Unknown node IDs fall back to 'base' template.
+ * Resolve a mermaid node to a model template.
+ *
+ * Always uses the base template (FR-SCF-028). The artifact class
+ * (first non-speckeeper class) determines only model name and file name.
+ * Level is inferred from subgraph membership.
  */
-export function resolveModelTemplate(nodeId: string): ModelTemplateInfo {
-  const templateName = NODE_ALIAS[nodeId];
-  if (templateName) {
-    const meta = TEMPLATE_META[templateName];
+export function resolveModelTemplate(
+  nodeId: string,
+  nodeClasses?: string[],
+  subgraphId?: string,
+): ModelTemplateInfo {
+  const level = inferLevelFromSubgraph(subgraphId);
+
+  const artifactClass = nodeClasses
+    ?.find(c => c !== SPECKEEPER_CLASS);
+
+  if (!artifactClass) {
     return {
-      templateName,
-      defaultLevel: meta.level,
+      templateName: 'base',
+      defaultLevel: level,
       defaultIdPrefix: nodeId,
-      modelName: meta.primaryTypeName,
-      fileName: meta.fileName,
+      modelName: toPascalCase(nodeId),
+      fileName: toKebabCase(nodeId),
     };
   }
 
   return {
     templateName: 'base',
-    defaultLevel: 'L1',
+    defaultLevel: level,
     defaultIdPrefix: nodeId,
-    modelName: toPascalCase(nodeId),
-    fileName: toKebabCase(nodeId),
+    modelName: toPascalCase(artifactClass),
+    fileName: toKebabCase(artifactClass),
   };
-}
-
-// ---------------------------------------------------------------------------
-// Checker template alias mapping
-// ---------------------------------------------------------------------------
-
-export interface CheckerTemplateInfo {
-  templateName: string;
-  targetType: string;
-  fileName: string;
-}
-
-const CHECKER_ALIAS: Record<string, CheckerTemplateInfo> = {
-  DDL: {
-    templateName: 'ddl-checker',
-    targetType: 'ddl',
-    fileName: 'ddl-checker',
-  },
-  API: {
-    templateName: 'openapi-checker',
-    targetType: 'openapi',
-    fileName: 'openapi-checker',
-  },
-  E2ET: {
-    templateName: 'test-checker',
-    targetType: 'test',
-    fileName: 'e2e-test-checker',
-  },
-  UT: {
-    templateName: 'test-checker',
-    targetType: 'test',
-    fileName: 'unit-test-checker',
-  },
-  DUT: {
-    templateName: 'test-checker',
-    targetType: 'test',
-    fileName: 'data-unit-test-checker',
-  },
-  IT: {
-    templateName: 'test-checker',
-    targetType: 'test',
-    fileName: 'integration-test-checker',
-  },
-};
-
-/**
- * Resolve an external target node ID to a checker template.
- * Returns undefined for unknown targets (will use base-checker).
- */
-export function resolveCheckerTemplate(targetNodeId: string): CheckerTemplateInfo | undefined {
-  return CHECKER_ALIAS[targetNodeId];
 }
 
 // ---------------------------------------------------------------------------

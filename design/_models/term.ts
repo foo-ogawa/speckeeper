@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { requireField } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -70,12 +71,7 @@ class TermModel extends Model<typeof TermSchema> {
   protected modelLevel: ModelLevel = 'L0';
 
   protected lintRules: LintRule<Term>[] = [
-    {
-      id: 'term-has-definition',
-      severity: 'error',
-      message: 'Term must have a definition',
-      check: (spec) => !spec.definition || spec.definition.trim() === '',
-    },
+    requireField<Term>('definition', 'error'),
     {
       id: 'term-acronym-has-expanded-form',
       severity: 'warning',

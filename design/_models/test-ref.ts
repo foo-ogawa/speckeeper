@@ -7,6 +7,7 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ExternalChecker, CheckResult, CoverageChecker, CoverageResult, ModelLevel } from '../../src/core/model.ts';
+import { arrayMinLength, idFormat } from '../../src/core/dsl/index.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { glob } from 'glob';
@@ -210,24 +211,14 @@ class TestRefModel extends Model<typeof TestRefSchema> {
   protected modelLevel: ModelLevel = 'L3';
 
   protected lintRules: LintRule<TestRef>[] = [
-    {
-      id: 'test-has-requirements',
-      severity: 'error',
-      message: 'TestRef must verify at least one requirement',
-      check: (spec) => !spec.verifiesRequirements || spec.verifiesRequirements.length === 0,
-    },
+    arrayMinLength<TestRef>('verifiesRequirements', 1),
     {
       id: 'test-has-source',
       severity: 'error',
       message: 'TestRef must have a test source path',
       check: (spec) => !spec.source?.path,
     },
-    {
-      id: 'test-id-format',
-      severity: 'warning',
-      message: 'TestRef ID should follow naming convention (e.g., TEST-001)',
-      check: (spec) => !/^TEST-\d{3}$/.test(spec.id),
-    },
+    idFormat<TestRef>('TEST'),
     {
       id: 'test-has-patterns',
       severity: 'info',

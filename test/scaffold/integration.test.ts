@@ -7,7 +7,6 @@ import { join } from 'node:path';
 import { parseMarkdownFlowchart } from '../../src/scaffold/mermaid-parser.js';
 import { resolveEdges } from '../../src/scaffold/edge-vocabulary.js';
 import { generateAllModelFiles } from '../../src/scaffold/model-generator.js';
-import { generateAllCheckerFiles } from '../../src/scaffold/checker-generator.js';
 import { generateModelsIndex } from '../../src/scaffold/index-generator.js';
 import type { MermaidNode } from '../../src/scaffold/types.js';
 
@@ -25,7 +24,7 @@ describe('scaffold integration with app-skelton README.md', () => {
   it('parses the flowchart', () => {
     expect(flowchart).not.toBeNull();
     expect(flowchart.nodes.size).toBe(22);
-    expect(flowchart.edges.length).toBe(32);
+    expect(flowchart.edges.length).toBe(34);
   });
 
   describe('speckeeper-managed nodes', () => {
@@ -46,7 +45,22 @@ describe('scaffold integration with app-skelton README.md', () => {
     const { resolved, diagnostics } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
 
     it('resolves all edges', () => {
-      expect(resolved.length).toBe(32);
+      expect(resolved.length).toBe(34);
+    });
+
+    it('resolves verifiedBy as check category', () => {
+      const frToUt = resolved.find(e => e.sourceId === 'FR' && e.targetId === 'UT' && e.normalizedLabel === 'verifiedBy');
+      expect(frToUt).toBeDefined();
+      expect(frToUt?.vocabulary.category).toBe('check');
+
+      const frToIt = resolved.find(e => e.sourceId === 'FR' && e.targetId === 'IT' && e.normalizedLabel === 'verifiedBy');
+      expect(frToIt).toBeDefined();
+      expect(frToIt?.vocabulary.category).toBe('check');
+    });
+
+    it('resolves verifies as external category', () => {
+      const dutToOrm = resolved.find(e => e.sourceId === 'DUT' && e.targetId === 'ORM');
+      expect(dutToOrm?.vocabulary.category).toBe('external');
     });
 
     it('resolves speckeeper labels as exact RelationType matches', () => {
@@ -59,7 +73,7 @@ describe('scaffold integration with app-skelton README.md', () => {
 
       const frToAt = resolved.find(e => e.sourceId === 'FR' && e.targetId === 'AT');
       expect(frToAt?.normalizedLabel).toBe('includes');
-      expect(frToAt?.vocabulary.category).toBe('coverage');
+      expect(frToAt?.vocabulary.category).toBe('lint');
 
       const frToVc = resolved.find(e => e.sourceId === 'FR' && e.targetId === 'VC');
       expect(frToVc?.normalizedLabel).toBe('traces');
@@ -91,7 +105,7 @@ describe('scaffold integration with app-skelton README.md', () => {
       if (node.classes.includes(SPECKEEPER_CLASS)) spkNodes.push(node);
     }
     const { resolved } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
-    const modelFiles = generateAllModelFiles(spkNodes, resolved);
+    const modelFiles = generateAllModelFiles(spkNodes, resolved, flowchart.nodes);
 
     it('generates de-duplicated model files and spec data files', () => {
       const modelPaths = modelFiles.map(f => f.relativePath).filter(p => p.startsWith('_models/')).sort();
@@ -120,77 +134,47 @@ describe('scaffold integration with app-skelton README.md', () => {
       expect(indexFile!.content).toContain('mergeSpecs');
     });
 
-    it('SR, FR, NFR all map to requirement (1 model file with 3 Model classes)', () => {
+    it('SR, FR, NFR all map to requirement (1 model file, de-duplicated)', () => {
       const reqModelFiles = modelFiles.filter(f => f.relativePath === '_models/requirement.ts');
       expect(reqModelFiles).toHaveLength(1);
-      expect(reqModelFiles[0].content).toContain('SystemRequirementModel');
-      expect(reqModelFiles[0].content).toContain('FunctionalRequirementModel');
-      expect(reqModelFiles[0].content).toContain('NonFunctionalRequirementModel');
-      expect(reqModelFiles[0].content).toContain("idPrefix = 'SR'");
-      expect(reqModelFiles[0].content).toContain("idPrefix = 'FR'");
-      expect(reqModelFiles[0].content).toContain("idPrefix = 'NFR'");
+      expect(reqModelFiles[0].content).toContain('RequirementModel');
+      expect(reqModelFiles[0].content).toContain('RequirementSchema');
     });
 
-    it('requirement template includes acceptance criteria', () => {
-      const req = modelFiles.find(f => f.relativePath === '_models/requirement.ts')!;
-      expect(req.content).toContain('AcceptanceCriteriaSchema');
-      expect(req.content).toContain('req-acceptance-not-empty');
+    it('all generated models use base template with core factory imports', () => {
+      const allModelFiles = modelFiles.filter(f => f.relativePath.startsWith('_models/'));
+      for (const mf of allModelFiles) {
+        expect(mf.content).toContain("from 'speckeeper/dsl'");
+        expect(mf.content).toContain('requireField');
+        expect(mf.content).toContain("z.object({");
+      }
     });
 
-    it('logical-entity template has LDM prefix and includes columns', () => {
+    it('logical-entity model uses base template with LDM prefix', () => {
       const le = modelFiles.find(f => f.relativePath.includes('logical-entity'))!;
       expect(le.content).toContain("idPrefix = 'LDM'");
-      expect(le.content).toContain('ColumnSchema');
-      expect(le.content).toContain('lent-has-primary-key');
-    });
-  });
-
-  describe('checker generation', () => {
-    const { resolved } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
-    const checkerFiles = generateAllCheckerFiles(resolved, flowchart.nodes, SPECKEEPER_CLASS);
-
-    it('generates checkers for artifact targets', () => {
-      const paths = checkerFiles.map(f => f.relativePath).sort();
-      expect(paths).toContain('_checkers/ddl-checker.ts');
-      expect(paths).toContain('_checkers/openapi-checker.ts');
+      expect(le.content).toContain("from 'speckeeper/dsl'");
     });
 
-    it('generates test-checkers for test-like targets', () => {
-      const paths = checkerFiles.map(f => f.relativePath).sort();
-      expect(paths).toContain('_checkers/e2e-test-checker.ts');
-      expect(paths).toContain('_checkers/data-unit-test-checker.ts');
-      expect(paths).toContain('_checkers/unit-test-checker.ts');
-      expect(paths).toContain('_checkers/integration-test-checker.ts');
+    it('FR model includes checker bindings for implements (API) and verifiedBy (UT, IT)', () => {
+      const req = modelFiles.find(f => f.relativePath === '_models/requirement.ts')!;
+      expect(req.content).toContain('Checker Bindings');
+      expect(req.content).toContain('verifiedBy');
+      expect(req.content).toContain('testChecker');
     });
 
-    it('test-checkers verify file existence and spec ID references', () => {
-      const e2e = checkerFiles.find(f => f.relativePath.includes('e2e-test-checker'))!;
-      expect(e2e.content).toContain("targetType: 'test'");
-      expect(e2e.content).toContain('AcceptanceTest');
-      expect(e2e.content).toContain('spec.id');
-      expect(e2e.content).toContain('embedoc');
+    it('UC model includes checker binding for implements (API)', () => {
+      const uc = modelFiles.find(f => f.relativePath === '_models/usecase.ts')!;
+      expect(uc.content).toContain('Checker Bindings');
+      expect(uc.content).toContain('implements');
+      expect(uc.content).toContain('openapi');
     });
 
-    it('ddl-checker references LogicalEntity', () => {
-      const ddl = checkerFiles.find(f => f.relativePath.includes('ddl-checker'))!;
-      expect(ddl.content).toContain('LogicalEntity');
-      expect(ddl.content).toContain("targetType: 'ddl'");
-    });
-
-    it('openapi-checker references UseCase', () => {
-      const api = checkerFiles.find(f => f.relativePath.includes('openapi-checker'))!;
-      expect(api.content).toContain('UseCase');
-      expect(api.content).toContain("targetType: 'openapi'");
-    });
-
-    it('generates expected checker files matching flowchart edges', () => {
-      const paths = checkerFiles.map(f => f.relativePath).sort();
-      expect(paths).toContain('_checkers/ddl-checker.ts');
-      expect(paths).toContain('_checkers/openapi-checker.ts');
-      expect(paths).toContain('_checkers/unit-test-checker.ts');
-      expect(paths).toContain('_checkers/e2e-test-checker.ts');
-      expect(paths).toContain('_checkers/data-unit-test-checker.ts');
-      expect(paths).toContain('_checkers/integration-test-checker.ts');
+    it('LDM model includes checker binding for implements (DDL)', () => {
+      const ldm = modelFiles.find(f => f.relativePath === '_models/logical-entity.ts')!;
+      expect(ldm.content).toContain('Checker Bindings');
+      expect(ldm.content).toContain('implements');
+      expect(ldm.content).toContain('sqlschema');
     });
   });
 
@@ -200,22 +184,19 @@ describe('scaffold integration with app-skelton README.md', () => {
       if (node.classes.includes(SPECKEEPER_CLASS)) spkNodes.push(node);
     }
     const { resolved } = resolveEdges(flowchart.edges, flowchart.nodes, SPECKEEPER_CLASS);
-    const modelFiles = generateAllModelFiles(spkNodes, resolved);
+    const modelFiles = generateAllModelFiles(spkNodes, resolved, flowchart.nodes);
     const indexFile = generateModelsIndex(modelFiles);
 
     it('generates _models/index.ts', () => {
       expect(indexFile.relativePath).toBe('_models/index.ts');
     });
 
-    it('exports all model classes', () => {
-      expect(indexFile.content).toContain('SystemRequirementModel');
-      expect(indexFile.content).toContain('FunctionalRequirementModel');
-      expect(indexFile.content).toContain('NonFunctionalRequirementModel');
-      expect(indexFile.content).toContain('UseCaseModel');
-      expect(indexFile.content).toContain('ActorModel');
+    it('exports model classes generated from base template', () => {
+      expect(indexFile.content).toContain('RequirementModel');
+      expect(indexFile.content).toContain('UsecaseModel');
       expect(indexFile.content).toContain('TermModel');
-      expect(indexFile.content).toContain('ConceptualDataModel');
-      expect(indexFile.content).toContain('LogicalDataModel');
+      expect(indexFile.content).toContain('EntityModel');
+      expect(indexFile.content).toContain('LogicalEntityModel');
       expect(indexFile.content).toContain('AcceptanceTestModel');
       expect(indexFile.content).toContain('DataTestModel');
       expect(indexFile.content).toContain('ValidationConstraintModel');

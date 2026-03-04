@@ -12,6 +12,7 @@ export function generateBaseModel(params: ModelTemplateParams): string {
 import { z } from 'zod';
 import { Model, RelationSchema } from 'speckeeper';
 import type { LintRule, Exporter, ModelLevel } from 'speckeeper';
+import { requireField } from 'speckeeper/dsl';
 
 // =============================================================================
 // Schema Definition
@@ -44,12 +45,7 @@ class ${className} extends Model<typeof ${schemaName}> {
   protected modelLevel: ModelLevel = '${params.level}';
 
   protected lintRules: LintRule<${params.modelName}>[] = [
-    {
-      id: '${params.modelId}-has-description',
-      severity: 'warning',
-      message: '${params.modelName} should have a description',
-      check: (spec) => !spec.description || spec.description.trim() === '',
-    },
+    requireField<${params.modelName}>('description'),
   ];
 
   protected exporters: Exporter<${params.modelName}>[] = [];
