@@ -229,12 +229,12 @@ When scaffold detects `implements` or `verifiedBy` edges from speckeeper-managed
 
 The checker factory is selected based on the external node's class (see Section 4.3):
 
-| Edge | Target Class | Checker Factory |
-|------|--------------|-----------------|
-| `implements` | `openapi` | `externalOpenAPIChecker` |
-| `implements` | `sqlschema` | `externalSqlSchemaChecker` |
-| `verifiedBy` | `test` | `testChecker` |
-| `implements` / `verifiedBy` | (unknown) | Generic checker stub |
+| Edge | Target Class | Checker Factory | Validation Levels |
+|------|--------------|-----------------|-------------------|
+| `implements` | `openapi` | `externalOpenAPIChecker` | Existence (operationId, path, schema, x-spec-id), Structural (HTTP method), Type (parameter/response property types) |
+| `implements` | `sqlschema` | `externalSqlSchemaChecker` | Existence (table name), Structural (column names), Type (column type containment) |
+| `verifiedBy` | `test` | `testChecker` | Existence (test file + spec ID reference in describe/it/test blocks) |
+| `implements` / `verifiedBy` | (unknown) | Generic checker stub | N/A |
 
 Users activate the binding by importing the factory from `speckeeper/dsl` and assigning it to the model's `externalChecker` property.
 

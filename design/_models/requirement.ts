@@ -91,8 +91,8 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
     {
       id: 'req-id-format',
       severity: 'warning',
-      message: 'Requirement ID should follow naming convention ({PREFIX}-NNN)',
-      check: (spec) => !new RegExp(`^${this.idPrefix}-\\d{3}$`).test(spec.id),
+      message: 'Requirement ID should follow naming convention ({PREFIX}-NNN or {PREFIX}-NNNN)',
+      check: (spec) => !new RegExp(`^${this.idPrefix}-\\d{3,4}$`).test(spec.id),
     },
     requireField<Requirement>('rationale', 'info'),
   ];

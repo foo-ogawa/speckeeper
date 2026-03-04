@@ -12,6 +12,7 @@
  * - FR-6xx: External SSOT consistency check
  * - FR-7xx: Change impact analysis
  * - FR-8xx: Export
+ * - FR-9xx: CLI Test Infrastructure
  */
 import type { Requirement } from './_models/requirement.ts';
 import { FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel } from './_models/requirement.ts';
@@ -255,6 +256,59 @@ npx speckeeper init --force`,
       { type: 'satisfies', target: 'UC-001', description: 'Satisfies requirement definition use case' },
     ],
   },
+
+  // ---------------------------------------------------------------------------
+  // FR-106: Artifact Class-Based Scaffold (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-106',
+    name: 'Artifact Class-Based Scaffold',
+    description: 'Scaffold generates model files from a common base template based on artifact class specified in mermaid flowchart, replacing fixed node-to-template mappings',
+    type: 'functional',
+    priority: 'must',
+    category: 'common',
+    parentId: 'FR-105',
+    rationale: 'To eliminate fixed template mappings (NODE_ALIAS, TEMPLATE_META, CHECKER_ALIAS) and enable flexible artifact type addition via class specification',
+    acceptanceCriteria: [
+      { id: 'FR-106-01', description: 'Scaffold recognizes artifact class on mermaid flowchart nodes and generates model files from a common base template', verificationMethod: 'test' },
+      { id: 'FR-106-02', description: 'Artifact class is used for: (1) aggregating same-class nodes into one model file, (2) deriving model/file names from class name, (3) selecting checker bindings for external nodes', verificationMethod: 'test' },
+      { id: 'FR-106-03', description: 'Multiple nodes with same artifact class are aggregated into a single model file', verificationMethod: 'test' },
+      { id: 'FR-106-04', description: 'Nodes without artifact class are generated with base template using node ID as model name', verificationMethod: 'test' },
+      { id: 'FR-106-05', description: 'Model name is PascalCase of node ID/class name, file name is kebab-case (e.g., class "requirement" → Model "Requirement", file "requirement.ts")', verificationMethod: 'test' },
+      { id: 'FR-106-06', description: 'NODE_ALIAS (fixed node ID to template mapping) is removed', verificationMethod: 'test' },
+      { id: 'FR-106-07', description: 'TEMPLATE_META (fixed template name to level/type/filename registry) is removed', verificationMethod: 'test' },
+      { id: 'FR-106-08', description: 'CHECKER_ALIAS (fixed external node ID to checker template mapping) is removed', verificationMethod: 'test' },
+      { id: 'FR-106-09', description: 'Fixed model template functions (requirement.ts, usecase.ts, term.ts, etc.) are removed; only base template remains', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-105', description: 'Refines scaffold generation mechanism' },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // FR-107: Core-Provided Model Factories (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-107',
+    name: 'Core-Provided Model Factories',
+    description: 'speckeeper core provides generic lint rule, exporter, schema, test checker, and coverage checker factories to simplify model definitions',
+    type: 'functional',
+    priority: 'must',
+    category: 'common',
+    parentId: 'FR-104',
+    rationale: 'To reduce model definition verbosity by extracting common patterns into reusable core-provided factories',
+    acceptanceCriteria: [
+      { id: 'FR-107-01', description: 'Core provides generic lint rule factories: field required check, array min length check, ID format check, child element ID format check', verificationMethod: 'test' },
+      { id: 'FR-107-02', description: 'Core provides generic exporter factories: markdown single exporter (declarative title/metadata/section), markdown index exporter (declarative table columns)', verificationMethod: 'test' },
+      { id: 'FR-107-03', description: 'Core provides common schema base (id, name, description, relations) that models extend with custom fields', verificationMethod: 'test' },
+      { id: 'FR-107-04', description: 'Core provides test verification common logic (test file search, spec ID reference check, test result parsing) usable by specifying test file path only', verificationMethod: 'test' },
+      { id: 'FR-107-05', description: 'Core provides relation-based coverage checker common logic (coverage calculation against all IDs of target model)', verificationMethod: 'test' },
+      { id: 'FR-107-06', description: 'All core-provided factories are optional; custom logic can coexist with core factories', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-104', description: 'Refines model definition by providing reusable factories' },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -289,6 +343,27 @@ const modelRequirements: Requirement[] = [
     ],
     relations: [
       { type: 'satisfies', target: 'UC-006', description: 'Satisfies external SSOT consistency check use case' },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // FR-201: External SSOT Path Configuration (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-201',
+    name: 'External SSOT Path Configuration',
+    description: 'External SSOT file paths (OpenAPI, DDL, test code, etc.) are configured in speckeeper.config.ts, not in mermaid flowcharts',
+    type: 'functional',
+    priority: 'must',
+    category: 'model',
+    parentId: 'FR-200',
+    rationale: 'To centralize runtime configuration (file paths) in config file, keeping mermaid flowcharts as scaffold-only artifacts',
+    acceptanceCriteria: [
+      { id: 'FR-201-01', description: 'External SSOT file paths are defined in speckeeper.config.ts via ExternalSsotPaths', verificationMethod: 'test' },
+      { id: 'FR-201-02', description: 'Mermaid flowchart is scaffold-only and does not contain runtime configuration such as file paths', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-200', description: 'Refines external SSOT reference path management' },
     ],
   },
 ];
@@ -738,6 +813,31 @@ Coverage logic is defined in each project's design/.`,
       { type: 'refines', target: 'FR-600', description: 'Concretization of external SSOT consistency check (coverage)' },
     ],
   },
+
+  // ---------------------------------------------------------------------------
+  // FR-605: Model-Integrated Check Architecture (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-605',
+    name: 'Model-Integrated Check Architecture',
+    description: 'External SSOT and test verification logic is integrated into _models/ definitions, eliminating the separate _checkers/ directory',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-600',
+    rationale: 'To consolidate check logic with model definitions, reducing management overhead and ensuring model-check consistency',
+    acceptanceCriteria: [
+      { id: 'FR-605-01', description: 'Scaffold does not generate _checkers/ directory', verificationMethod: 'test' },
+      { id: 'FR-605-02', description: 'Verification logic is included in _models/ model definitions', verificationMethod: 'test' },
+      { id: 'FR-605-03', description: 'speckeeper check external-ssot uses verification logic from _models/ model definitions only', verificationMethod: 'test' },
+      { id: 'FR-605-04', description: 'speckeeper check external-ssot does not reference _checkers/ directory', verificationMethod: 'test' },
+      { id: 'FR-605-05', description: 'Checker template functions (src/scaffold/templates/checkers/) are removed; checker logic moves to core DSL (src/core/dsl/)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-600', description: 'Refines check architecture by integrating into models' },
+      { type: 'refines', target: 'FR-603', description: 'Refines external checker by model integration' },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -888,6 +988,52 @@ L0 (Business+Domain)      L1 (Requirements)    L2 (Design)          L3 (Detailed
       { type: 'satisfies', target: 'UC-002', description: 'Satisfies architecture definition use case' },
     ],
   },
+
+  // ---------------------------------------------------------------------------
+  // FR-702: Verified-By / Verifies Relation Types (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-702',
+    name: 'Verified-By / Verifies Relation Types',
+    description: 'Add verifiedBy relation type (spec→test code) and redefine verifies (test code→implementation code) for semantic accuracy',
+    type: 'functional',
+    priority: 'must',
+    category: 'impact',
+    parentId: 'FR-701',
+    rationale: 'To express spec-test-implementation relationships with semantically accurate relation names instead of overloading implements',
+    acceptanceCriteria: [
+      { id: 'FR-702-01', description: 'verifiedBy is added as RelationType with edge category "check" (spec→test code direction)', verificationMethod: 'test' },
+      { id: 'FR-702-02', description: 'verifies is redefined as "test code tests implementation code" (test→implementation direction)', verificationMethod: 'test' },
+      { id: 'FR-702-03', description: 'verifiedBy between speckeeper→speckeeper nodes produces a warning', verificationMethod: 'test' },
+      { id: 'FR-702-04', description: 'Same source node can have both implements and verifiedBy edges, each verified independently', verificationMethod: 'test' },
+      { id: 'FR-702-05', description: 'verifies (typically external→external) is recognized for traceability but not a checker generation target', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-701', description: 'Refines inter-model relation types with verifiedBy/verifies' },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // FR-703: Edge Type-Specific Relation Schema (from specs/002)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'FR-703',
+    name: 'Edge Type-Specific Relation Schema',
+    description: 'implements and verifiedBy relations have edge-type-specific schemas (ImplementsRelationSchema, VerifiedByRelationSchema) with additional properties beyond target ID',
+    type: 'functional',
+    priority: 'must',
+    category: 'impact',
+    parentId: 'FR-701',
+    rationale: 'To define structured relation data (path, target type, etc.) per edge type instead of using generic relation schema',
+    acceptanceCriteria: [
+      { id: 'FR-703-01', description: 'implements and verifiedBy have edge-type-specific schemas with additional properties (path, target type, etc.)', verificationMethod: 'test' },
+      { id: 'FR-703-02', description: 'Scaffold generates checker binding guidance comments when implements/verifiedBy edges are detected', verificationMethod: 'test' },
+      { id: 'FR-703-03', description: 'Edge-type-specific relation schemas are provided by core; no manual definition needed in model definitions', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-701', description: 'Refines relation schema with edge-type-specific structures' },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -912,6 +1058,343 @@ const exportRequirements: Requirement[] = [
   },
 ];
 
+// (FR-900~904 moved to Non-Functional Requirements as NFR-011~015)
+
+// ============================================================================
+// Functional Requirements - 8.11 External Checker Implementation (from specs/003)
+// ============================================================================
+
+const externalCheckerImplRequirements: Requirement[] = [
+  {
+    id: 'FR-1000',
+    name: 'External Checker Implementation',
+    description: 'Implement actual validation logic for externalOpenAPIChecker and externalSqlSchemaChecker, replacing stubs with real file parsing and verification',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    acceptanceCriteria: [
+      { id: 'FR-1000-01', description: 'All child requirements (FR-1001~FR-1019) are satisfied', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-600', description: 'Implements external SSOT consistency checks' },
+    ],
+  },
+
+  // OpenAPI Checker
+  {
+    id: 'FR-1001',
+    name: 'OpenAPI YAML/JSON Parsing',
+    description: 'externalOpenAPIChecker MUST parse YAML and JSON format OpenAPI files',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1001-01', description: 'YAML format OpenAPI files are parsed successfully', verificationMethod: 'test' },
+      { id: 'FR-1001-02', description: 'JSON format OpenAPI files are parsed successfully', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'OpenAPI parsing capability' },
+    ],
+  },
+  {
+    id: 'FR-1002',
+    name: 'OpenAPI Spec ID Verification',
+    description: 'externalOpenAPIChecker MUST verify spec IDs via operationId, path segments, schema names, and x-spec-id extensions',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1002-01', description: 'Spec ID found via operationId', verificationMethod: 'test' },
+      { id: 'FR-1002-02', description: 'Spec ID found via exact path segment match', verificationMethod: 'test' },
+      { id: 'FR-1002-03', description: 'Spec ID found via schema name', verificationMethod: 'test' },
+      { id: 'FR-1002-04', description: 'Spec ID found via x-spec-id extension', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Spec ID lookup strategy' },
+    ],
+  },
+  {
+    id: 'FR-1003',
+    name: 'OpenAPI Missing Spec ID Warning',
+    description: 'externalOpenAPIChecker MUST report a warning for each spec ID not found in the OpenAPI document',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1003-01', description: 'Warning reported when spec ID is not found', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Missing spec ID detection' },
+    ],
+  },
+  {
+    id: 'FR-1004',
+    name: 'OpenAPI Method Check',
+    description: 'externalOpenAPIChecker MAY optionally verify HTTP method exists for matched path (opt-in via config)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1004-01', description: 'Method check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1004-02', description: 'Warning reported for method mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Optional method verification' },
+    ],
+  },
+  {
+    id: 'FR-1005',
+    name: 'OpenAPI Parameter/Response Check',
+    description: 'externalOpenAPIChecker MAY optionally verify parameter names, response property names and types (opt-in via config)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1005-01', description: 'Parameter check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1005-02', description: 'Response property check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1005-03', description: 'Type containment is used for type comparison', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Optional parameter/response verification' },
+    ],
+  },
+  {
+    id: 'FR-1006',
+    name: 'OpenAPI Mismatch Warnings',
+    description: 'externalOpenAPIChecker MUST report warnings for method/parameter/property/type mismatches',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1006-01', description: 'Warning for missing/wrong HTTP method', verificationMethod: 'test' },
+      { id: 'FR-1006-02', description: 'Warning for missing request parameter', verificationMethod: 'test' },
+      { id: 'FR-1006-03', description: 'Warning for missing response property', verificationMethod: 'test' },
+      { id: 'FR-1006-04', description: 'Warning for type mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Mismatch reporting' },
+    ],
+  },
+  {
+    id: 'FR-1007',
+    name: 'OpenAPI File Not Found Error',
+    description: 'externalOpenAPIChecker MUST report an error when the OpenAPI file does not exist',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1007-01', description: 'Error reported with missing file path', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'File not found handling' },
+    ],
+  },
+  {
+    id: 'FR-1008',
+    name: 'OpenAPI Parse Failure Error',
+    description: 'externalOpenAPIChecker MUST report an error when the OpenAPI file cannot be parsed',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1008-01', description: 'Error reported for invalid YAML', verificationMethod: 'test' },
+      { id: 'FR-1008-02', description: 'Error reported for empty file', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Parse failure handling' },
+    ],
+  },
+
+  // SQL Schema Checker
+  {
+    id: 'FR-1009',
+    name: 'SQL DDL Parsing',
+    description: 'externalSqlSchemaChecker MUST parse SQL DDL files and extract table definitions',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1009-01', description: 'DDL parsed with node-sql-parser', verificationMethod: 'test' },
+      { id: 'FR-1009-02', description: 'Table names, column names, and column types extracted', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'DDL parsing capability' },
+    ],
+  },
+  {
+    id: 'FR-1010',
+    name: 'SQL Table Existence Check',
+    description: 'externalSqlSchemaChecker MUST verify spec-referenced table names exist in parsed DDL',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1010-01', description: 'Warning when referenced table is missing', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Table existence verification' },
+    ],
+  },
+  {
+    id: 'FR-1011',
+    name: 'SQL Column Existence Check',
+    description: 'externalSqlSchemaChecker MUST verify spec-referenced columns exist in DDL table',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1011-01', description: 'Warning when referenced column is missing', verificationMethod: 'test' },
+      { id: 'FR-1011-02', description: 'Column check skipped when table is missing', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Column existence verification' },
+    ],
+  },
+  {
+    id: 'FR-1012',
+    name: 'SQL Type Consistency Check',
+    description: 'externalSqlSchemaChecker MAY optionally verify column type containment (opt-in via checkTypes)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1012-01', description: 'Type check is opt-in via checkTypes config', verificationMethod: 'test' },
+      { id: 'FR-1012-02', description: 'Wider DDL type accepted (SMALLINT→INT OK)', verificationMethod: 'test' },
+      { id: 'FR-1012-03', description: 'Narrower DDL type produces warning (INT→SMALLINT NG)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Type containment verification' },
+    ],
+  },
+  {
+    id: 'FR-1013',
+    name: 'SQL Checker Warnings',
+    description: 'externalSqlSchemaChecker MUST report warnings for missing table, column, and type mismatches',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1013-01', description: 'Warning for missing table', verificationMethod: 'test' },
+      { id: 'FR-1013-02', description: 'Warning for missing column', verificationMethod: 'test' },
+      { id: 'FR-1013-03', description: 'Warning for type mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'SQL checker warning reporting' },
+    ],
+  },
+  {
+    id: 'FR-1014',
+    name: 'SQL File Not Found Error',
+    description: 'externalSqlSchemaChecker MUST report an error when the DDL file does not exist',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1014-01', description: 'Error reported with missing file path', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'DDL file not found handling' },
+    ],
+  },
+  {
+    id: 'FR-1015',
+    name: 'SQL Parse Failure Graceful Degradation',
+    description: 'externalSqlSchemaChecker MUST handle DDL parse failures gracefully with regex fallback',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1015-01', description: 'Regex fallback used when parser fails', verificationMethod: 'test' },
+      { id: 'FR-1015-02', description: 'Warning emitted for parse fallback', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Graceful parse degradation' },
+    ],
+  },
+
+  // Shared
+  {
+    id: 'FR-1016',
+    name: 'Checker Pattern Consistency',
+    description: 'Both checkers follow the testChecker pattern: file existence check → content parsing → spec ID verification',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1016-01', description: 'OpenAPI checker follows file→parse→verify pattern', verificationMethod: 'test' },
+      { id: 'FR-1016-02', description: 'SQL checker follows file→parse→verify pattern', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Pattern consistency' },
+    ],
+  },
+  {
+    id: 'FR-1017',
+    name: 'Source Path Fallback',
+    description: 'Both checkers use sourcePath from checker config, falling back to hardcoded defaults',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1017-01', description: 'Config sourcePath used when provided', verificationMethod: 'test' },
+      { id: 'FR-1017-02', description: 'Default path used when no config', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Path resolution fallback' },
+    ],
+  },
+  {
+    id: 'FR-1018',
+    name: 'Minimal New Dependencies',
+    description: 'Only node-sql-parser added as new runtime dependency (>100K weekly downloads)',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1018-01', description: 'Only node-sql-parser added as new dependency', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Dependency constraint' },
+    ],
+  },
+
+  // Documentation
+  {
+    id: 'FR-1019',
+    name: 'Checker Documentation Accuracy',
+    description: 'README and scaffold-mermaid-spec.md accurately describe all three built-in checkers as fully implemented',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1019-01', description: 'README checker table describes validation levels', verificationMethod: 'review' },
+      { id: 'FR-1019-02', description: 'scaffold-mermaid-spec.md Section 7 describes validation levels', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Documentation accuracy' },
+    ],
+  },
+];
+
 // ============================================================================
 // Functional Requirements - All
 // ============================================================================
@@ -925,6 +1408,7 @@ export const functionalRequirements: Requirement[] = [
   ...externalCheckRequirements,
   ...impactRequirements,
   ...exportRequirements,
+  ...externalCheckerImplRequirements,
 ];
 
 // ============================================================================
@@ -1082,6 +1566,94 @@ export const nonFunctionalRequirements: Requirement[] = [
     acceptanceCriteria: [
       { id: 'NFR-010-01', description: 'Can publish package via npm publish', verificationMethod: 'demo' },
       { id: 'NFR-010-02', description: 'Can install via npm install speckeeper', verificationMethod: 'demo' },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Testability (from specs/001 — formerly FR-900~904)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'NFR-011',
+    name: 'CLI Test Infrastructure',
+    description: 'All CLI commands have comprehensive test coverage with traceability to specifications',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    acceptanceCriteria: [
+      { id: 'NFR-011-01', description: 'All child requirements (NFR-012~NFR-015) are satisfied', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-012',
+    name: 'CLI Command Test Coverage',
+    description: 'Each CLI command (lint, check, build, impact, drift, new) has a corresponding test file in test/cli/ with requirement ID references',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To prevent regression bugs in CLI commands that directly affect all users and CI pipelines',
+    acceptanceCriteria: [
+      { id: 'NFR-012-01', description: 'Test files exist in test/cli/ for each CLI command (lint, check, build, impact, drift, new)', verificationMethod: 'test' },
+      { id: 'NFR-012-02', description: 'describe/it block names contain corresponding requirement IDs (FR-xxx)', verificationMethod: 'test' },
+      { id: 'NFR-012-03', description: 'CLI module statement coverage reaches 60% or above (from 0%)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-013',
+    name: 'Test-Specification Traceability',
+    description: 'TestRef definitions in design/test-refs.ts provide bidirectional traceability between tests and specifications',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure all acceptance criteria are covered by test cases and maintain spec-test traceability',
+    acceptanceCriteria: [
+      { id: 'NFR-013-01', description: 'TestRef definitions (TEST-020~025) exist in design/test-refs.ts for each CLI test file', verificationMethod: 'test' },
+      { id: 'NFR-013-02', description: 'TestRefs are linked to corresponding command IDs via implementsCommand', verificationMethod: 'test' },
+      { id: 'NFR-013-03', description: 'speckeeper check test succeeds for all TestRefs', verificationMethod: 'test' },
+      { id: 'NFR-013-04', description: 'speckeeper check test --coverage achieves 100% for target acceptance criteria', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-604', description: 'Refines coverage verification for CLI tests' },
+    ],
+  },
+  {
+    id: 'NFR-014',
+    name: 'CLI Definition-Implementation Consistency',
+    description: 'CLI command definitions in design/cli-commands.ts match actual implementation in src/cli/index.ts',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure specification and implementation stay synchronized (e.g., no missing --config parameters)',
+    acceptanceCriteria: [
+      { id: 'NFR-014-01', description: 'All command definitions in design/cli-commands.ts match implementation (parameters, subcommands, exit codes)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-015',
+    name: 'CLI Backward Compatibility',
+    description: 'Existing public APIs and CLI behavior are not changed by test additions',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure test strengthening does not introduce regressions',
+    acceptanceCriteria: [
+      { id: 'NFR-015-01', description: 'All existing tests continue to pass (no regression)', verificationMethod: 'test' },
+      { id: 'NFR-015-02', description: 'No changes to existing public API or CLI behavior', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
     ],
   },
 ];

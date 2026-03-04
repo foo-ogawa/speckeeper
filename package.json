@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -61,6 +61,7 @@
     "commander": "^12.1.0",
     "embedoc": "^0.10.1",
     "glob": "^10.3.10",
+    "node-sql-parser": "^5.4.0",
     "tsx": "^4.21.0",
     "yaml": "^2.3.4",
     "zod": "^3.22.4"
@@ -68,6 +69,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^20.11.0",
+    "@types/node-sql-parser": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^1.6.1",

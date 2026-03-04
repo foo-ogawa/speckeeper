@@ -19,6 +19,9 @@ export type { MarkdownExporterConfig } from './exporters.js';
 // Checker factories
 export { testChecker, externalOpenAPIChecker, externalSqlSchemaChecker, relationCoverage } from './checkers.js';
 
+// Type compatibility utility
+export { isTypeContainedBy } from './type-compat.js';
+
 // Edge-typed relation schemas
 export { ImplementsRelationSchema, VerifiedByRelationSchema } from './relation-schemas.js';
 export type { ImplementsRelation, VerifiedByRelation } from './relation-schemas.js';

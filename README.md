@@ -189,8 +189,8 @@ Validate your specifications against actual implementation artifacts. speckeeper
 | Factory | Target | Validates |
 |---------|--------|-----------|
 | `testChecker()` | Test code | Test file existence + spec ID references in describe/it/test blocks |
-| `externalOpenAPIChecker()` | OpenAPI spec | Consistency with OpenAPI specification |
-| `externalSqlSchemaChecker()` | SQL schema | Consistency with DDL / schema files |
+| `externalOpenAPIChecker()` | OpenAPI spec | Spec ID existence (operationId, path, schema, x-spec-id), HTTP method, parameter/response property names and types |
+| `externalSqlSchemaChecker()` | SQL schema | Table existence, column existence, type containment (DDL type must be equal or wider than spec type) |
 | `relationCoverage()` | Cross-model | Coverage of a target model via relations |
 
 Assign a checker to a model's `externalChecker` property. Scaffold emits guidance comments showing which factory to use based on your `implements` / `verifiedBy` edges.
