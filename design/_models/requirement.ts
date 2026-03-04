@@ -3,7 +3,8 @@
  */
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
-import type { LintRule, Exporter, CoverageChecker, CoverageResult, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import type { LintRule, Exporter, CoverageChecker, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { arrayMinLength, childIdFormat, requireField, relationCoverage } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -85,33 +86,15 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
   protected modelLevel: ModelLevel = 'L1';
 
   protected lintRules: LintRule<Requirement>[] = [
-    {
-      id: 'req-acceptance-not-empty',
-      severity: 'error',
-      message: 'Requirement must have at least one acceptance criteria',
-      check: (spec) => !spec.acceptanceCriteria || spec.acceptanceCriteria.length === 0,
-    },
-    {
-      id: 'req-acceptance-id-format',
-      severity: 'warning',
-      message: 'Acceptance criteria ID should follow parent requirement ID (e.g., FR-101-01)',
-      check: (spec) => {
-        if (!spec.acceptanceCriteria) return false;
-        return spec.acceptanceCriteria.some(ac => !ac.id.startsWith(spec.id + '-'));
-      },
-    },
+    arrayMinLength<Requirement>('acceptanceCriteria', 1),
+    childIdFormat<Requirement>('acceptanceCriteria', 'id'),
     {
       id: 'req-id-format',
       severity: 'warning',
       message: 'Requirement ID should follow naming convention ({PREFIX}-NNN)',
       check: (spec) => !new RegExp(`^${this.idPrefix}-\\d{3}$`).test(spec.id),
     },
-    {
-      id: 'req-has-rationale',
-      severity: 'info',
-      message: 'Requirement should have a rationale',
-      check: (spec) => !spec.rationale || spec.rationale.trim() === '',
-    },
+    requireField<Requirement>('rationale', 'info'),
   ];
 
   protected exporters: Exporter<Requirement>[] = [
@@ -176,60 +159,12 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
     },
   ];
 
-  /**
-   * Coverage Checker
-   * 
-   * Verifies that all UseCases are satisfied by Requirement relations
-   */
-  protected coverageChecker: CoverageChecker<Requirement> | undefined = {
+  protected coverageChecker: CoverageChecker<Requirement> | undefined = relationCoverage<Requirement>({
     targetModel: 'usecase',
     description: 'Verifies UseCases are satisfied by Requirements',
-    check: (specs, registry): CoverageResult => {
-      const useCases = registry['usecase'];
-      if (!useCases) {
-        return { total: 0, covered: 0, uncovered: 0, coveragePercent: 100, coveredItems: [], uncoveredItems: [] };
-      }
-
-      // Get list of UseCase IDs
-      interface UseCaseSpec { id: string; name: string }
-      const allUseCaseIds = new Set<string>();
-      const useCaseMap = new Map<string, UseCaseSpec>();
-      for (const uc of useCases.values() as IterableIterator<UseCaseSpec>) {
-        allUseCaseIds.add(uc.id);
-        useCaseMap.set(uc.id, uc);
-      }
-
-      // Collect UseCases satisfied via Requirement.relations
-      const satisfiedUseCaseIds = new Set<string>();
-      for (const req of specs) {
-        if (!req.relations) continue;
-        for (const rel of req.relations) {
-          if (rel.type === 'satisfies' && rel.target.startsWith('UC-')) {
-            satisfiedUseCaseIds.add(rel.target);
-          }
-        }
-      }
-
-      // Determine coverage
-      const coveredItems: CoverageResult['coveredItems'] = [];
-      const uncoveredItems: CoverageResult['uncoveredItems'] = [];
-      for (const ucId of allUseCaseIds) {
-        const uc = useCaseMap.get(ucId);
-        if (satisfiedUseCaseIds.has(ucId)) {
-          coveredItems.push({ id: ucId, description: uc?.name });
-        } else {
-          uncoveredItems.push({ id: ucId, description: uc?.name });
-        }
-      }
-
-      const total = allUseCaseIds.size;
-      const covered = coveredItems.length;
-      const uncovered = uncoveredItems.length;
-      const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
-
-      return { total, covered, uncovered, coveragePercent, coveredItems, uncoveredItems };
-    },
-  };
+    relationType: 'satisfies',
+    targetPrefix: 'UC-',
+  });
 
   // ============================================================================
   // Renderers (for embeds)

@@ -17,16 +17,3 @@ export interface ModelTemplateParams {
   description: string;
 }
 
-/** Parameters passed to a checker template function */
-export interface CheckerTemplateParams {
-  /** Checker file name (without .ts) */
-  checkerName: string;
-  /** Target type (e.g. 'ddl', 'openapi') */
-  targetType: string;
-  /** Source model name PascalCase (e.g. 'LogicalEntity') */
-  sourceModelName: string;
-  /** Source model file name (e.g. 'logical-entity') */
-  sourceModelFile: string;
-  /** Description */
-  description: string;
-}

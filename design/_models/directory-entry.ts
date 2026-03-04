@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { Model } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ModelLevel } from '../../src/core/model.ts';
+import { requireField } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -47,6 +48,7 @@ class DirectoryEntryModel extends Model<typeof DirectoryEntrySchema> {
   protected modelLevel: ModelLevel = 'L3';
 
   protected lintRules: LintRule<DirectoryEntry>[] = [
+    requireField<DirectoryEntry>('description', 'error'),
     {
       id: 'dir-path-ends-with-slash',
       severity: 'warning',

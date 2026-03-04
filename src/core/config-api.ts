@@ -57,6 +57,8 @@ export interface SpeckeeperConfigInput {
       path: string;
     };
   };
+  /** External SSOT file paths — maps node IDs to file paths/globs */
+  externalPaths?: Record<string, string>;
   /** Lint configuration */
   lint?: {
     /** Strict mode */

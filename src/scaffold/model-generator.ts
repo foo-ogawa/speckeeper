@@ -2,58 +2,129 @@
  * Model file generator
  *
  * Generates _models/*.ts files for speckeeper-managed nodes
- * by looking up the appropriate template.
+ * by resolving artifact class from mermaid node classes.
  */
 import type {
   MermaidNode,
   ResolvedEdge,
   GeneratedFile,
 } from './types.js';
+import { isCheckEdge } from './edge-vocabulary.js';
 import { resolveModelTemplate } from './template-registry.js';
 import { MODEL_TEMPLATE_FUNCTIONS } from './templates/index.js';
+
+// ---------------------------------------------------------------------------
+// Checker binding resolution
+// ---------------------------------------------------------------------------
+
+export interface CheckerBinding {
+  edgeType: 'implements' | 'verifiedBy';
+  targetNodeId: string;
+  targetClass: string;
+}
+
+/**
+ * Determine checker bindings for a speckeeper node from its outgoing check edges.
+ */
+export function resolveCheckerBindings(
+  _nodeId: string,
+  outgoingEdges: ResolvedEdge[],
+  nodes: Map<string, MermaidNode>,
+  speckeeperClassName: string,
+): CheckerBinding[] {
+  const isSpk = (id: string): boolean =>
+    nodes.get(id)?.classes.includes(speckeeperClassName) ?? false;
+
+  const bindings: CheckerBinding[] = [];
+  const seen = new Set<string>();
+
+  for (const edge of outgoingEdges) {
+    if (!isCheckEdge(edge.vocabulary)) continue;
+    if (isSpk(edge.targetId)) continue;
+
+    if (seen.has(edge.targetId)) continue;
+    seen.add(edge.targetId);
+
+    const targetNode = nodes.get(edge.targetId);
+    const targetClass = targetNode?.classes.find(c => c !== speckeeperClassName) ?? edge.targetId.toLowerCase();
+
+    const edgeType = edge.normalizedLabel === 'verifiedBy' ? 'verifiedBy' as const : 'implements' as const;
+
+    bindings.push({ edgeType, targetNodeId: edge.targetId, targetClass });
+  }
+
+  return bindings;
+}
 
 /**
  * Generate _models/*.ts file for a single speckeeper-managed node.
  *
- * @param node - The mermaid node
- * @param incomingEdges - Edges pointing to this node
- * @param outgoingEdges - Edges from this node
- * @returns GeneratedFile or null if no template matches
+ * Checker bindings from implements/verifiedBy edges are appended as
+ * commented configuration that users can activate.
  */
 export function generateModelFile(
   node: MermaidNode,
   _incomingEdges: ResolvedEdge[],
-  _outgoingEdges: ResolvedEdge[],
+  outgoingEdges: ResolvedEdge[],
+  allNodes?: Map<string, MermaidNode>,
 ): GeneratedFile {
-  const templateInfo = resolveModelTemplate(node.id);
+  const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
   const templateFn = MODEL_TEMPLATE_FUNCTIONS[templateInfo.templateName];
 
-  if (!templateFn) {
-    const baseFn = MODEL_TEMPLATE_FUNCTIONS['base'];
-    return {
-      relativePath: `_models/${templateInfo.fileName}.ts`,
-      content: baseFn({
-        modelId: templateInfo.fileName,
-        modelName: templateInfo.modelName,
-        idPrefix: templateInfo.defaultIdPrefix,
-        level: templateInfo.defaultLevel,
-        description: node.label ?? node.id,
-      }),
-    };
-  }
-
-  const content = templateFn({
+  const params = {
     modelId: templateInfo.fileName,
     modelName: templateInfo.modelName,
     idPrefix: templateInfo.defaultIdPrefix,
     level: templateInfo.defaultLevel,
     description: node.label ?? node.id,
-  });
+  };
+
+  let content: string;
+  if (!templateFn) {
+    content = MODEL_TEMPLATE_FUNCTIONS['base'](params);
+  } else {
+    content = templateFn(params);
+  }
+
+  const bindings = allNodes
+    ? resolveCheckerBindings(node.id, outgoingEdges, allNodes, 'speckeeper')
+    : [];
+
+  if (bindings.length > 0) {
+    content += generateCheckerBindingComment(bindings);
+  }
 
   return {
     relativePath: `_models/${templateInfo.fileName}.ts`,
     content,
   };
+}
+
+const CHECKER_FACTORY_MAP: Record<string, string> = {
+  openapi: 'externalOpenAPIChecker',
+  sqlschema: 'externalSqlSchemaChecker',
+  test: 'testChecker',
+};
+
+function generateCheckerBindingComment(bindings: CheckerBinding[]): string {
+  const lines = [
+    '',
+    '// =============================================================================',
+    '// Checker Bindings (auto-detected from flowchart edges)',
+    '// =============================================================================',
+    '//',
+    '// Import and assign to externalChecker in the Model class:',
+    "// import { " + bindings.map(b => CHECKER_FACTORY_MAP[b.targetClass] ?? 'externalSsotChecker').join(', ') + " } from 'speckeeper/dsl';",
+    '//',
+  ];
+
+  for (const b of bindings) {
+    const factory = CHECKER_FACTORY_MAP[b.targetClass] ?? `/* custom checker for '${b.targetClass}' */`;
+    lines.push(`// ${b.edgeType} → ${b.targetNodeId} (class: ${b.targetClass}): ${factory}`);
+  }
+
+  lines.push('');
+  return lines.join('\n');
 }
 
 /**
@@ -62,7 +133,7 @@ export function generateModelFile(
 export function generateSpecDataFile(
   node: MermaidNode,
 ): GeneratedFile {
-  const templateInfo = resolveModelTemplate(node.id);
+  const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
   const className = `${templateInfo.modelName}Model`;
   const typeName = templateInfo.modelName;
   const varName = toCamelCase(templateInfo.modelName) + 's';
@@ -106,10 +177,9 @@ export function generateDesignIndex(
   const specFiles: { varName: string; fileName: string }[] = [];
 
   for (const node of speckeeperNodes) {
-    const templateInfo = resolveModelTemplate(node.id);
-    const key = templateInfo.templateName === 'base'
-      ? `base:${node.id}`
-      : templateInfo.templateName;
+    const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
+    const hasArtifactClass = node.classes.some(c => c !== 'speckeeper');
+    const key = hasArtifactClass ? templateInfo.fileName : `base:${node.id}`;
 
     if (generated.has(key)) continue;
     generated.add(key);
@@ -143,29 +213,40 @@ export default mergeSpecs(${args});
 /**
  * Generate all model files for speckeeper-managed nodes.
  *
- * Multiple nodes may map to the same template (e.g. SR, FR, NFR → requirement).
- * In that case, only one file is generated (de-duplicated by template name).
- * Also generates a corresponding spec data file and design/index.ts.
+ * Multiple nodes with the same artifact class are de-duplicated
+ * into a single model file (e.g. FR, SR, NFR with class 'requirement').
  */
 export function generateAllModelFiles(
   speckeeperNodes: MermaidNode[],
   resolvedEdges: ResolvedEdge[],
+  allNodes?: Map<string, MermaidNode>,
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
   const generated = new Set<string>();
 
+  const templateNodeGroups = new Map<string, MermaidNode[]>();
   for (const node of speckeeperNodes) {
-    const templateInfo = resolveModelTemplate(node.id);
-    const key = templateInfo.templateName === 'base'
-      ? `base:${node.id}`
-      : templateInfo.templateName;
+    const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
+    const hasArtifactClass = node.classes.some(c => c !== 'speckeeper');
+    const key = hasArtifactClass ? templateInfo.fileName : `base:${node.id}`;
+    const group = templateNodeGroups.get(key) ?? [];
+    group.push(node);
+    templateNodeGroups.set(key, group);
+  }
+
+  for (const node of speckeeperNodes) {
+    const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
+    const hasArtifactClass = node.classes.some(c => c !== 'speckeeper');
+    const key = hasArtifactClass ? templateInfo.fileName : `base:${node.id}`;
 
     if (generated.has(key)) continue;
     generated.add(key);
 
-    const incoming = resolvedEdges.filter(e => e.targetId === node.id);
-    const outgoing = resolvedEdges.filter(e => e.sourceId === node.id);
-    files.push(generateModelFile(node, incoming, outgoing));
+    const groupNodes = templateNodeGroups.get(key) ?? [node];
+    const groupNodeIds = new Set(groupNodes.map(n => n.id));
+    const incoming = resolvedEdges.filter(e => groupNodeIds.has(e.targetId));
+    const outgoing = resolvedEdges.filter(e => groupNodeIds.has(e.sourceId));
+    files.push(generateModelFile(node, incoming, outgoing, allNodes));
     files.push(generateSpecDataFile(node));
   }
 

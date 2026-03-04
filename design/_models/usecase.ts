@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { requireField, arrayMinLength } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -90,12 +91,7 @@ class ActorModel extends Model<typeof ActorSchema> {
   protected modelLevel: ModelLevel = 'L0';
 
   protected lintRules: LintRule<Actor>[] = [
-    {
-      id: 'actor-has-description',
-      severity: 'warning',
-      message: 'Actor should have a description',
-      check: (spec) => !spec.description || spec.description.trim() === '',
-    },
+    requireField<Actor>('description'),
   ];
 
   protected exporters: Exporter<Actor>[] = [
@@ -161,18 +157,8 @@ class UseCaseModel extends Model<typeof UseCaseFlowSchema> {
   protected modelLevel: ModelLevel = 'L0';
 
   protected lintRules: LintRule<UseCase>[] = [
-    {
-      id: 'usecase-has-main-flow',
-      severity: 'error',
-      message: 'UseCase must have a main flow',
-      check: (spec) => !spec.mainFlow || spec.mainFlow.length === 0,
-    },
-    {
-      id: 'usecase-has-actor',
-      severity: 'error',
-      message: 'UseCase must have an actor',
-      check: (spec) => !spec.actor || spec.actor.trim() === '',
-    },
+    arrayMinLength<UseCase>('mainFlow', 1),
+    requireField<UseCase>('actor', 'error'),
   ];
 
   protected exporters: Exporter<UseCase>[] = [

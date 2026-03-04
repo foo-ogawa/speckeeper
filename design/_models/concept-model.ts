@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, CoverageChecker, CoverageResult, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { arrayMinLength } from '../../src/core/dsl/index.ts';
 
 // ============================================================================
 // Schema Definition
@@ -94,12 +95,7 @@ class EntityModel extends Model<typeof EntitySchema> {
   protected modelLevel: ModelLevel = 'L2';
 
   protected lintRules: LintRule<Entity>[] = [
-    {
-      id: 'entity-has-attributes',
-      severity: 'warning',
-      message: 'Entity should have at least one attribute',
-      check: (spec) => !spec.attributes || spec.attributes.length === 0,
-    },
+    arrayMinLength<Entity>('attributes', 1, 'warning'),
   ];
 
   protected exporters: Exporter<Entity>[] = [

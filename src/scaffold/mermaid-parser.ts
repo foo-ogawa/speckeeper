@@ -10,6 +10,7 @@ import type {
   MermaidEdge,
   MermaidClassDef,
   MermaidClassAssignment,
+  SubgraphInfo,
   ParsedFlowchart,
 } from './types.js';
 
@@ -35,7 +36,10 @@ export function parseFlowchart(mermaidSource: string): ParsedFlowchart {
   const edges: MermaidEdge[] = [];
   const classDefs: MermaidClassDef[] = [];
   const classAssignments: MermaidClassAssignment[] = [];
+  const subgraphs: SubgraphInfo[] = [];
   let direction = 'TB';
+
+  const subgraphStack: SubgraphInfo[] = [];
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
@@ -51,6 +55,30 @@ export function parseFlowchart(mermaidSource: string): ParsedFlowchart {
     if (line.startsWith('graph ')) {
       const gMatch = line.match(/^graph\s+(\w+)/);
       if (gMatch) direction = gMatch[1];
+      continue;
+    }
+
+    // subgraph id [Label] or subgraph id
+    const subgraphMatch = line.match(/^subgraph\s+(\S+)(?:\s*\[([^\]]*)\])?/);
+    if (subgraphMatch) {
+      const sg: SubgraphInfo = {
+        id: subgraphMatch[1],
+        label: subgraphMatch[2] || undefined,
+        nodeIds: [],
+      };
+      subgraphStack.push(sg);
+      continue;
+    }
+
+    if (line === 'end' && subgraphStack.length > 0) {
+      const completed = subgraphStack.pop()!;
+      subgraphs.push(completed);
+      for (const nodeId of completed.nodeIds) {
+        const node = nodes.get(nodeId);
+        if (node) {
+          node.subgraph = completed.id;
+        }
+      }
       continue;
     }
 
@@ -85,6 +113,11 @@ export function parseFlowchart(mermaidSource: string): ParsedFlowchart {
           rawLabel: label,
           direction: dir,
         });
+        if (subgraphStack.length > 0) {
+          const current = subgraphStack[subgraphStack.length - 1];
+          if (!current.nodeIds.includes(sourceId)) current.nodeIds.push(sourceId);
+          if (!current.nodeIds.includes(targetId)) current.nodeIds.push(targetId);
+        }
       }
       continue;
     }
@@ -92,10 +125,14 @@ export function parseFlowchart(mermaidSource: string): ParsedFlowchart {
     const standaloneNode = tryParseStandaloneNode(line);
     if (standaloneNode) {
       ensureNode(nodes, standaloneNode.id, standaloneNode.label);
+      if (subgraphStack.length > 0) {
+        const current = subgraphStack[subgraphStack.length - 1];
+        if (!current.nodeIds.includes(standaloneNode.id)) current.nodeIds.push(standaloneNode.id);
+      }
     }
   }
 
-  return { direction, nodes, edges, classDefs, classAssignments };
+  return { direction, nodes, edges, classDefs, classAssignments, subgraphs };
 }
 
 /**

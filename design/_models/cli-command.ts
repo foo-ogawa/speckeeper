@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ExternalChecker, CheckResult, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
+import { arrayMinLength } from '../../src/core/dsl/index.ts';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as ts from 'typescript';
@@ -163,15 +164,10 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
     {
       id: 'cmd-has-description',
       severity: 'error',
-      message: 'Command must have a description',
+      message: 'Command must have a description (min 5 chars)',
       check: (spec) => !spec.description || spec.description.length < 5,
     },
-    {
-      id: 'cmd-has-examples',
-      severity: 'warning',
-      message: 'Command should have usage examples',
-      check: (spec) => spec.examples.length === 0,
-    },
+    arrayMinLength<CLICommand>('examples', 1, 'warning'),
     {
       id: 'cmd-has-exit-codes',
       severity: 'info',

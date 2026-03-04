@@ -1,8 +1,8 @@
 /**
- * Edge label controlled vocabulary
+ * Edge label controlled vocabulary (logic-driven)
  *
- * Edge labels for speckeeper-managed nodes must match speckeeper's
- * RELATION_TYPES. Labels between non-speckeeper nodes are free text.
+ * Only edges that trigger specific speckeeper logic are defined here.
+ * Other speckeeper↔speckeeper edges use generic reference integrity.
  */
 import type {
   EdgeVocabularyEntry,
@@ -17,11 +17,31 @@ import type {
 // ---------------------------------------------------------------------------
 
 /**
- * Speckeeper-managed vocabulary — labels match RELATION_TYPES exactly.
- * Used for edges involving at least one speckeeper-managed node.
+ * Speckeeper-managed vocabulary — labels that trigger specific logic.
+ *
+ * - implements (check): speckeeper → external SSOT, triggers external checker
+ * - verifiedBy (check): speckeeper → external test, triggers test checker
+ * - refines (lint): speckeeper → speckeeper, reference integrity + level constraint
+ * - All other speckeeper↔speckeeper edges: generic reference integrity (lint)
  */
 export const EDGE_VOCABULARY: EdgeVocabularyEntry[] = [
-  // A. lint targets (speckeeper ↔ speckeeper reference integrity)
+  // check: speckeeper → external SSOT
+  {
+    label: 'implements',
+    expectedDirection: 'forward',
+    relationType: 'implements',
+    category: 'check',
+    description: 'Spec is implemented as external artifact (OpenAPI, DDL, etc.)',
+  },
+  {
+    label: 'verifiedBy',
+    expectedDirection: 'forward',
+    relationType: 'verifiedBy',
+    category: 'check',
+    description: 'Spec is verified by external test code',
+  },
+
+  // lint: speckeeper ↔ speckeeper with level constraint
   {
     label: 'refines',
     expectedDirection: 'forward',
@@ -29,6 +49,8 @@ export const EDGE_VOCABULARY: EdgeVocabularyEntry[] = [
     category: 'lint',
     description: 'Decompose higher-level item into lower-level detail',
   },
+
+  // lint: speckeeper ↔ speckeeper generic reference integrity
   {
     label: 'relatedTo',
     expectedDirection: 'bidirectional',
@@ -43,40 +65,6 @@ export const EDGE_VOCABULARY: EdgeVocabularyEntry[] = [
     category: 'lint',
     description: 'Reference / dependency',
   },
-
-  // B. check targets (speckeeper → external SSOT)
-  {
-    label: 'implements',
-    expectedDirection: 'forward',
-    relationType: 'implements',
-    category: 'check',
-    description: 'Realize speckeeper spec as external artifact, interface, or test',
-  },
-
-  // C. coverage targets
-  {
-    label: 'includes',
-    expectedDirection: 'forward',
-    relationType: 'includes',
-    category: 'coverage',
-    description: 'Parent contains child items',
-  },
-  {
-    label: 'traces',
-    expectedDirection: 'forward',
-    relationType: 'traces',
-    category: 'coverage',
-    description: 'Derive target from source',
-  },
-  {
-    label: 'verifies',
-    expectedDirection: 'forward',
-    relationType: 'verifies',
-    category: 'coverage',
-    description: 'Test verifies target',
-  },
-
-  // Additional RELATION_TYPES (usable but no special scaffold behaviour)
   {
     label: 'dependsOn',
     expectedDirection: 'forward',
@@ -91,12 +79,33 @@ export const EDGE_VOCABULARY: EdgeVocabularyEntry[] = [
     category: 'lint',
     description: 'Satisfies business/requirements',
   },
+  {
+    label: 'includes',
+    expectedDirection: 'forward',
+    relationType: 'includes',
+    category: 'lint',
+    description: 'Parent contains child items',
+  },
+  {
+    label: 'traces',
+    expectedDirection: 'forward',
+    relationType: 'traces',
+    category: 'lint',
+    description: 'Derive target from source',
+  },
+
+  // external: test code → implementation code (no checker generated)
+  {
+    label: 'verifies',
+    expectedDirection: 'forward',
+    relationType: 'verifies',
+    category: 'external',
+    description: 'Test code tests implementation code (external → external, no checker)',
+  },
 ];
 
 /**
  * Well-known labels for edges between non-speckeeper nodes.
- * These are not validated — any label is accepted for external-only edges.
- * Listed here so scaffold can recognise and categorise them.
  */
 export const EXTERNAL_LABELS: EdgeVocabularyEntry[] = [
   {
@@ -138,11 +147,6 @@ const SORTED_SPECKEEPER_VOCABULARY = [...EDGE_VOCABULARY].sort(
 
 /**
  * Normalise a raw edge label to its canonical vocabulary entry.
- *
- * 1. Exact match (case-insensitive)
- * 2. Label ends with a vocabulary entry (longest match wins)
- * 3. Label contains a vocabulary entry (longest match wins)
- * 4. null if no match
  */
 export function normalizeLabel(
   rawLabel: string | undefined,
@@ -184,6 +188,14 @@ export function normalizeLabel(
 // Edge resolution
 // ---------------------------------------------------------------------------
 
+/** Known test-like node classes */
+const TEST_CLASSES = new Set(['test', 'e2e-test', 'unit-test', 'integration-test']);
+
+function isTestLikeByClass(node: MermaidNode | undefined): boolean {
+  if (!node) return false;
+  return node.classes.some(c => TEST_CLASSES.has(c) || c.includes('test'));
+}
+
 /**
  * Resolve raw edges to vocabulary-backed ResolvedEdges,
  * collecting diagnostics along the way.
@@ -204,12 +216,10 @@ export function resolveEdges(
   for (const edge of edges) {
     const involvesSpeckeeper = isSpk(edge.sourceId) || isSpk(edge.targetId);
 
-    // Try to normalise against the full vocabulary
     const norm = normalizeLabel(edge.rawLabel);
 
     if (!norm) {
       if (involvesSpeckeeper) {
-        // Edge involves speckeeper node but label doesn't match any RelationType
         diagnostics.push({
           severity: 'warning',
           message: `Edge label "${edge.rawLabel}" is not a valid speckeeper RelationType — falling back to "relatedTo"`,
@@ -222,7 +232,6 @@ export function resolveEdges(
           modifier: undefined,
         });
       } else {
-        // Both nodes are external — free text label, skip validation
         resolved.push({
           ...edge,
           normalizedLabel: edge.rawLabel ?? '',
@@ -233,7 +242,6 @@ export function resolveEdges(
       continue;
     }
 
-    // If the edge involves a speckeeper node, the label must be a RelationType
     if (involvesSpeckeeper && !norm.entry.relationType) {
       const spkNorm = normalizeLabel(edge.rawLabel, SORTED_SPECKEEPER_VOCABULARY);
       if (!spkNorm) {
@@ -259,7 +267,7 @@ export function resolveEdges(
       modifier: norm.modifier,
     });
 
-    // Validate arrow direction (only for speckeeper-involved edges)
+    // Validate arrow direction
     if (involvesSpeckeeper && edge.direction !== norm.entry.expectedDirection) {
       const expected = norm.entry.expectedDirection === 'bidirectional' ? '<-->' : '-->';
       diagnostics.push({
@@ -269,7 +277,7 @@ export function resolveEdges(
       });
     }
 
-    // Validate: "implements" should not be speckeeper → speckeeper
+    // Validate: "implements" should be speckeeper → external only
     if (norm.entry.label === 'implements') {
       if (isSpk(edge.sourceId) && isSpk(edge.targetId)) {
         diagnostics.push({
@@ -280,14 +288,30 @@ export function resolveEdges(
       }
     }
 
-    // Validate: "includes" and "traces" should be speckeeper → speckeeper
-    if (norm.entry.label === 'includes' || norm.entry.label === 'traces') {
-      if (!isSpk(edge.sourceId) || !isSpk(edge.targetId)) {
+    // Validate: "verifiedBy" should be speckeeper → external only
+    if (norm.entry.label === 'verifiedBy') {
+      if (isSpk(edge.sourceId) && isSpk(edge.targetId)) {
         diagnostics.push({
           severity: 'warning',
-          message: `"${norm.entry.label}" should connect two speckeeper-managed nodes`,
+          message: '"verifiedBy" should be speckeeper → external; it represents verification by external test code',
           context: `${edge.sourceId} → ${edge.targetId}`,
         });
+      }
+
+      // Warn if target is not a test-like node
+      const targetNode = nodes.get(edge.targetId);
+      if (targetNode && !isTestLikeByClass(targetNode)) {
+        const targetId = edge.targetId.toUpperCase();
+        const looksLikeTest = ['UT', 'IT', 'DUT', 'E2ET'].includes(targetId) ||
+          targetId.includes('TEST') ||
+          (targetNode.label ?? '').toLowerCase().includes('test');
+        if (!looksLikeTest) {
+          diagnostics.push({
+            severity: 'warning',
+            message: `"verifiedBy" target "${edge.targetId}" does not appear to be a test node; verifiedBy is intended for test targets`,
+            context: `${edge.sourceId} → ${edge.targetId}`,
+          });
+        }
       }
     }
   }
@@ -316,11 +340,11 @@ export function isDriftEdge(entry: EdgeVocabularyEntry): boolean {
 }
 
 /**
- * Determine whether an "implements" edge should generate a coverage checker
- * (target is a test-like node) rather than an external checker.
+ * Determine whether a node is test-like (by ID, label, or class).
  */
 export function isTestLikeNode(node: MermaidNode | undefined): boolean {
   if (!node) return false;
+  if (isTestLikeByClass(node)) return true;
   const id = node.id.toUpperCase();
   const testIds = ['UT', 'IT', 'DUT', 'E2ET'];
   if (testIds.includes(id)) return true;

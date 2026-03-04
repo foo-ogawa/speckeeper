@@ -13,6 +13,8 @@ export interface MermaidNode {
   label: string | undefined;
   /** CSS classes applied (e.g. ['speckeeper']) */
   classes: string[];
+  /** Subgraph this node belongs to (if any) */
+  subgraph?: string;
 }
 
 /** Parsed mermaid edge */
@@ -43,6 +45,16 @@ export interface MermaidClassAssignment {
   className: string;
 }
 
+/** Subgraph info */
+export interface SubgraphInfo {
+  /** Subgraph ID */
+  id: string;
+  /** Subgraph label */
+  label: string | undefined;
+  /** Node IDs contained in this subgraph */
+  nodeIds: string[];
+}
+
 /** Result of parsing a mermaid flowchart block */
 export interface ParsedFlowchart {
   /** Flowchart direction (TB, LR, etc.) */
@@ -55,6 +67,8 @@ export interface ParsedFlowchart {
   classDefs: MermaidClassDef[];
   /** Class assignments */
   classAssignments: MermaidClassAssignment[];
+  /** Subgraphs */
+  subgraphs: SubgraphInfo[];
 }
 
 /** Edge label category determining what speckeeper generates */
