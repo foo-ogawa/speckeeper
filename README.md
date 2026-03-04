@@ -184,28 +184,26 @@ Checks include:
 
 ### External SSOT Validation (check)
 
-Validate your specifications against actual implementation artifacts.
+Validate your specifications against actual implementation artifacts. speckeeper provides built-in checker factories via `speckeeper/dsl`:
 
-**Built-in: Test Coverage Check**
+| Factory | Target | Validates |
+|---------|--------|-----------|
+| `testChecker()` | Test code | Test file existence + spec ID references in describe/it/test blocks |
+| `externalOpenAPIChecker()` | OpenAPI spec | Consistency with OpenAPI specification |
+| `externalSqlSchemaChecker()` | SQL schema | Consistency with DDL / schema files |
+| `relationCoverage()` | Cross-model | Coverage of a target model via relations |
 
-Define test references that link to your requirements:
+Assign a checker to a model's `externalChecker` property. Scaffold emits guidance comments showing which factory to use based on your `implements` / `verifiedBy` edges.
 
 ```typescript
-// design/test-refs.ts
-import type { TestRef } from 'speckeeper';
+// design/_models/requirement.ts
+import { testChecker } from 'speckeeper/dsl';
 
-export const testRefs: TestRef[] = [
-  {
-    id: 'TEST-001',
-    description: 'Authentication tests',
-    source: { path: 'test/auth.test.ts', framework: 'vitest' },
-    verifiesRequirements: ['FR-001'],
-    testCasePatterns: [
-      { acceptanceCriteriaId: 'FR-001-01', pattern: 'valid credentials' },
-      { acceptanceCriteriaId: 'FR-001-02', pattern: 'invalid credentials' },
-    ],
-  },
-];
+class RequirementModel extends Model<typeof RequirementSchema> {
+  // ... schema, lintRules, etc.
+
+  protected externalChecker = testChecker<Requirement>();
+}
 ```
 
 ```bash
@@ -218,13 +216,11 @@ speckeeper check
 
   ✓ All checks passed
 
-  Coverage: TestRef → Requirement
-    Coverage: 100% (34/34 acceptance criteria covered)
+  Coverage: Requirement → UseCase
+    Coverage: 100% (7/7 use cases covered)
 ```
 
-**Custom Checkers**
-
-Implement `externalChecker` in model definitions to validate against any external source (OpenAPI, DDL, IaC, etc.). See [Model Definition Guide](./docs/model-guide.md) for details.
+You can also implement custom checkers for any external source by defining an `ExternalChecker<T>` directly. See [Model Definition Guide](./docs/model-guide.md) for details.
 
 ## Model Levels & Traceability
 
