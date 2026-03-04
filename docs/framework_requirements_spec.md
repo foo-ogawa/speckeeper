@@ -398,18 +398,12 @@ npx speckeeper init --force
 
 Can define references to external SSOT (OpenAPI, DDL, IaC, etc.)
 
-- **FR-200-01**: Provides basic interfaces for APIRef/TableRef/IaCRef/BatchRef [test]
-- **FR-200-02**: Can set file path and identifier for referenced target [test]
-- **FR-200-03**: Can associate with related components and entities [test]
+#### FR-201: External SSOT Path Configuration
 
-| Reference | Target | Main Consistency Checks |
-|-----------|--------|------------------------|
-| `APIRef` | OpenAPI | operationId existence, Entity consistency |
-| `TableRef` | DDL/Prisma | Table existence, column consistency |
-| `IaCRef` | CloudFormation/Terraform | Resource existence, type consistency |
-| `BatchRef` | Step Functions/EventBridge | Definition existence, schedule consistency |
+External SSOT file paths (OpenAPI, DDL, test code, etc.) are configured in speckeeper.config.ts, not in mermaid flowcharts
 
-> [External SSOT Reference Details](model-guide.md#10-external-ssot-reference)
+- **FR-201-01**: External SSOT file paths are defined in speckeeper.config.ts via ExternalSsotPaths [test]
+- **FR-201-02**: Mermaid flowchart is scaffold-only and does not contain runtime configuration such as file paths [review]
 
 ### 8.3 Generation (build)
 
@@ -665,6 +659,153 @@ Not covered:              0
 
 Coverage: 100%
 ```
+
+#### FR-605: Model-Integrated Check Architecture
+
+External SSOT and test verification logic is integrated into _models/ definitions, eliminating the separate _checkers/ directory
+
+- **FR-605-01**: Scaffold does not generate _checkers/ directory [test]
+- **FR-605-02**: Verification logic is included in _models/ model definitions [test]
+- **FR-605-03**: speckeeper check external-ssot uses verification logic from _models/ model definitions only [test]
+- **FR-605-04**: speckeeper check external-ssot does not reference _checkers/ directory [test]
+- **FR-605-05**: Checker template functions (src/scaffold/templates/checkers/) are removed; checker logic moves to core DSL (src/core/dsl/) [test]
+
+Implement actual validation logic for externalOpenAPIChecker and externalSqlSchemaChecker, replacing stubs with real file parsing and verification
+
+#### FR-1001: OpenAPI YAML/JSON Parsing
+
+externalOpenAPIChecker MUST parse YAML and JSON format OpenAPI files
+
+- **FR-1001-01**: YAML format OpenAPI files are parsed successfully [test]
+- **FR-1001-02**: JSON format OpenAPI files are parsed successfully [test]
+
+#### FR-1002: OpenAPI Spec ID Verification
+
+externalOpenAPIChecker MUST verify spec IDs via operationId, path segments, schema names, and x-spec-id extensions
+
+- **FR-1002-01**: Spec ID found via operationId [test]
+- **FR-1002-02**: Spec ID found via exact path segment match [test]
+- **FR-1002-03**: Spec ID found via schema name [test]
+- **FR-1002-04**: Spec ID found via x-spec-id extension [test]
+
+#### FR-1003: OpenAPI Missing Spec ID Warning
+
+externalOpenAPIChecker MUST report a warning for each spec ID not found in the OpenAPI document
+
+- **FR-1003-01**: Warning reported when spec ID is not found [test]
+
+#### FR-1004: OpenAPI Method Check
+
+externalOpenAPIChecker MAY optionally verify HTTP method exists for matched path (opt-in via config)
+
+- **FR-1004-01**: Method check is opt-in via mapper config [test]
+- **FR-1004-02**: Warning reported for method mismatch [test]
+
+#### FR-1005: OpenAPI Parameter/Response Check
+
+externalOpenAPIChecker MAY optionally verify parameter names, response property names and types (opt-in via config)
+
+- **FR-1005-01**: Parameter check is opt-in via mapper config [test]
+- **FR-1005-02**: Response property check is opt-in via mapper config [test]
+- **FR-1005-03**: Type containment is used for type comparison [test]
+
+#### FR-1006: OpenAPI Mismatch Warnings
+
+externalOpenAPIChecker MUST report warnings for method/parameter/property/type mismatches
+
+- **FR-1006-01**: Warning for missing/wrong HTTP method [test]
+- **FR-1006-02**: Warning for missing request parameter [test]
+- **FR-1006-03**: Warning for missing response property [test]
+- **FR-1006-04**: Warning for type mismatch [test]
+
+#### FR-1007: OpenAPI File Not Found Error
+
+externalOpenAPIChecker MUST report an error when the OpenAPI file does not exist
+
+- **FR-1007-01**: Error reported with missing file path [test]
+
+#### FR-1008: OpenAPI Parse Failure Error
+
+externalOpenAPIChecker MUST report an error when the OpenAPI file cannot be parsed
+
+- **FR-1008-01**: Error reported for invalid YAML [test]
+- **FR-1008-02**: Error reported for empty file [test]
+
+#### FR-1009: SQL DDL Parsing
+
+externalSqlSchemaChecker MUST parse SQL DDL files and extract table definitions
+
+- **FR-1009-01**: DDL parsed with node-sql-parser [test]
+- **FR-1009-02**: Table names, column names, and column types extracted [test]
+
+#### FR-1010: SQL Table Existence Check
+
+externalSqlSchemaChecker MUST verify spec-referenced table names exist in parsed DDL
+
+- **FR-1010-01**: Warning when referenced table is missing [test]
+
+#### FR-1011: SQL Column Existence Check
+
+externalSqlSchemaChecker MUST verify spec-referenced columns exist in DDL table
+
+- **FR-1011-01**: Warning when referenced column is missing [test]
+- **FR-1011-02**: Column check skipped when table is missing [test]
+
+#### FR-1012: SQL Type Consistency Check
+
+externalSqlSchemaChecker MAY optionally verify column type containment (opt-in via checkTypes)
+
+- **FR-1012-01**: Type check is opt-in via checkTypes config [test]
+- **FR-1012-02**: Wider DDL type accepted (SMALLINT→INT OK) [test]
+- **FR-1012-03**: Narrower DDL type produces warning (INT→SMALLINT NG) [test]
+
+#### FR-1013: SQL Checker Warnings
+
+externalSqlSchemaChecker MUST report warnings for missing table, column, and type mismatches
+
+- **FR-1013-01**: Warning for missing table [test]
+- **FR-1013-02**: Warning for missing column [test]
+- **FR-1013-03**: Warning for type mismatch [test]
+
+#### FR-1014: SQL File Not Found Error
+
+externalSqlSchemaChecker MUST report an error when the DDL file does not exist
+
+- **FR-1014-01**: Error reported with missing file path [test]
+
+#### FR-1015: SQL Parse Failure Graceful Degradation
+
+externalSqlSchemaChecker MUST handle DDL parse failures gracefully with regex fallback
+
+- **FR-1015-01**: Regex fallback used when parser fails [test]
+- **FR-1015-02**: Warning emitted for parse fallback [test]
+
+#### FR-1016: Checker Pattern Consistency
+
+Both checkers follow the testChecker pattern: file existence check → content parsing → spec ID verification
+
+- **FR-1016-01**: OpenAPI checker follows file→parse→verify pattern [test]
+- **FR-1016-02**: SQL checker follows file→parse→verify pattern [test]
+
+#### FR-1017: Source Path Fallback
+
+Both checkers use sourcePath from checker config, falling back to hardcoded defaults
+
+- **FR-1017-01**: Config sourcePath used when provided [test]
+- **FR-1017-02**: Default path used when no config [test]
+
+#### FR-1018: Minimal New Dependencies
+
+Only node-sql-parser added as new runtime dependency (>100K weekly downloads)
+
+- **FR-1018-01**: Only node-sql-parser added as new dependency [review]
+
+#### FR-1019: Checker Documentation Accuracy
+
+README and scaffold-mermaid-spec.md accurately describe all three built-in checkers as fully implemented
+
+- **FR-1019-01**: README checker table describes validation levels [review]
+- **FR-1019-02**: scaffold-mermaid-spec.md Section 7 describes validation levels [review]
 
 ### 8.7 Change Impact Analysis
 

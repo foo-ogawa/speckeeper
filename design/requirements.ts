@@ -1169,6 +1169,341 @@ const testRequirements: Requirement[] = [
 ];
 
 // ============================================================================
+// Functional Requirements - 8.11 External Checker Implementation (from specs/003)
+// ============================================================================
+
+const externalCheckerImplRequirements: Requirement[] = [
+  {
+    id: 'FR-1000',
+    name: 'External Checker Implementation',
+    description: 'Implement actual validation logic for externalOpenAPIChecker and externalSqlSchemaChecker, replacing stubs with real file parsing and verification',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    acceptanceCriteria: [
+      { id: 'FR-1000-01', description: 'All child requirements (FR-1001~FR-1019) are satisfied', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-600', description: 'Implements external SSOT consistency checks' },
+    ],
+  },
+
+  // OpenAPI Checker
+  {
+    id: 'FR-1001',
+    name: 'OpenAPI YAML/JSON Parsing',
+    description: 'externalOpenAPIChecker MUST parse YAML and JSON format OpenAPI files',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1001-01', description: 'YAML format OpenAPI files are parsed successfully', verificationMethod: 'test' },
+      { id: 'FR-1001-02', description: 'JSON format OpenAPI files are parsed successfully', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'OpenAPI parsing capability' },
+    ],
+  },
+  {
+    id: 'FR-1002',
+    name: 'OpenAPI Spec ID Verification',
+    description: 'externalOpenAPIChecker MUST verify spec IDs via operationId, path segments, schema names, and x-spec-id extensions',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1002-01', description: 'Spec ID found via operationId', verificationMethod: 'test' },
+      { id: 'FR-1002-02', description: 'Spec ID found via exact path segment match', verificationMethod: 'test' },
+      { id: 'FR-1002-03', description: 'Spec ID found via schema name', verificationMethod: 'test' },
+      { id: 'FR-1002-04', description: 'Spec ID found via x-spec-id extension', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Spec ID lookup strategy' },
+    ],
+  },
+  {
+    id: 'FR-1003',
+    name: 'OpenAPI Missing Spec ID Warning',
+    description: 'externalOpenAPIChecker MUST report a warning for each spec ID not found in the OpenAPI document',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1003-01', description: 'Warning reported when spec ID is not found', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Missing spec ID detection' },
+    ],
+  },
+  {
+    id: 'FR-1004',
+    name: 'OpenAPI Method Check',
+    description: 'externalOpenAPIChecker MAY optionally verify HTTP method exists for matched path (opt-in via config)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1004-01', description: 'Method check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1004-02', description: 'Warning reported for method mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Optional method verification' },
+    ],
+  },
+  {
+    id: 'FR-1005',
+    name: 'OpenAPI Parameter/Response Check',
+    description: 'externalOpenAPIChecker MAY optionally verify parameter names, response property names and types (opt-in via config)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1005-01', description: 'Parameter check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1005-02', description: 'Response property check is opt-in via mapper config', verificationMethod: 'test' },
+      { id: 'FR-1005-03', description: 'Type containment is used for type comparison', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Optional parameter/response verification' },
+    ],
+  },
+  {
+    id: 'FR-1006',
+    name: 'OpenAPI Mismatch Warnings',
+    description: 'externalOpenAPIChecker MUST report warnings for method/parameter/property/type mismatches',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1006-01', description: 'Warning for missing/wrong HTTP method', verificationMethod: 'test' },
+      { id: 'FR-1006-02', description: 'Warning for missing request parameter', verificationMethod: 'test' },
+      { id: 'FR-1006-03', description: 'Warning for missing response property', verificationMethod: 'test' },
+      { id: 'FR-1006-04', description: 'Warning for type mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Mismatch reporting' },
+    ],
+  },
+  {
+    id: 'FR-1007',
+    name: 'OpenAPI File Not Found Error',
+    description: 'externalOpenAPIChecker MUST report an error when the OpenAPI file does not exist',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1007-01', description: 'Error reported with missing file path', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'File not found handling' },
+    ],
+  },
+  {
+    id: 'FR-1008',
+    name: 'OpenAPI Parse Failure Error',
+    description: 'externalOpenAPIChecker MUST report an error when the OpenAPI file cannot be parsed',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1008-01', description: 'Error reported for invalid YAML', verificationMethod: 'test' },
+      { id: 'FR-1008-02', description: 'Error reported for empty file', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Parse failure handling' },
+    ],
+  },
+
+  // SQL Schema Checker
+  {
+    id: 'FR-1009',
+    name: 'SQL DDL Parsing',
+    description: 'externalSqlSchemaChecker MUST parse SQL DDL files and extract table definitions',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1009-01', description: 'DDL parsed with node-sql-parser', verificationMethod: 'test' },
+      { id: 'FR-1009-02', description: 'Table names, column names, and column types extracted', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'DDL parsing capability' },
+    ],
+  },
+  {
+    id: 'FR-1010',
+    name: 'SQL Table Existence Check',
+    description: 'externalSqlSchemaChecker MUST verify spec-referenced table names exist in parsed DDL',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1010-01', description: 'Warning when referenced table is missing', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Table existence verification' },
+    ],
+  },
+  {
+    id: 'FR-1011',
+    name: 'SQL Column Existence Check',
+    description: 'externalSqlSchemaChecker MUST verify spec-referenced columns exist in DDL table',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1011-01', description: 'Warning when referenced column is missing', verificationMethod: 'test' },
+      { id: 'FR-1011-02', description: 'Column check skipped when table is missing', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Column existence verification' },
+    ],
+  },
+  {
+    id: 'FR-1012',
+    name: 'SQL Type Consistency Check',
+    description: 'externalSqlSchemaChecker MAY optionally verify column type containment (opt-in via checkTypes)',
+    type: 'functional',
+    priority: 'should',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1012-01', description: 'Type check is opt-in via checkTypes config', verificationMethod: 'test' },
+      { id: 'FR-1012-02', description: 'Wider DDL type accepted (SMALLINT→INT OK)', verificationMethod: 'test' },
+      { id: 'FR-1012-03', description: 'Narrower DDL type produces warning (INT→SMALLINT NG)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Type containment verification' },
+    ],
+  },
+  {
+    id: 'FR-1013',
+    name: 'SQL Checker Warnings',
+    description: 'externalSqlSchemaChecker MUST report warnings for missing table, column, and type mismatches',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1013-01', description: 'Warning for missing table', verificationMethod: 'test' },
+      { id: 'FR-1013-02', description: 'Warning for missing column', verificationMethod: 'test' },
+      { id: 'FR-1013-03', description: 'Warning for type mismatch', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'SQL checker warning reporting' },
+    ],
+  },
+  {
+    id: 'FR-1014',
+    name: 'SQL File Not Found Error',
+    description: 'externalSqlSchemaChecker MUST report an error when the DDL file does not exist',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1014-01', description: 'Error reported with missing file path', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'DDL file not found handling' },
+    ],
+  },
+  {
+    id: 'FR-1015',
+    name: 'SQL Parse Failure Graceful Degradation',
+    description: 'externalSqlSchemaChecker MUST handle DDL parse failures gracefully with regex fallback',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1015-01', description: 'Regex fallback used when parser fails', verificationMethod: 'test' },
+      { id: 'FR-1015-02', description: 'Warning emitted for parse fallback', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Graceful parse degradation' },
+    ],
+  },
+
+  // Shared
+  {
+    id: 'FR-1016',
+    name: 'Checker Pattern Consistency',
+    description: 'Both checkers follow the testChecker pattern: file existence check → content parsing → spec ID verification',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1016-01', description: 'OpenAPI checker follows file→parse→verify pattern', verificationMethod: 'test' },
+      { id: 'FR-1016-02', description: 'SQL checker follows file→parse→verify pattern', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Pattern consistency' },
+    ],
+  },
+  {
+    id: 'FR-1017',
+    name: 'Source Path Fallback',
+    description: 'Both checkers use sourcePath from checker config, falling back to hardcoded defaults',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1017-01', description: 'Config sourcePath used when provided', verificationMethod: 'test' },
+      { id: 'FR-1017-02', description: 'Default path used when no config', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Path resolution fallback' },
+    ],
+  },
+  {
+    id: 'FR-1018',
+    name: 'Minimal New Dependencies',
+    description: 'Only node-sql-parser added as new runtime dependency (>100K weekly downloads)',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1018-01', description: 'Only node-sql-parser added as new dependency', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Dependency constraint' },
+    ],
+  },
+
+  // Documentation
+  {
+    id: 'FR-1019',
+    name: 'Checker Documentation Accuracy',
+    description: 'README and scaffold-mermaid-spec.md accurately describe all three built-in checkers as fully implemented',
+    type: 'functional',
+    priority: 'must',
+    category: 'check',
+    parentId: 'FR-1000',
+    acceptanceCriteria: [
+      { id: 'FR-1019-01', description: 'README checker table describes validation levels', verificationMethod: 'review' },
+      { id: 'FR-1019-02', description: 'scaffold-mermaid-spec.md Section 7 describes validation levels', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-1000', description: 'Documentation accuracy' },
+    ],
+  },
+];
+
+// ============================================================================
 // Functional Requirements - All
 // ============================================================================
 
@@ -1182,6 +1517,7 @@ export const functionalRequirements: Requirement[] = [
   ...impactRequirements,
   ...exportRequirements,
   ...testRequirements,
+  ...externalCheckerImplRequirements,
 ];
 
 // ============================================================================

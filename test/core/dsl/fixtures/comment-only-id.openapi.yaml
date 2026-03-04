@@ -1,0 +1,12 @@
+openapi: "3.0.0"
+# FR-001 is referenced here in a comment only
+info:
+  title: Comment Test
+  version: "1.0.0"
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK

@@ -1,0 +1,9 @@
+CREATE TABLE categories (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE tags (
+  id INT PRIMARY KEY,
+  label VARCHAR(50) NOT NULL
+);
