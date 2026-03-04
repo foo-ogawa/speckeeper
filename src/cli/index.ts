@@ -110,7 +110,7 @@ program
 // Scaffold command
 program
   .command('scaffold')
-  .description('Generate _models/ and _checkers/ from a mermaid flowchart definition')
+  .description('Generate _models/ from a mermaid flowchart definition')
   .requiredOption('-s, --source <path>', 'Path to Markdown file containing mermaid flowchart')
   .option('-o, --output <path>', 'Output directory (default: design/)')
   .option('-f, --force', 'Overwrite existing files')

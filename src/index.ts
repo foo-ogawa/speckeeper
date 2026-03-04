@@ -45,17 +45,5 @@ export {
 export * from './core/model-registry.js';
 export * from './core/config-api.js';
 
-// DSL
-export * from './dsl/index.js';
-
-// Generators
-export * from './generators/index.js';
-
-// Validators
-export * from './validators/index.js';
-
-// Checkers
-export * from './checkers/index.js';
-
 // Utils
 export * from './utils/index.js';

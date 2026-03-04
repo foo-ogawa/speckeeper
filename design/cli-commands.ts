@@ -188,7 +188,7 @@ export const commands: CLICommand[] = [
   {
     id: 'CMD-SCAFFOLD',
     name: 'scaffold',
-    description: 'Generate _models/ and _checkers/ from a mermaid flowchart definition',
+    description: 'Generate _models/ from a mermaid flowchart definition',
     componentId: 'COMP-CLI',
     globalParameters: [],
     parameters: [

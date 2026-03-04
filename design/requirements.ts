@@ -1058,115 +1058,7 @@ const exportRequirements: Requirement[] = [
   },
 ];
 
-// ============================================================================
-// Functional Requirements - 8.10 CLI Test Infrastructure (from specs/001)
-// ============================================================================
-
-const testRequirements: Requirement[] = [
-  // ---------------------------------------------------------------------------
-  // FR-900: CLI Test Infrastructure (Parent)
-  // ---------------------------------------------------------------------------
-  {
-    id: 'FR-900',
-    name: 'CLI Test Infrastructure',
-    description: 'Ensure all CLI commands have comprehensive test coverage with traceability to specifications',
-    type: 'functional',
-    priority: 'must',
-    category: 'test',
-    acceptanceCriteria: [
-      { id: 'FR-900-01', description: 'All child requirements (FR-901~FR-904) are satisfied', verificationMethod: 'review' },
-    ],
-    relations: [
-      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
-    ],
-  },
-
-  // ---------------------------------------------------------------------------
-  // FR-901: CLI Command Test Coverage
-  // ---------------------------------------------------------------------------
-  {
-    id: 'FR-901',
-    name: 'CLI Command Test Coverage',
-    description: 'Each CLI command (lint, check, build, impact, drift, new) has a corresponding test file in test/cli/ with requirement ID references',
-    type: 'functional',
-    priority: 'must',
-    category: 'test',
-    parentId: 'FR-900',
-    rationale: 'To prevent regression bugs in CLI commands that directly affect all users and CI pipelines',
-    acceptanceCriteria: [
-      { id: 'FR-901-01', description: 'Test files exist in test/cli/ for each CLI command (lint, check, build, impact, drift, new)', verificationMethod: 'test' },
-      { id: 'FR-901-02', description: 'describe/it block names contain corresponding requirement IDs (FR-xxx)', verificationMethod: 'test' },
-      { id: 'FR-901-03', description: 'CLI module statement coverage reaches 60% or above (from 0%)', verificationMethod: 'test' },
-    ],
-    relations: [
-      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
-    ],
-  },
-
-  // ---------------------------------------------------------------------------
-  // FR-902: Test-Specification Traceability
-  // ---------------------------------------------------------------------------
-  {
-    id: 'FR-902',
-    name: 'Test-Specification Traceability',
-    description: 'TestRef definitions in design/test-refs.ts provide bidirectional traceability between tests and specifications',
-    type: 'functional',
-    priority: 'must',
-    category: 'test',
-    parentId: 'FR-900',
-    rationale: 'To ensure all acceptance criteria are covered by test cases and maintain spec-test traceability',
-    acceptanceCriteria: [
-      { id: 'FR-902-01', description: 'TestRef definitions (TEST-020~025) exist in design/test-refs.ts for each CLI test file', verificationMethod: 'test' },
-      { id: 'FR-902-02', description: 'TestRefs are linked to corresponding command IDs via implementsCommand', verificationMethod: 'test' },
-      { id: 'FR-902-03', description: 'speckeeper check test succeeds for all TestRefs', verificationMethod: 'test' },
-      { id: 'FR-902-04', description: 'speckeeper check test --coverage achieves 100% for target acceptance criteria', verificationMethod: 'test' },
-    ],
-    relations: [
-      { type: 'refines', target: 'FR-604', description: 'Refines coverage verification for CLI tests' },
-    ],
-  },
-
-  // ---------------------------------------------------------------------------
-  // FR-903: CLI Definition-Implementation Consistency
-  // ---------------------------------------------------------------------------
-  {
-    id: 'FR-903',
-    name: 'CLI Definition-Implementation Consistency',
-    description: 'CLI command definitions in design/cli-commands.ts match actual implementation in src/cli/index.ts',
-    type: 'functional',
-    priority: 'must',
-    category: 'test',
-    parentId: 'FR-900',
-    rationale: 'To ensure specification and implementation stay synchronized (e.g., no missing --config parameters)',
-    acceptanceCriteria: [
-      { id: 'FR-903-01', description: 'All command definitions in design/cli-commands.ts match implementation (parameters, subcommands, exit codes)', verificationMethod: 'test' },
-    ],
-    relations: [
-      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
-    ],
-  },
-
-  // ---------------------------------------------------------------------------
-  // FR-904: CLI Backward Compatibility
-  // ---------------------------------------------------------------------------
-  {
-    id: 'FR-904',
-    name: 'CLI Backward Compatibility',
-    description: 'Existing public APIs and CLI behavior are not changed by test additions',
-    type: 'functional',
-    priority: 'must',
-    category: 'test',
-    parentId: 'FR-900',
-    rationale: 'To ensure test strengthening does not introduce regressions',
-    acceptanceCriteria: [
-      { id: 'FR-904-01', description: 'All existing tests continue to pass (no regression)', verificationMethod: 'test' },
-      { id: 'FR-904-02', description: 'No changes to existing public API or CLI behavior', verificationMethod: 'review' },
-    ],
-    relations: [
-      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
-    ],
-  },
-];
+// (FR-900~904 moved to Non-Functional Requirements as NFR-011~015)
 
 // ============================================================================
 // Functional Requirements - 8.11 External Checker Implementation (from specs/003)
@@ -1516,7 +1408,6 @@ export const functionalRequirements: Requirement[] = [
   ...externalCheckRequirements,
   ...impactRequirements,
   ...exportRequirements,
-  ...testRequirements,
   ...externalCheckerImplRequirements,
 ];
 
@@ -1675,6 +1566,94 @@ export const nonFunctionalRequirements: Requirement[] = [
     acceptanceCriteria: [
       { id: 'NFR-010-01', description: 'Can publish package via npm publish', verificationMethod: 'demo' },
       { id: 'NFR-010-02', description: 'Can install via npm install speckeeper', verificationMethod: 'demo' },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Testability (from specs/001 — formerly FR-900~904)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'NFR-011',
+    name: 'CLI Test Infrastructure',
+    description: 'All CLI commands have comprehensive test coverage with traceability to specifications',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    acceptanceCriteria: [
+      { id: 'NFR-011-01', description: 'All child requirements (NFR-012~NFR-015) are satisfied', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-012',
+    name: 'CLI Command Test Coverage',
+    description: 'Each CLI command (lint, check, build, impact, drift, new) has a corresponding test file in test/cli/ with requirement ID references',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To prevent regression bugs in CLI commands that directly affect all users and CI pipelines',
+    acceptanceCriteria: [
+      { id: 'NFR-012-01', description: 'Test files exist in test/cli/ for each CLI command (lint, check, build, impact, drift, new)', verificationMethod: 'test' },
+      { id: 'NFR-012-02', description: 'describe/it block names contain corresponding requirement IDs (FR-xxx)', verificationMethod: 'test' },
+      { id: 'NFR-012-03', description: 'CLI module statement coverage reaches 60% or above (from 0%)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-013',
+    name: 'Test-Specification Traceability',
+    description: 'TestRef definitions in design/test-refs.ts provide bidirectional traceability between tests and specifications',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure all acceptance criteria are covered by test cases and maintain spec-test traceability',
+    acceptanceCriteria: [
+      { id: 'NFR-013-01', description: 'TestRef definitions (TEST-020~025) exist in design/test-refs.ts for each CLI test file', verificationMethod: 'test' },
+      { id: 'NFR-013-02', description: 'TestRefs are linked to corresponding command IDs via implementsCommand', verificationMethod: 'test' },
+      { id: 'NFR-013-03', description: 'speckeeper check test succeeds for all TestRefs', verificationMethod: 'test' },
+      { id: 'NFR-013-04', description: 'speckeeper check test --coverage achieves 100% for target acceptance criteria', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-604', description: 'Refines coverage verification for CLI tests' },
+    ],
+  },
+  {
+    id: 'NFR-014',
+    name: 'CLI Definition-Implementation Consistency',
+    description: 'CLI command definitions in design/cli-commands.ts match actual implementation in src/cli/index.ts',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure specification and implementation stay synchronized (e.g., no missing --config parameters)',
+    acceptanceCriteria: [
+      { id: 'NFR-014-01', description: 'All command definitions in design/cli-commands.ts match implementation (parameters, subcommands, exit codes)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
+    ],
+  },
+  {
+    id: 'NFR-015',
+    name: 'CLI Backward Compatibility',
+    description: 'Existing public APIs and CLI behavior are not changed by test additions',
+    type: 'non-functional',
+    priority: 'must',
+    category: 'testability',
+    parentId: 'NFR-011',
+    rationale: 'To ensure test strengthening does not introduce regressions',
+    acceptanceCriteria: [
+      { id: 'NFR-015-01', description: 'All existing tests continue to pass (no regression)', verificationMethod: 'test' },
+      { id: 'NFR-015-02', description: 'No changes to existing public API or CLI behavior', verificationMethod: 'review' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },
     ],
   },
 ];
