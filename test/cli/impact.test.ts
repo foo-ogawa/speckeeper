@@ -31,11 +31,10 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[], specData
 }
 
 describe('impactCommand', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
+    vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
       throw new Error(`process.exit(${code})`);
     }) as never);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
