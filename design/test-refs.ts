@@ -107,39 +107,39 @@ const initTestPatterns: TestCasePattern[] = [
 
 // Lint command test patterns
 const lintTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-401-01', pattern: 'FR-401-01.*ID.*duplicat', description: 'ID uniqueness verification' },
-  { acceptanceCriteriaId: 'FR-401-03', pattern: 'FR-401-03.*reference.*exist', description: 'Reference integrity verification' },
-  { acceptanceCriteriaId: 'FR-402-01', pattern: 'FR-402-01.*lintRules', description: 'Custom lint rules execution' },
+  { acceptanceCriteriaId: 'FR-401-01', pattern: 'FR-401-01.*lintAll.*exits.*code 1', description: 'Error-severity results trigger exit(1)' },
+  { acceptanceCriteriaId: 'FR-401-03', pattern: 'FR-401-03.*exits.*code 1.*error message', description: 'Ref-exists error triggers exit and output' },
+  { acceptanceCriteriaId: 'FR-402-01', pattern: 'FR-402-01.*lintAll.*outputs warning', description: 'Warnings output without exit' },
 ];
 
 // Check command test patterns
 const checkTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-602-01', pattern: 'FR-602-01.*check.*all models', description: 'Check runs for all models' },
-  { acceptanceCriteriaId: 'FR-602-04', pattern: 'FR-602-04.*externalChecker', description: 'Only models with externalChecker targeted' },
-  { acceptanceCriteriaId: 'FR-603-03', pattern: 'FR-603-03.*success.*errors.*warnings', description: 'Check results structure' },
+  { acceptanceCriteriaId: 'FR-602-01', pattern: 'FR-602-01.*check.*consistency', description: 'Check runs external SSOT check' },
+  { acceptanceCriteriaId: 'FR-602-04', pattern: 'FR-602-04.*skips.*without external', description: 'Skips models without external source' },
+  { acceptanceCriteriaId: 'FR-603-03', pattern: 'FR-603-03.*exits.*code 1.*outputs.*error', description: 'Outputs error/warning messages and exits' },
 ];
 
 // Build command test patterns
 const buildTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-300-01', pattern: 'FR-300-01.*human-readable.*docs', description: 'Human-readable artifact output' },
-  { acceptanceCriteriaId: 'FR-301-05', pattern: 'FR-301-05.*idempoten', description: 'Regeneration idempotency' },
+  { acceptanceCriteriaId: 'FR-300-01', pattern: 'FR-300-01.*exporter\\.single.*batchWriteFiles', description: 'Calls exporter and passes to batchWriteFiles' },
+  { acceptanceCriteriaId: 'FR-301-05', pattern: 'FR-301-05.*exporter\\.single.*identical arguments', description: 'Same arguments on repeated builds' },
 ];
 
 // Impact command test patterns
 const impactTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-700-01', pattern: 'FR-700-01.*impact.*scope', description: 'Impact scope analysis' },
-  { acceptanceCriteriaId: 'FR-700-03', pattern: 'FR-700-03.*depth', description: 'Reference depth specification' },
+  { acceptanceCriteriaId: 'FR-700-01', pattern: 'FR-700-01.*target info.*analysis phase', description: 'Reaches analysis phase for valid ID' },
+  { acceptanceCriteriaId: 'FR-700-03', pattern: 'FR-700-03.*depth value.*--depth', description: 'Outputs depth from --depth option' },
 ];
 
 // Drift command test patterns
 const driftTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-500-01', pattern: 'FR-500-01.*detect.*difference', description: 'Drift detection' },
-  { acceptanceCriteriaId: 'FR-500-02', pattern: 'FR-500-02.*fail.*CI', description: 'CI failure on drift' },
+  { acceptanceCriteriaId: 'FR-500-01', pattern: 'FR-500-01.*No drift detected.*content match', description: 'No drift when content matches' },
+  { acceptanceCriteriaId: 'FR-500-02', pattern: 'FR-500-02.*exits.*code 1.*failOnDrift', description: 'Exits with code 1 on failOnDrift' },
 ];
 
 // New command test patterns (uses FR-104 model definition)
 const newTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-104-01', pattern: 'FR-104-01.*define.*model', description: 'Model-based element creation' },
+  { acceptanceCriteriaId: 'FR-104-01', pattern: 'FR-104-01.*available model types header', description: 'Outputs model types header when type omitted' },
 ];
 
 // ============================================================================
