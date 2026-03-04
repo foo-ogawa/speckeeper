@@ -18,6 +18,7 @@ export const commands: CLICommand[] = [
     componentId: 'COMP-CLI',
     globalParameters: [],
     parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
       { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Output directory base path', required: false, default: '.' },
       { kind: 'option', name: 'format', alias: 'f', type: 'enum', description: 'Output format', required: false, choices: ['markdown', 'json', 'both'], default: 'both' },
       { kind: 'option', name: 'watch', alias: 'w', type: 'boolean', description: 'Watch file changes and auto-regenerate', required: false, default: false },
@@ -38,6 +39,7 @@ export const commands: CLICommand[] = [
     componentId: 'COMP-CLI',
     globalParameters: [],
     parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
       { kind: 'option', name: 'phase', alias: 'p', type: 'enum', description: 'Phase gate (prohibit TBD at specified phase)', required: false, choices: ['REQ', 'HLD', 'LLD', 'OPS'] },
       { kind: 'option', name: 'strict', alias: 's', type: 'boolean', description: 'Strict mode (treat warnings as errors)', required: false, default: false },
       { kind: 'option', name: 'fix', type: 'boolean', description: 'Fix auto-fixable issues', required: false, default: false },
@@ -58,6 +60,7 @@ export const commands: CLICommand[] = [
     componentId: 'COMP-CLI',
     globalParameters: [],
     parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
       { kind: 'option', name: 'update', alias: 'u', type: 'boolean', description: 'Auto-update if differences exist', required: false, default: false },
       { kind: 'option', name: 'format', alias: 'f', type: 'enum', description: 'Output format', required: false, choices: ['text', 'json', 'diff'], default: 'text' },
     ],
@@ -75,7 +78,13 @@ export const commands: CLICommand[] = [
     description: 'Check consistency with external SSOT (OpenAPI/DDL/IaC)',
     componentId: 'COMP-CLI',
     globalParameters: [],
-    parameters: [],
+    parameters: [
+      { kind: 'argument', name: 'type', type: 'string', description: 'Type of check: external-ssot, openapi, ddl, iac, custom, all, test', required: false },
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
+      { kind: 'option', name: 'strict', type: 'boolean', description: 'Treat warnings as errors', required: false, default: false },
+      { kind: 'option', name: 'verbose', alias: 'v', type: 'boolean', description: 'Show detailed output', required: false, default: false },
+      { kind: 'option', name: 'coverage', type: 'boolean', description: 'Check if all testable acceptance criteria are covered by TestRefs', required: false, default: false },
+    ],
     subCommands: [
       {
         name: 'openapi',
@@ -203,6 +212,7 @@ export const commands: CLICommand[] = [
     globalParameters: [],
     parameters: [
       { kind: 'argument', name: 'id', type: 'string', description: 'ID to analyze', required: true, example: 'REQ-001' },
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
       { kind: 'option', name: 'depth', alias: 'd', type: 'number', description: 'Analysis depth (reference tracking level)', required: false, default: 3 },
       { kind: 'option', name: 'direction', type: 'enum', description: 'Analysis direction', required: false, choices: ['upstream', 'downstream', 'both'], default: 'both' },
       { kind: 'option', name: 'format', alias: 'f', type: 'enum', description: 'Output format', required: false, choices: ['text', 'json', 'mermaid'], default: 'text' },

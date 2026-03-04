@@ -105,6 +105,43 @@ const initTestPatterns: TestCasePattern[] = [
   { acceptanceCriteriaId: 'FR-105-10', pattern: 'FR-105-10.*skips package.json', description: 'Skip existing package.json test' },
 ];
 
+// Lint command test patterns
+const lintTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-401-01', pattern: 'FR-401-01.*ID.*duplicat', description: 'ID uniqueness verification' },
+  { acceptanceCriteriaId: 'FR-401-03', pattern: 'FR-401-03.*reference.*exist', description: 'Reference integrity verification' },
+  { acceptanceCriteriaId: 'FR-402-01', pattern: 'FR-402-01.*lintRules', description: 'Custom lint rules execution' },
+];
+
+// Check command test patterns
+const checkTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-602-01', pattern: 'FR-602-01.*check.*all models', description: 'Check runs for all models' },
+  { acceptanceCriteriaId: 'FR-602-04', pattern: 'FR-602-04.*externalChecker', description: 'Only models with externalChecker targeted' },
+  { acceptanceCriteriaId: 'FR-603-03', pattern: 'FR-603-03.*success.*errors.*warnings', description: 'Check results structure' },
+];
+
+// Build command test patterns
+const buildTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-300-01', pattern: 'FR-300-01.*human-readable.*docs', description: 'Human-readable artifact output' },
+  { acceptanceCriteriaId: 'FR-301-05', pattern: 'FR-301-05.*idempoten', description: 'Regeneration idempotency' },
+];
+
+// Impact command test patterns
+const impactTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-700-01', pattern: 'FR-700-01.*impact.*scope', description: 'Impact scope analysis' },
+  { acceptanceCriteriaId: 'FR-700-03', pattern: 'FR-700-03.*depth', description: 'Reference depth specification' },
+];
+
+// Drift command test patterns
+const driftTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-500-01', pattern: 'FR-500-01.*detect.*difference', description: 'Drift detection' },
+  { acceptanceCriteriaId: 'FR-500-02', pattern: 'FR-500-02.*fail.*CI', description: 'CI failure on drift' },
+];
+
+// New command test patterns (uses FR-104 model definition)
+const newTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-104-01', pattern: 'FR-104-01.*define.*model', description: 'Model-based element creation' },
+];
+
 // ============================================================================
 // Test Reference List
 // ============================================================================
@@ -173,6 +210,102 @@ export const testRefs: TestRef[] = [
     implementsCommand: 'CMD-INIT',
     testCasePatterns: initTestPatterns,
     relations: deriveRelations(initTestPatterns, 'CMD-INIT'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-020: Lint command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-020',
+    description: 'Lint command verification test',
+    source: {
+      path: 'test/cli/lint.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(lintTestPatterns),
+    implementsCommand: 'CMD-LINT',
+    testCasePatterns: lintTestPatterns,
+    relations: deriveRelations(lintTestPatterns, 'CMD-LINT'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-021: Check command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-021',
+    description: 'Check command verification test',
+    source: {
+      path: 'test/cli/check.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(checkTestPatterns),
+    implementsCommand: 'CMD-CHECK',
+    testCasePatterns: checkTestPatterns,
+    relations: deriveRelations(checkTestPatterns, 'CMD-CHECK'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-022: Build command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-022',
+    description: 'Build command verification test',
+    source: {
+      path: 'test/cli/build.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(buildTestPatterns),
+    implementsCommand: 'CMD-BUILD',
+    testCasePatterns: buildTestPatterns,
+    relations: deriveRelations(buildTestPatterns, 'CMD-BUILD'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-023: Impact command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-023',
+    description: 'Impact command verification test',
+    source: {
+      path: 'test/cli/impact.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(impactTestPatterns),
+    implementsCommand: 'CMD-IMPACT',
+    testCasePatterns: impactTestPatterns,
+    relations: deriveRelations(impactTestPatterns, 'CMD-IMPACT'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-024: Drift command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-024',
+    description: 'Drift command verification test',
+    source: {
+      path: 'test/cli/drift.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(driftTestPatterns),
+    implementsCommand: 'CMD-DRIFT',
+    testCasePatterns: driftTestPatterns,
+    relations: deriveRelations(driftTestPatterns, 'CMD-DRIFT'),
+  },
+
+  // ---------------------------------------------------------------------------
+  // TEST-025: New command test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-025',
+    description: 'New command verification test',
+    source: {
+      path: 'test/cli/new.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(newTestPatterns),
+    implementsCommand: 'CMD-NEW',
+    testCasePatterns: newTestPatterns,
+    relations: deriveRelations(newTestPatterns, 'CMD-NEW'),
   },
 ];
 

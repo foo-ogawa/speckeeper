@@ -34,3 +34,7 @@ test-results/
 
 # Build artifacts for testing
 .test-build/
+
+# Spec Kit (development process artifacts)
+.specify/
+specs/
