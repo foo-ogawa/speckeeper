@@ -241,10 +241,11 @@ Defines the abstraction level of a model:
 
 | Type | Direction Constraint | Description |
 |------|----------------------|-------------|
-| `implements` | L3→L1 | Implements a requirement |
+| `implements` | spec→external | Spec is implemented as external artifact (OpenAPI, DDL) |
 | `satisfies` | L1→L0 | Satisfies a use case |
 | `refines` | Same level or lower | Refinement |
-| `verifies` | L3→L1 | Test verifies a requirement |
+| `verifiedBy` | spec→test | Spec is verified by external test code |
+| `verifies` | test→implementation | Test verifies implementation code (external, no checker generated) |
 | `dependsOn` | None | Dependency |
 | `relatedTo` | None | Association |
 

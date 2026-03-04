@@ -11,7 +11,7 @@
 Requirements and design documents often drift from implementation. **speckeeper** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
 
 ```
-Mermaid flowchart ──► speckeeper scaffold ──► design/_models/ & _checkers/
+Mermaid flowchart ──► speckeeper scaffold ──► design/_models/
                                                      │
 design/*.ts  ─────────────────────────────► Validation & Consistency Checks
     │
@@ -26,7 +26,7 @@ design/*.ts  ──────────────────────�
 - **Design validation** — Lint rules for ID uniqueness, reference integrity, circular dependencies, and phase gates
 - **External SSOT validation** — Check consistency with test files, and custom checkers for OpenAPI, DDL, etc.
 - **Traceability** — Track relationships across model levels (L0-L3) with impact analysis
-- **Scaffold from Mermaid** — Generate `_models/` and `_checkers/` skeletons from a mermaid flowchart
+- **Scaffold from Mermaid** — Generate `_models/` skeletons from a mermaid flowchart with class-based artifact resolution
 - **Custom models** — Extend with domain-specific models (Runbooks, Policies, etc.)
 - **CI-ready** — Built-in lint, drift detection, and coverage checks
 
@@ -47,33 +47,55 @@ Create a Markdown file (e.g. `requirements.md`) containing a mermaid flowchart t
 
 ```mermaid
 flowchart TB
-  TERM[Term] <-->|relatedTo| SR[System Requirement]
-  SR -->|refines| FR[Functional Requirement]
-  SR -->|refines| NFR[Non-Functional Requirement]
-  FR -->|refines| UC[Use Case]
-  FR -->|includes| AT[Acceptance Test]
-  UC -->|implements| API[API Spec]
-  AT -->|implements| E2ET[E2E Test]
+  subgraph L0[Business]
+    UC[Use Cases]
+    TERM[Glossary]
+  end
+  subgraph L1[Requirements]
+    FR[Functional Requirements]
+    NFR[Non-Functional Requirements]
+  end
+  subgraph External[External Artifacts]
+    API[OpenAPI Spec]
+    DDL[Database Schema]
+    UT[Unit Tests]
+  end
 
-  classDef speckeeper fill:#2563EB,stroke:#1D4ED8,color:#fff,stroke-width:2px
-  class TERM,SR,FR,NFR,UC,AT speckeeper
+  FR -->|refines| UC
+  FR -->|implements| API
+  FR -->|verifiedBy| UT
+  FR -->|implements| DDL
+
+  class UC,TERM,FR,NFR speckeeper
+  class FR,NFR requirement
+  class UC usecase
+  class TERM term
+  class API openapi
+  class DDL sqlschema
+  class UT test
 ```
 
-Nodes marked with `class ... speckeeper` become managed models. Edges define lint rules (reference integrity) and checkers (external validation) automatically.
+Key concepts:
+- `class ... speckeeper` marks nodes as managed by speckeeper
+- Additional `class` lines assign **artifact classes** (determines model name/file and node grouping)
+- External node classes (`openapi`, `sqlschema`, `test`) determine checker bindings
+- `subgraph` determines model level (L0–L3)
+- `implements` edges trigger external SSOT validation
+- `verifiedBy` edges trigger test verification
 
-### 2. Scaffold models and checkers
+### 2. Scaffold models
 
 ```bash
 npx speckeeper scaffold --source requirements.md
 ```
 
 This generates:
-- `design/_models/` — Model classes with Zod schemas, lint rules, and exporters derived from your flowchart
-- `design/*.ts` — Spec data files using `defineSpecs()` for each model
-- `design/index.ts` — Entry point that aggregates all spec modules via `mergeSpecs()`
-- `design/_checkers/` — External checker skeletons for `implements` edges (e.g. OpenAPI, DDL)
+- `design/_models/` — Model classes with base schema (id, name, description, relations) and core factory imports. Customise after generation.
+- `design/*.ts` — Spec data files using `defineSpecs()`
+- `design/index.ts` — Entry point via `mergeSpecs()`
+- Checker bindings from `implements`/`verifiedBy` edges are added as guidance comments
 
-See [Scaffold Mermaid Specification](./docs/scaffold-mermaid-spec.md) for the full input format and built-in node mappings.
+See [Scaffold Mermaid Specification](./docs/scaffold-mermaid-spec.md) for the full input format.
 
 ### 3. Fill in your specifications
 
@@ -129,7 +151,7 @@ npx speckeeper impact FR-001
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
 | `speckeeper check test --coverage` | Verify test coverage for requirements |
-| `speckeeper scaffold` | Generate model/checker skeletons from a mermaid flowchart |
+| `speckeeper scaffold` | Generate model skeletons from a mermaid flowchart |
 | `speckeeper drift` | Detect manual edits to generated `specs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 
@@ -223,45 +245,65 @@ $ npx speckeeper impact FR-001
 FR-001 (Requirement)
 ├── implements: COMP-AUTH (Component)
 ├── satisfies: UC-001 (UseCase)
-└── verifies: TEST-001 (TestRef)
+└── verifiedBy: TEST-001 (TestRef)
 ```
 
-See [Model Entity Catalog](./docs/model_entity_catalog.md) for relation types and level constraints.
+### Relation Types
+
+| Relation | Direction | Description |
+|----------|-----------|-------------|
+| `implements` | spec→external | Spec is implemented as external artifact (OpenAPI, DDL) |
+| `verifiedBy` | spec→test | Spec is verified by external test code |
+| `satisfies` | L1→L0 | Satisfies a use case |
+| `refines` | Same level or lower | Refinement |
+| `verifies` | test→implementation | Test verifies implementation code (external, no checker) |
+| `dependsOn` | None | Dependency |
+| `relatedTo` | None | Association |
+
+See [Model Entity Catalog](./docs/model_entity_catalog.md) for full details on relation types and level constraints.
 
 ## Customizing Models
 
-The starter templates provide basic models. You can customize them or add new domain-specific models:
+Scaffolded models provide a base schema (id, name, description, relations). You can customize them or add new domain-specific models using core factory functions from `speckeeper/dsl`:
 
 ```typescript
 import { z } from 'zod';
-import { Model } from 'speckeeper';
+import { Model, RelationSchema } from 'speckeeper';
+import type { LintRule, Exporter, ModelLevel } from 'speckeeper';
+import { requireField, arrayMinLength } from 'speckeeper/dsl';
 
 const RunbookSchema = z.object({
   id: z.string(),
-  title: z.string(),
+  name: z.string().min(1),
+  description: z.string(),
   severity: z.enum(['critical', 'high', 'medium', 'low']),
   steps: z.array(z.object({
     action: z.string(),
     verification: z.string().optional(),
-  })),
+  })).min(1),
+  relations: z.array(RelationSchema).optional(),
 });
 
+type Runbook = z.input<typeof RunbookSchema>;
+
 class RunbookModel extends Model<typeof RunbookSchema> {
-  id = 'runbook';
-  name = 'Runbook';
-  idPrefix = 'RB';
-  schema = RunbookSchema;
-  
-  lintRules = [
-    {
-      id: 'runbook-has-steps',
-      severity: 'error',
-      message: 'Runbook must have at least one step',
-      check: (spec) => spec.steps.length === 0,
-    },
+  readonly id = 'runbook';
+  readonly name = 'Runbook';
+  readonly idPrefix = 'RB';
+  readonly schema = RunbookSchema;
+  readonly description = 'Incident runbooks';
+  protected modelLevel: ModelLevel = 'L3';
+
+  protected lintRules: LintRule<Runbook>[] = [
+    requireField<Runbook>('description', 'error'),
+    arrayMinLength<Runbook>('steps', 1),
   ];
+
+  protected exporters: Exporter<Runbook>[] = [];
 }
 ```
+
+Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `testChecker`, `externalOpenAPIChecker`, `externalSqlSchemaChecker`, `relationCoverage`, and `baseSpecSchema`.
 
 ## Documentation
 

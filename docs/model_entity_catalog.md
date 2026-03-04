@@ -1,7 +1,7 @@
 # Model Entity Catalog
 
 Created: 2026-02-03  
-Version: 0.3
+Version: 0.5
 
 ---
 
