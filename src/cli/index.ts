@@ -62,6 +62,7 @@ program
   .option('-c, --config <path>', 'Path to config file')
   .option('-u, --update', 'Auto-update if differences are found')
   .option('-f, --format <format>', 'Output format: text, json, diff', 'text')
+  .option('--fail-on-drift', 'Exit with code 1 if drift is detected (for CI)')
   .action(driftCommand);
 
 // Check command

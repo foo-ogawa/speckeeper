@@ -40,6 +40,9 @@ jobs:
       - name: Run speckeeper lint
         run: npx speckeeper lint
 
+      - name: Run speckeeper drift
+        run: npx speckeeper drift --fail-on-drift
+
       - name: Run tests
         run: npm run test:run
 

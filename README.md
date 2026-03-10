@@ -152,7 +152,7 @@ npx speckeeper impact FR-001
 | `speckeeper check` | Verify consistency with external SSOT |
 | `speckeeper check test --coverage` | Verify test coverage for requirements |
 | `speckeeper scaffold` | Generate model skeletons from a mermaid flowchart |
-| `speckeeper drift` | Detect manual edits to generated `specs/` files |
+| `speckeeper drift` | Detect manual edits to generated `docs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 
 **Note**: `speckeeper build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
