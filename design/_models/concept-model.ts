@@ -101,23 +101,6 @@ class EntityModel extends Model<typeof EntitySchema> {
   protected exporters: Exporter<Entity>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push('');
-        lines.push(spec.description);
-        lines.push('');
-        lines.push('## Attributes');
-        lines.push('');
-        lines.push('| Name | Type | Required | Description |');
-        lines.push('|------|------|----------|-------------|');
-        for (const attr of spec.attributes) {
-          lines.push(`| ${attr.name} | ${attr.type} | ${attr.required ? 'Yes' : 'No'} | ${attr.description || ''} |`);
-        }
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Entities');
@@ -127,10 +110,28 @@ class EntityModel extends Model<typeof EntitySchema> {
         for (const spec of specs) {
           lines.push(`| ${spec.id} | ${spec.name} | ${spec.description} |`);
         }
-        return lines.join('\n');
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+          lines.push('### Attributes');
+          lines.push('');
+          lines.push('| Name | Type | Required | Description |');
+          lines.push('|------|------|----------|-------------|');
+          for (const attr of spec.attributes) {
+            lines.push(`| ${attr.name} | ${attr.type} | ${attr.required ? 'Yes' : 'No'} | ${attr.description || ''} |`);
+          }
+          lines.push('');
+          lines.push('---');
+          lines.push('');
+        }
+        return lines.join('\n').replace(/\n---\n\n$/, '\n');
       },
-      outputDir: 'data-model/entities',
-      filename: (spec) => spec.id,
+      outputFile: 'design/entities.md',
     },
   ];
 

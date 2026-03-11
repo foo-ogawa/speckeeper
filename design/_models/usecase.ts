@@ -97,21 +97,6 @@ class ActorModel extends Model<typeof ActorSchema> {
   protected exporters: Exporter<Actor>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Type**: ${spec.type}`);
-        lines.push('');
-        if (spec.description) {
-          lines.push('## Description');
-          lines.push('');
-          lines.push(spec.description);
-          lines.push('');
-        }
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Actors');
@@ -121,10 +106,23 @@ class ActorModel extends Model<typeof ActorSchema> {
         for (const spec of specs) {
           lines.push(`| ${spec.id} | ${spec.name} | ${spec.type} | ${spec.description || ''} |`);
         }
+        lines.push('');
+        lines.push('---');
+        for (const spec of specs) {
+          lines.push('');
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(`**Type**: ${spec.type}`);
+          lines.push('');
+          lines.push('### Description');
+          lines.push('');
+          lines.push(spec.description || '');
+          lines.push('');
+          lines.push('---');
+        }
         return lines.join('\n');
       },
-      outputDir: 'actors',
-      filename: (spec) => spec.id,
+      outputFile: 'design/actors.md',
     },
   ];
 
@@ -164,20 +162,6 @@ class UseCaseModel extends Model<typeof UseCaseFlowSchema> {
   protected exporters: Exporter<UseCase>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Actor**: ${spec.actor}`);
-        lines.push('');
-        lines.push('## Main Flow');
-        lines.push('');
-        for (const step of spec.mainFlow) {
-          lines.push(`${step.stepNumber}. ${step.description}`);
-        }
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Use Cases');
@@ -187,10 +171,25 @@ class UseCaseModel extends Model<typeof UseCaseFlowSchema> {
         for (const spec of specs) {
           lines.push(`| ${spec.id} | ${spec.name} | ${spec.actor} |`);
         }
+        lines.push('');
+        lines.push('---');
+        for (const spec of specs) {
+          lines.push('');
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(`**Actor**: ${spec.actor}`);
+          lines.push('');
+          lines.push('### Main Flow');
+          lines.push('');
+          for (const step of spec.mainFlow) {
+            lines.push(`${step.stepNumber}. ${step.description}`);
+          }
+          lines.push('');
+          lines.push('---');
+        }
         return lines.join('\n');
       },
-      outputDir: 'usecases',
-      filename: (spec) => spec.id,
+      outputFile: 'design/usecases.md',
     },
   ];
 

@@ -179,81 +179,6 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
   protected exporters: Exporter<CLICommand>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push('');
-        lines.push('## Overview');
-        lines.push('');
-        lines.push(spec.description);
-        lines.push('');
-
-        // Usage
-        lines.push('## Usage');
-        lines.push('');
-        lines.push('```bash');
-        if (spec.subCommands.length > 0) {
-          lines.push(`speckeeper ${spec.name} <subcommand> [options]`);
-        } else {
-          lines.push(`speckeeper ${spec.name} [options]`);
-        }
-        lines.push('```');
-        lines.push('');
-
-        // Parameters
-        if (spec.parameters.length > 0) {
-          lines.push('## Parameters');
-          lines.push('');
-          lines.push('| Name | Kind | Type | Required | Default | Description |');
-          lines.push('|------|------|------|----------|---------|-------------|');
-          for (const p of spec.parameters) {
-            const alias = p.alias ? `-${p.alias}, ` : '';
-            const flag = p.kind === 'option' ? `${alias}--${p.name}` : `<${p.name}>`;
-            const req = p.required ? '✓' : '';
-            const def = p.default !== undefined ? String(p.default) : '-';
-            lines.push(`| ${flag} | ${p.kind} | ${p.type} | ${req} | ${def} | ${p.description} |`);
-          }
-          lines.push('');
-        }
-
-        // Subcommands
-        if (spec.subCommands.length > 0) {
-          lines.push('## Subcommands');
-          lines.push('');
-          for (const sub of spec.subCommands) {
-            lines.push(`### ${sub.name}`);
-            lines.push('');
-            lines.push(sub.description);
-            lines.push('');
-          }
-        }
-
-        // Examples
-        if (spec.examples.length > 0) {
-          lines.push('## Examples');
-          lines.push('');
-          lines.push('```bash');
-          lines.push(spec.examples.join('\n'));
-          lines.push('```');
-          lines.push('');
-        }
-
-        // Exit codes
-        if (spec.exitCodes.length > 0) {
-          lines.push('## Exit Codes');
-          lines.push('');
-          lines.push('| Code | Description |');
-          lines.push('|------|-------------|');
-          for (const ec of spec.exitCodes) {
-            lines.push(`| ${ec.code} | ${ec.description} |`);
-          }
-          lines.push('');
-        }
-
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# CLI Commands');
@@ -261,12 +186,82 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
         lines.push('| Command | Description |');
         lines.push('|---------|-------------|');
         for (const spec of specs) {
-          lines.push(`| [${spec.name}](./${spec.id}.md) | ${spec.description} |`);
+          lines.push(`| ${spec.name} | ${spec.description} |`);
         }
-        return lines.join('\n');
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+
+          lines.push('### Usage');
+          lines.push('');
+          lines.push('```bash');
+          if (spec.subCommands.length > 0) {
+            lines.push(`speckeeper ${spec.name} <subcommand> [options]`);
+          } else {
+            lines.push(`speckeeper ${spec.name} [options]`);
+          }
+          lines.push('```');
+          lines.push('');
+
+          if (spec.parameters.length > 0) {
+            lines.push('### Parameters');
+            lines.push('');
+            lines.push('| Name | Kind | Type | Required | Default | Description |');
+            lines.push('|------|------|------|----------|---------|-------------|');
+            for (const p of spec.parameters) {
+              const alias = p.alias ? `-${p.alias}, ` : '';
+              const flag = p.kind === 'option' ? `${alias}--${p.name}` : `<${p.name}>`;
+              const req = p.required ? '✓' : '';
+              const def = p.default !== undefined ? String(p.default) : '-';
+              lines.push(`| ${flag} | ${p.kind} | ${p.type} | ${req} | ${def} | ${p.description} |`);
+            }
+            lines.push('');
+          }
+
+          if (spec.subCommands.length > 0) {
+            lines.push('### Subcommands');
+            lines.push('');
+            for (const sub of spec.subCommands) {
+              lines.push(`#### ${sub.name}`);
+              lines.push('');
+              lines.push(sub.description);
+              lines.push('');
+            }
+          }
+
+          if (spec.examples.length > 0) {
+            lines.push('### Examples');
+            lines.push('');
+            lines.push('```bash');
+            lines.push(spec.examples.join('\n'));
+            lines.push('```');
+            lines.push('');
+          }
+
+          if (spec.exitCodes.length > 0) {
+            lines.push('### Exit Codes');
+            lines.push('');
+            lines.push('| Code | Description |');
+            lines.push('|------|-------------|');
+            for (const ec of spec.exitCodes) {
+              lines.push(`| ${ec.code} | ${ec.description} |`);
+            }
+            lines.push('');
+          }
+
+          lines.push('---');
+          lines.push('');
+        }
+
+        return lines.join('\n').replace(/\n---\n\n$/s, '\n');
       },
-      outputDir: 'cli',
-      filename: (spec) => spec.id,
+      outputFile: 'design/cli-commands.md',
     },
   ];
 

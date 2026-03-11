@@ -101,17 +101,6 @@ class ComponentModelBase extends Model<typeof ComponentSchema> {
   protected exporters: Exporter<Component>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Type**: ${spec.type}`);
-        if (spec.technology) lines.push(`**Technology**: ${spec.technology.name}`);
-        lines.push('');
-        lines.push(spec.description);
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Components');
@@ -121,10 +110,23 @@ class ComponentModelBase extends Model<typeof ComponentSchema> {
         for (const spec of specs) {
           lines.push(`| ${spec.id} | ${spec.name} | ${spec.type} | ${spec.description} |`);
         }
-        return lines.join('\n');
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(`**Type**: ${spec.type}`);
+          if (spec.technology) lines.push(`**Technology**: ${spec.technology.name}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+          lines.push('---');
+          lines.push('');
+        }
+        return lines.join('\n').replace(/\n---\n\n$/, '\n');
       },
-      outputDir: 'architecture',
-      filename: (spec) => spec.id,
+      outputFile: 'design/architecture.md',
     },
   ];
 

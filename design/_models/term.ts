@@ -83,21 +83,6 @@ class TermModel extends Model<typeof TermSchema> {
   protected exporters: Exporter<Term>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.term}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Category**: ${spec.category}`);
-        if (spec.abbreviation) lines.push(`**Abbreviation**: ${spec.abbreviation}`);
-        if (spec.expandedForm) lines.push(`**Expanded Form**: ${spec.expandedForm}`);
-        lines.push('');
-        lines.push('## Definition');
-        lines.push('');
-        lines.push(spec.definition);
-        lines.push('');
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Glossary');
@@ -106,10 +91,29 @@ class TermModel extends Model<typeof TermSchema> {
         for (const spec of sorted) {
           lines.push(`- **${spec.term}**: ${spec.definition}`);
         }
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+        for (let i = 0; i < sorted.length; i++) {
+          const spec = sorted[i];
+          lines.push(`## ${spec.id}: ${spec.term}`);
+          lines.push('');
+          lines.push(`**Category**: ${spec.category}`);
+          if (spec.abbreviation) lines.push(`**Abbreviation**: ${spec.abbreviation}`);
+          if (spec.expandedForm) lines.push(`**Expanded Form**: ${spec.expandedForm}`);
+          lines.push('');
+          lines.push('### Definition');
+          lines.push('');
+          lines.push(spec.definition);
+          if (i < sorted.length - 1) {
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+          }
+        }
         return lines.join('\n');
       },
-      outputDir: 'glossary',
-      filename: (spec) => spec.id,
+      outputFile: 'design/glossary.md',
     },
   ];
 

@@ -81,7 +81,9 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
         }
         
         if (exporter.index) {
-          const indexPath = join(outputDir, 'index.md');
+          const indexPath = exporter.outputFile
+            ? join(cwd, config.docsDir, exporter.outputFile)
+            : join(outputDir, 'index.md');
           
           if (!existsSync(indexPath)) {
             results.push({ file: indexPath, status: 'missing' });

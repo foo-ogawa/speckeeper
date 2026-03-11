@@ -230,46 +230,6 @@ class TestRefModel extends Model<typeof TestRefSchema> {
   protected exporters: Exporter<TestRef>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.id}: ${spec.description}`);
-        lines.push('');
-        lines.push('## Test Source');
-        lines.push('');
-        lines.push(`- **Path**: \`${spec.source.path}\``);
-        lines.push(`- **Framework**: ${spec.source.framework}`);
-        if (spec.source.resultPath) {
-          lines.push(`- **Result JSON**: \`${spec.source.resultPath}\``);
-        }
-        lines.push('');
-
-        lines.push('## Verified Requirements');
-        lines.push('');
-        for (const reqId of spec.verifiesRequirements) {
-          lines.push(`- ${reqId}`);
-        }
-        lines.push('');
-
-        if (spec.implementsCommand) {
-          lines.push('## Implemented Command');
-          lines.push('');
-          lines.push(`- ${spec.implementsCommand}`);
-          lines.push('');
-        }
-
-        if (spec.testCasePatterns && spec.testCasePatterns.length > 0) {
-          lines.push('## Test Case Patterns');
-          lines.push('');
-          lines.push('| Acceptance Criteria ID | Pattern | Description |');
-          lines.push('|------------------------|---------|-------------|');
-          for (const p of spec.testCasePatterns) {
-            lines.push(`| ${p.acceptanceCriteriaId} | \`${p.pattern}\` | ${p.description || '-'} |`);
-          }
-          lines.push('');
-        }
-
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Test Reference List');
@@ -278,13 +238,57 @@ class TestRefModel extends Model<typeof TestRefSchema> {
         lines.push('|----|-------------|-----------|-------------------|');
         for (const spec of specs) {
           lines.push(
-            `| [${spec.id}](./${spec.id}.md) | ${spec.description} | ${spec.source.framework} | ${spec.verifiesRequirements.length} |`,
+            `| ${spec.id} | ${spec.description} | ${spec.source.framework} | ${spec.verifiesRequirements.length} |`,
           );
         }
-        return lines.join('\n');
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.description}`);
+          lines.push('');
+          lines.push('### Test Source');
+          lines.push('');
+          lines.push(`- **Path**: \`${spec.source.path}\``);
+          lines.push(`- **Framework**: ${spec.source.framework}`);
+          if (spec.source.resultPath) {
+            lines.push(`- **Result JSON**: \`${spec.source.resultPath}\``);
+          }
+          lines.push('');
+
+          lines.push('### Verified Requirements');
+          lines.push('');
+          for (const reqId of spec.verifiesRequirements) {
+            lines.push(`- ${reqId}`);
+          }
+          lines.push('');
+
+          if (spec.implementsCommand) {
+            lines.push('### Implemented Command');
+            lines.push('');
+            lines.push(`- ${spec.implementsCommand}`);
+            lines.push('');
+          }
+
+          if (spec.testCasePatterns && spec.testCasePatterns.length > 0) {
+            lines.push('### Test Case Patterns');
+            lines.push('');
+            lines.push('| Acceptance Criteria ID | Pattern | Description |');
+            lines.push('|------------------------|---------|-------------|');
+            for (const p of spec.testCasePatterns) {
+              lines.push(`| ${p.acceptanceCriteriaId} | \`${p.pattern}\` | ${p.description || '-'} |`);
+            }
+            lines.push('');
+          }
+
+          lines.push('---');
+          lines.push('');
+        }
+
+        return lines.join('\n').replace(/\n---\n\n$/s, '\n');
       },
-      outputDir: 'test-refs',
-      filename: (spec) => spec.id,
+      outputFile: 'design/test-refs.md',
     },
   ];
 

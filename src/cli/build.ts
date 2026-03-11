@@ -79,7 +79,9 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
           ? join(cwd, config.docsDir, exporter.outputDir)
           : join(cwd, config.docsDir);
         
-        ensureDir(outputDir);
+        if (exporter.single) {
+          ensureDir(outputDir);
+        }
         
         if (exporter.single) {
           for (const spec of modelSpecs) {
@@ -94,8 +96,14 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
         
         if (exporter.index) {
           const indexContent = exporter.index(modelSpecs);
+          const indexPath = exporter.outputFile
+            ? join(cwd, config.docsDir, exporter.outputFile)
+            : join(outputDir, 'index.md');
+          if (!exporter.outputFile) {
+            ensureDir(outputDir);
+          }
           files.push({
-            path: join(outputDir, 'index.md'),
+            path: indexPath,
             content: indexContent,
           });
         }

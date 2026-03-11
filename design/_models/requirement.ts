@@ -100,33 +100,6 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
   protected exporters: Exporter<Requirement>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Type**: ${spec.type}`);
-        lines.push(`**Priority**: ${spec.priority}`);
-        if (spec.category) lines.push(`**Category**: ${spec.category}`);
-        lines.push('');
-        lines.push('## Description');
-        lines.push('');
-        lines.push(spec.description);
-        lines.push('');
-        if (spec.rationale) {
-          lines.push('## Rationale');
-          lines.push('');
-          lines.push(spec.rationale);
-          lines.push('');
-        }
-        lines.push('## Acceptance Criteria');
-        lines.push('');
-        for (const ac of spec.acceptanceCriteria) {
-          const method = ac.verificationMethod ? ` [${ac.verificationMethod}]` : '';
-          lines.push(`- **${ac.id}**: ${ac.description}${method}`);
-        }
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Requirements');
@@ -148,14 +121,41 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
           lines.push('| ID | Name | Priority | Category |');
           lines.push('|----|------|----------|----------|');
           for (const spec of typeSpecs) {
-            lines.push(`| [${spec.id}](./${spec.id}.md) | ${spec.name} | ${spec.priority} | ${spec.category || '-'} |`);
+            lines.push(`| ${spec.id} | ${spec.name} | ${spec.priority} | ${spec.category || '-'} |`);
           }
           lines.push('');
         }
+        lines.push('---');
+        lines.push('');
+        for (let i = 0; i < specs.length; i++) {
+          const spec = specs[i];
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(`**Type**: ${spec.type} | **Priority**: ${spec.priority} | **Category**: ${spec.category || '-'}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+          if (spec.rationale) {
+            lines.push('### Rationale');
+            lines.push('');
+            lines.push(spec.rationale);
+            lines.push('');
+          }
+          lines.push('### Acceptance Criteria');
+          lines.push('');
+          for (const ac of spec.acceptanceCriteria) {
+            const method = ac.verificationMethod ? ` [${ac.verificationMethod}]` : '';
+            lines.push(`- **${ac.id}**: ${ac.description}${method}`);
+          }
+          if (i < specs.length - 1) {
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+          }
+        }
         return lines.join('\n');
       },
-      outputDir: 'requirements',
-      filename: (spec) => spec.id,
+      outputFile: 'design/requirements.md',
     },
   ];
 

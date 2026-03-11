@@ -67,6 +67,7 @@ class DirectoryEntryModel extends Model<typeof DirectoryEntrySchema> {
     {
       format: 'markdown',
       index: (specs) => generateDirectoryTree(specs),
+      outputFile: 'directory-entries.md',
     },
   ];
 }

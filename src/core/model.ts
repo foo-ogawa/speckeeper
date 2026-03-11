@@ -48,7 +48,10 @@ export interface Exporter<T> {
   format: 'markdown' | 'json' | 'mermaid';
   single?: (spec: T) => string;
   index?: (specs: T[]) => string;
+  /** Subdirectory under docsDir (used with single + index/index.md) */
   outputDir?: string;
+  /** Direct output file path relative to docsDir (used with index-only exporters) */
+  outputFile?: string;
   filename?: (spec: T) => string;
 }
 

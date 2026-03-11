@@ -62,26 +62,6 @@ class ArtifactModel extends Model<typeof ArtifactSchema> {
   protected exporters: Exporter<Artifact>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.name}`);
-        lines.push('');
-        lines.push(`**ID**: ${spec.id}`);
-        lines.push(`**Category**: ${spec.category}`);
-        lines.push(`**Location**: \`${spec.location}\``);
-        lines.push(`**Drift Target**: ${spec.driftTarget ? 'Yes' : 'No'}`);
-        if (spec.generatedFrom) {
-          lines.push(`**Generated From**: ${spec.generatedFrom}`);
-        }
-        lines.push('');
-
-        lines.push('## Purpose');
-        lines.push('');
-        lines.push(spec.purpose);
-        lines.push('');
-
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Artifacts');
@@ -112,10 +92,29 @@ class ArtifactModel extends Model<typeof ArtifactSchema> {
           lines.push('');
         }
 
-        return lines.join('\n');
+        lines.push('---');
+        lines.push('');
+
+        for (const [, categorySpecs] of Array.from(byCategory.entries())) {
+          for (const spec of categorySpecs) {
+            lines.push(`## ${spec.id}: ${spec.name}`);
+            lines.push('');
+            lines.push(`**Category**: ${spec.category} | **Location**: \`${spec.location}\` | **Drift Target**: ${spec.driftTarget ? 'Yes' : 'No'}`);
+            if (spec.generatedFrom) {
+              lines.push(`**Generated From**: ${spec.generatedFrom}`);
+            }
+            lines.push('');
+            lines.push('### Purpose');
+            lines.push('');
+            lines.push(spec.purpose);
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+          }
+        }
+        return lines.join('\n').replace(/\n---\n\n$/, '\n');
       },
-      outputDir: 'artifacts',
-      filename: (spec) => spec.id,
+      outputFile: 'design/artifacts.md',
     },
   ];
 
