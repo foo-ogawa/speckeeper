@@ -97,67 +97,71 @@ class RequirementModelBase extends Model<typeof RequirementSchema> {
     requireField<Requirement>('rationale', 'info'),
   ];
 
-  protected exporters: Exporter<Requirement>[] = [
-    {
-      format: 'markdown',
-      index: (specs) => {
-        const lines: string[] = [];
-        lines.push('# Requirements');
-        lines.push('');
-        const byType = new Map<string, Requirement[]>();
-        for (const spec of specs) {
-          const list = byType.get(spec.type) || [];
-          list.push(spec);
-          byType.set(spec.type, list);
-        }
-        const typeLabels: Record<string, string> = {
-          'functional': 'Functional Requirements',
-          'non-functional': 'Non-Functional Requirements',
-          'constraint': 'Constraints',
-        };
-        for (const [type, typeSpecs] of Array.from(byType.entries())) {
-          lines.push(`## ${typeLabels[type] || type}`);
+  protected exporters: Exporter<Requirement>[] = this.createExporters('design/requirements.md');
+
+  protected createExporters(outputFile: string): Exporter<Requirement>[] {
+    return [
+      {
+        format: 'markdown',
+        index: (specs) => {
+          const lines: string[] = [];
+          lines.push('# Requirements');
           lines.push('');
-          lines.push('| ID | Name | Priority | Category |');
-          lines.push('|----|------|----------|----------|');
-          for (const spec of typeSpecs) {
-            lines.push(`| ${spec.id} | ${spec.name} | ${spec.priority} | ${spec.category || '-'} |`);
+          const byType = new Map<string, Requirement[]>();
+          for (const spec of specs) {
+            const list = byType.get(spec.type) || [];
+            list.push(spec);
+            byType.set(spec.type, list);
           }
-          lines.push('');
-        }
-        lines.push('---');
-        lines.push('');
-        for (let i = 0; i < specs.length; i++) {
-          const spec = specs[i];
-          lines.push(`## ${spec.id}: ${spec.name}`);
-          lines.push('');
-          lines.push(`**Type**: ${spec.type} | **Priority**: ${spec.priority} | **Category**: ${spec.category || '-'}`);
-          lines.push('');
-          lines.push(spec.description);
-          lines.push('');
-          if (spec.rationale) {
-            lines.push('### Rationale');
+          const typeLabels: Record<string, string> = {
+            'functional': 'Functional Requirements',
+            'non-functional': 'Non-Functional Requirements',
+            'constraint': 'Constraints',
+          };
+          for (const [type, typeSpecs] of Array.from(byType.entries())) {
+            lines.push(`## ${typeLabels[type] || type}`);
             lines.push('');
-            lines.push(spec.rationale);
+            lines.push('| ID | Name | Priority | Category |');
+            lines.push('|----|------|----------|----------|');
+            for (const spec of typeSpecs) {
+              lines.push(`| ${spec.id} | ${spec.name} | ${spec.priority} | ${spec.category || '-'} |`);
+            }
             lines.push('');
           }
-          lines.push('### Acceptance Criteria');
+          lines.push('---');
           lines.push('');
-          for (const ac of spec.acceptanceCriteria) {
-            const method = ac.verificationMethod ? ` [${ac.verificationMethod}]` : '';
-            lines.push(`- **${ac.id}**: ${ac.description}${method}`);
-          }
-          if (i < specs.length - 1) {
+          for (let i = 0; i < specs.length; i++) {
+            const spec = specs[i];
+            lines.push(`## ${spec.id}: ${spec.name}`);
             lines.push('');
-            lines.push('---');
+            lines.push(`**Type**: ${spec.type} | **Priority**: ${spec.priority} | **Category**: ${spec.category || '-'}`);
             lines.push('');
+            lines.push(spec.description);
+            lines.push('');
+            if (spec.rationale) {
+              lines.push('### Rationale');
+              lines.push('');
+              lines.push(spec.rationale);
+              lines.push('');
+            }
+            lines.push('### Acceptance Criteria');
+            lines.push('');
+            for (const ac of spec.acceptanceCriteria) {
+              const method = ac.verificationMethod ? ` [${ac.verificationMethod}]` : '';
+              lines.push(`- **${ac.id}**: ${ac.description}${method}`);
+            }
+            if (i < specs.length - 1) {
+              lines.push('');
+              lines.push('---');
+              lines.push('');
+            }
           }
-        }
-        return lines.join('\n');
+          return lines.join('\n');
+        },
+        outputFile,
       },
-      outputFile: 'design/requirements.md',
-    },
-  ];
+    ];
+  }
 
   protected coverageChecker: CoverageChecker<Requirement> | undefined = relationCoverage<Requirement>({
     targetModel: 'usecase',
@@ -199,6 +203,7 @@ class FunctionalRequirementModel extends RequirementModelBase {
   readonly name = 'Functional Requirement';
   readonly idPrefix = 'FR';
   readonly description = 'Defines functional requirements';
+  protected exporters = this.createExporters('design/functional-requirements.md');
 }
 
 class NonFunctionalRequirementModel extends RequirementModelBase {
@@ -207,6 +212,7 @@ class NonFunctionalRequirementModel extends RequirementModelBase {
   readonly idPrefix = 'NFR';
   readonly description = 'Defines non-functional requirements (quality attributes)';
   protected coverageChecker = undefined;
+  protected exporters = this.createExporters('design/nonfunctional-requirements.md');
 }
 
 class ConstraintModel extends RequirementModelBase {
@@ -215,6 +221,7 @@ class ConstraintModel extends RequirementModelBase {
   readonly idPrefix = 'CR';
   readonly description = 'Defines constraints';
   protected coverageChecker = undefined;
+  protected exporters = this.createExporters('design/constraints.md');
 }
 
 export { RequirementModelBase as RequirementModel, FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel };

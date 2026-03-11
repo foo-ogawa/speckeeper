@@ -98,37 +98,41 @@ class ComponentModelBase extends Model<typeof ComponentSchema> {
     requireField<Component>('description'),
   ];
 
-  protected exporters: Exporter<Component>[] = [
-    {
-      format: 'markdown',
-      index: (specs) => {
-        const lines: string[] = [];
-        lines.push('# Components');
-        lines.push('');
-        lines.push('| ID | Name | Type | Description |');
-        lines.push('|----|------|------|-------------|');
-        for (const spec of specs) {
-          lines.push(`| ${spec.id} | ${spec.name} | ${spec.type} | ${spec.description} |`);
-        }
-        lines.push('');
-        lines.push('---');
-        lines.push('');
-        for (const spec of specs) {
-          lines.push(`## ${spec.id}: ${spec.name}`);
+  protected exporters: Exporter<Component>[] = this.createExporters('design/architecture.md');
+
+  protected createExporters(outputFile: string): Exporter<Component>[] {
+    return [
+      {
+        format: 'markdown',
+        index: (specs) => {
+          const lines: string[] = [];
+          lines.push('# Components');
           lines.push('');
-          lines.push(`**Type**: ${spec.type}`);
-          if (spec.technology) lines.push(`**Technology**: ${spec.technology.name}`);
-          lines.push('');
-          lines.push(spec.description);
+          lines.push('| ID | Name | Type | Description |');
+          lines.push('|----|------|------|-------------|');
+          for (const spec of specs) {
+            lines.push(`| ${spec.id} | ${spec.name} | ${spec.type} | ${spec.description} |`);
+          }
           lines.push('');
           lines.push('---');
           lines.push('');
-        }
-        return lines.join('\n').replace(/\n---\n\n$/, '\n');
+          for (const spec of specs) {
+            lines.push(`## ${spec.id}: ${spec.name}`);
+            lines.push('');
+            lines.push(`**Type**: ${spec.type}`);
+            if (spec.technology) lines.push(`**Technology**: ${spec.technology.name}`);
+            lines.push('');
+            lines.push(spec.description);
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+          }
+          return lines.join('\n').replace(/\n---\n\n$/, '\n');
+        },
+        outputFile,
       },
-      outputFile: 'design/architecture.md',
-    },
-  ];
+    ];
+  }
 
 }
 
@@ -191,6 +195,7 @@ class ActorComponentModel extends ComponentModelBase {
   readonly name = 'Actor (Architecture)';
   readonly idPrefix = 'ACTOR';
   readonly description = 'Defines actors (people) in the architecture';
+  protected exporters = this.createExporters('design/arch-actors.md');
 }
 
 class ExternalSystemModel extends ComponentModelBase {
@@ -198,6 +203,7 @@ class ExternalSystemModel extends ComponentModelBase {
   readonly name = 'External System';
   readonly idPrefix = 'EXT';
   readonly description = 'Defines external systems';
+  protected exporters = this.createExporters('design/external-systems.md');
 }
 
 class ContainerModel extends ComponentModelBase {
@@ -205,6 +211,7 @@ class ContainerModel extends ComponentModelBase {
   readonly name = 'Container';
   readonly idPrefix = 'CONT';
   readonly description = 'Defines containers (deployable units)';
+  protected exporters = this.createExporters('design/containers.md');
 
   protected coverageChecker = relationCoverage<Component>({
     targetModel: 'functional-requirement',
