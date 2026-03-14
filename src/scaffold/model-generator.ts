@@ -9,78 +9,26 @@ import type {
   ResolvedEdge,
   GeneratedFile,
 } from './types.js';
-import { isCheckEdge } from './edge-vocabulary.js';
 import { resolveModelTemplate } from './template-registry.js';
 import { MODEL_TEMPLATE_FUNCTIONS } from './templates/index.js';
 
 export { ARTIFACT_CLASS_DEFAULTS } from './artifact-defaults.js';
 
 // ---------------------------------------------------------------------------
-// Checker binding resolution
+// Model file generation
 // ---------------------------------------------------------------------------
-
-export interface CheckerBinding {
-  edgeType: 'implements' | 'verifiedBy';
-  targetNodeId: string;
-  targetClass: string;
-}
-
-/**
- * Determine checker bindings for a speckeeper node from its outgoing check edges.
- */
-export function resolveCheckerBindings(
-  _nodeId: string,
-  outgoingEdges: ResolvedEdge[],
-  nodes: Map<string, MermaidNode>,
-  speckeeperClassName: string,
-): CheckerBinding[] {
-  const isSpk = (id: string): boolean =>
-    nodes.get(id)?.classes.includes(speckeeperClassName) ?? false;
-
-  const bindings: CheckerBinding[] = [];
-  const seen = new Set<string>();
-
-  for (const edge of outgoingEdges) {
-    if (!isCheckEdge(edge.vocabulary)) continue;
-    if (isSpk(edge.targetId)) continue;
-
-    if (seen.has(edge.targetId)) continue;
-    seen.add(edge.targetId);
-
-    const targetNode = nodes.get(edge.targetId);
-    const targetClass = targetNode?.classes.find(c => c !== speckeeperClassName) ?? edge.targetId.toLowerCase();
-
-    const edgeType = edge.normalizedLabel === 'verifiedBy' ? 'verifiedBy' as const : 'implements' as const;
-
-    bindings.push({ edgeType, targetNodeId: edge.targetId, targetClass });
-  }
-
-  return bindings;
-}
 
 /**
  * Generate _models/*.ts file for a single speckeeper-managed node.
- *
- * Checker bindings from implements/verifiedBy edges are passed to the template
- * which generates annotationChecker() configuration code inside the model class.
  */
 export function generateModelFile(
   node: MermaidNode,
   _incomingEdges: ResolvedEdge[],
-  outgoingEdges: ResolvedEdge[],
-  allNodes?: Map<string, MermaidNode>,
+  _outgoingEdges: ResolvedEdge[],
+  _allNodes?: Map<string, MermaidNode>,
 ): GeneratedFile {
   const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
   const templateFn = MODEL_TEMPLATE_FUNCTIONS[templateInfo.templateName];
-
-  const bindings = allNodes
-    ? resolveCheckerBindings(node.id, outgoingEdges, allNodes, 'speckeeper')
-    : [];
-
-  const checkerBindings =
-    bindings.length > 0
-      ? bindings.map((b) => ({ edgeType: b.edgeType, targetClass: b.targetClass }))
-      : undefined;
 
   const params = {
     modelId: templateInfo.fileName,
@@ -88,7 +36,6 @@ export function generateModelFile(
     idPrefix: templateInfo.defaultIdPrefix,
     level: templateInfo.defaultLevel,
     description: node.label ?? node.id,
-    checkerBindings,
   };
 
   const content =

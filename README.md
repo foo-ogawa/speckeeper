@@ -11,20 +11,28 @@
 Requirements and design documents often drift from implementation. **speckeeper** treats specifications as **code** — type-safe, version-controlled, and continuously validated against your actual artifacts (tests, OpenAPI, DDL, IaC).
 
 ```
-Mermaid flowchart ──► speckeeper scaffold ──► design/_models/
-                                                     │
-design/*.ts  ─────────────────────────────► Validation & Consistency Checks
+speckeeper.config.ts (sources)
     │
-    ├─► speckeeper lint    → Design integrity (IDs, references, phase gates)
-    ├─► speckeeper check   → External SSOT validation (test coverage, etc.)
-    └─► speckeeper impact  → Change impact analysis with traceability
+    ├─► Global Source Scan  → Find spec IDs in OpenAPI / DDL / annotations
+    │         │
+    │         ▼
+    │    MatchMap (specId → matches)
+    │         │
+    │         ▼
+    ├─► Deep Validation     → Model-level structural checks (optional)
+    │
+design/*.ts
+    │
+    ├─► speckeeper lint     → Design integrity (IDs, references, phase gates)
+    ├─► speckeeper check    → External SSOT validation (global scan + deep validation)
+    └─► speckeeper impact   → Change impact analysis with traceability
 ```
 
 ## Features
 
 - **TypeScript as SSOT** — Define requirements, architecture, and design in type-safe TypeScript
 - **Design validation** — Lint rules for ID uniqueness, reference integrity, circular dependencies, and phase gates
-- **External SSOT validation** — Check consistency with test files, and custom checkers for OpenAPI, DDL, etc.
+- **External SSOT validation** — Global scan across OpenAPI, DDL, annotations; optional deep validation per model
 - **Traceability** — Track relationships across model levels (L0-L3) with impact analysis
 - **Scaffold from Mermaid** — Generate `_models/` skeletons from a mermaid flowchart with class-based artifact resolution
 - **Custom models** — Extend with domain-specific models (Runbooks, Policies, etc.)
@@ -78,10 +86,9 @@ flowchart TB
 Key concepts:
 - `class ... speckeeper` marks nodes as managed by speckeeper
 - Additional `class` lines assign **artifact classes** (determines model name/file and node grouping)
-- External node classes (`openapi`, `sqlschema`, `test`) determine checker bindings
+- External node classes (`openapi`, `sqlschema`, `test`) describe the artifact type
 - `subgraph` determines model level (L0–L3)
-- `implements` edges trigger external SSOT validation
-- `verifiedBy` edges trigger test verification
+- `implements`/`verifiedBy` edges define the relationship semantics
 
 ### 2. Scaffold models
 
@@ -90,7 +97,7 @@ npx speckeeper scaffold --source requirements.md
 ```
 
 This generates:
-- `design/_models/` — Model classes with base schema, lint rules, and `annotationChecker` bindings derived from `implements`/`verifiedBy` edges
+- `design/_models/` — Model classes with base schema and lint rules
 - `design/*.ts` — Spec data files using `defineSpecs()`
 - `design/index.ts` — Entry point via `mergeSpecs()`
 
@@ -183,11 +190,64 @@ Checks include:
 
 ### External SSOT Validation (check)
 
-Validate your specifications against actual implementation artifacts. speckeeper scans source and test files for **annotation comments** (`@verifies`, `@implements`, `@traces`) to automatically detect which specs are covered — no manual relation wiring needed.
+Validate your specifications against actual implementation artifacts. speckeeper performs a **global source scan** across all configured sources, then optionally runs **deep validation** using model-specific rules.
 
-#### Annotation-based auto-detection
+The check flow has three levels:
 
-Add annotations to your source and test files:
+1. **Existence check** (automatic) — Is the spec ID found in any configured source?
+2. **Structural check** (via `deepValidation`) — Does the matched object's structure match? (e.g. HTTP method, table columns)
+3. **Type check** (via `deepValidation`) — Do types match? (e.g. parameter types, column types)
+
+#### Source configuration
+
+Define global scan sources in `speckeeper.config.ts`:
+
+```typescript
+// speckeeper.config.ts
+import { defineConfig } from 'speckeeper';
+
+export default defineConfig({
+  // ...
+  sources: [
+    {
+      type: 'openapi',
+      paths: ['api/openapi.yaml'],
+      relation: 'implements',
+    },
+    {
+      type: 'ddl',
+      paths: ['db/schema.sql'],
+      relation: 'implements',
+    },
+    {
+      type: 'annotation',
+      paths: ['test/**/*.test.ts', 'tests/**/*.test.ts'],
+      relation: 'verifiedBy',
+    },
+    {
+      type: 'annotation',
+      paths: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts'],
+      relation: 'implements',
+    },
+  ],
+});
+```
+
+Each source defines:
+- **`type`** — Built-in (`'openapi'`, `'ddl'`, `'annotation'`) or custom with a `scanner` plugin
+- **`paths`** — Glob patterns for files to scan
+- **`relation`** — Whether matches represent `'implements'` or `'verifiedBy'`
+
+#### Built-in scanners
+
+| Scanner | Finds spec IDs via | Deep validation |
+|---------|-------------------|-----------------|
+| `openapi` | operationId, path segment, schema name, `x-spec-id` | HTTP method, parameter names/types, response property names/types |
+| `ddl` | Table name (case-insensitive, schema-prefix stripped) | Column names, column types (containment-based) |
+| `annotation` | `@verifies`, `@implements`, `@traces` annotations | — |
+
+Annotations work in any comment style (`//`, `#`, `--`, `/* */`, `<!-- -->`). Multiple IDs can be comma- or space-separated.
 
 ```typescript
 // tests/unit/auth.test.ts
@@ -201,81 +261,70 @@ describe('User Authentication', () => { ... });
 export class AuthHandler { ... }
 ```
 
-speckeeper scans for these annotations and automatically links specs to their implementation and tests. Annotations work in any comment style (`//`, `#`, `--`, `/* */`, `<!-- -->`).
+#### Deep validation (optional)
 
-#### Artifact configuration
-
-Define scan targets per artifact class in your config:
+Models can define `deepValidation` to enable Level 2/3 structural checks on matched source objects:
 
 ```typescript
-// speckeeper.config.ts
-export default defineConfig({
-  // ...
-  artifacts: {
-    test: {
-      globs: ['test/**/*.test.ts', 'tests/**/*.test.ts'],
-      contentPatterns: [/@verifies\s+([\w-]+(?:[,\s]+[\w-]+)*)/],
-    },
-    typescript: {
-      globs: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts'],
-      contentPatterns: [/@implements\s+([\w-]+(?:[,\s]+[\w-]+)*)/],
-    },
-    openapi: {
-      globs: ['api/openapi.yaml'],
-    },
-  },
-});
-```
-
-Scaffold auto-generates this config based on your Mermaid flowchart's external nodes and their artifact classes.
-
-#### Checker factories
-
-| Factory | Type | Validates |
-|---------|------|-----------|
-| `annotationChecker()` | Generic | Scans files for `@verifies`/`@implements`/`@traces` annotations matching spec IDs |
-| `annotationCoverage()` | Coverage | Computes coverage from annotation scan results (no manual relations needed) |
-| `externalOpenAPIChecker()` | Specialized | OpenAPI spec: operationId, path, schema, x-spec-id, HTTP method, parameter/response types |
-| `externalSqlSchemaChecker()` | Specialized | SQL schema: table existence, column existence, type containment |
-
-`annotationChecker()` is the generic checker. Specialized checkers (`externalOpenAPIChecker`, `externalSqlSchemaChecker`) extend it with source-level parsing for deeper validation. Scaffold generates the appropriate checker binding based on your artifact classes.
-
-```typescript
-// design/_models/requirement.ts
-import { annotationChecker } from 'speckeeper/dsl';
-
-class RequirementModel extends Model<typeof RequirementSchema> {
+class EntityModel extends Model<typeof EntitySchema> {
   // ... schema, lintRules, etc.
 
-  protected externalChecker = annotationChecker<Requirement>({
-    checks: [
-      { artifact: 'test', relationType: 'verifiedBy' },
-      { artifact: 'typescript', relationType: 'implements' },
-    ],
-  });
+  protected deepValidation: DeepValidationConfig<Entity> = {
+    ddl: {
+      mapper: (spec) => ({
+        tableName: spec.tableName,
+        columns: spec.columns.map(c => ({ name: c.name, type: c.type })),
+        checkTypes: true,
+      }),
+    },
+    openapi: {
+      mapper: (spec) => ({
+        path: spec.apiPath,
+        method: spec.httpMethod,
+        responseProperties: spec.fields.map(f => ({ name: f.name, type: f.type })),
+      }),
+    },
+  };
 }
 ```
 
+Without `deepValidation`, speckeeper still performs existence checks for all spec IDs across all configured sources.
+
+#### Custom scanners
+
+For file formats not covered by the built-in scanners, provide a custom `SourceScanner` plugin:
+
+```typescript
+// speckeeper.config.ts
+import { defineConfig } from 'speckeeper';
+import type { SourceScanner } from 'speckeeper';
+
+const protoScanner: SourceScanner = {
+  findSpecIds(content, specIds, filePath) {
+    // Parse protobuf content, find spec IDs in service/message names
+    // Return SourceMatch[] with specId, location, and optional context
+    return [];
+  },
+};
+
+export default defineConfig({
+  sources: [
+    { type: 'proto', paths: ['proto/**/*.proto'], relation: 'implements', scanner: protoScanner },
+    // ... other sources
+  ],
+});
+```
+
 ```bash
-$ npx speckeeper check test --coverage
+$ npx speckeeper check --verbose
 
 speckeeper check
 
   Design: design/
-  Type:   test
-
-  Scanning artifacts...
-    test:       12 @verifies annotations in 8 files
-    typescript:  5 @implements annotations in 4 files
+  Type:   all
 
   ✓ All checks passed
-
-  Coverage: Requirement (verifiedBy → test)
-    Coverage: 100% (7/7 requirements verified)
 ```
-
-You can also implement custom checkers for any external source by defining an `ExternalChecker<T>` directly. See [Model Definition Guide](./docs/model-guide.md) for details.
 
 ## Model Levels & Traceability
 
@@ -354,7 +403,7 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 }
 ```
 
-Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `annotationChecker`, `annotationCoverage`, `externalOpenAPIChecker`, `externalSqlSchemaChecker`, `relationCoverage`, and `baseSpecSchema`.
+Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `annotationCoverage`, `relationCoverage`, and `baseSpecSchema`. Global scanner utilities (`openapiScanner`, `ddlScanner`, `annotationScanner`, `createAnnotationScanner`) are also re-exported for advanced use.
 
 ## Documentation
 

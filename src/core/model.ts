@@ -80,6 +80,44 @@ export interface CheckResult {
   }>;
 }
 
+// ============================================================================
+// Deep Validation (replaces per-model externalChecker)
+// ============================================================================
+
+/** OpenAPI deep validation mapping */
+export interface OpenAPIValidationMapping {
+  path: string;
+  method?: string;
+  parameters?: Array<{ name: string; in?: string; type?: string }>;
+  responseProperties?: Array<{ name: string; type?: string }>;
+}
+
+/** DDL deep validation mapping */
+export interface DDLValidationMapping {
+  tableName: string;
+  columns?: Array<{ name: string; type?: string }>;
+  checkTypes?: boolean;
+}
+
+/**
+ * Deep validation rule for a specific source type.
+ * The mapper extracts expected structure from a spec for detailed comparison
+ * against the matched source object.
+ */
+export interface DeepValidationRule<T, TMapping = unknown> {
+  mapper: (spec: T) => TMapping;
+}
+
+/**
+ * Deep validation configuration keyed by source type.
+ * Models define this to enable Level 2/3 checks beyond existence.
+ */
+export interface DeepValidationConfig<T> {
+  openapi?: DeepValidationRule<T, OpenAPIValidationMapping>;
+  ddl?: DeepValidationRule<T, DDLValidationMapping>;
+  [sourceType: string]: DeepValidationRule<T, unknown> | undefined;
+}
+
 /**
  * Coverage result
  */
@@ -201,8 +239,11 @@ export abstract class Model<TSchema extends ZodType> {
   /** Exporters (override in subclass) */
   protected exporters: Exporter<z.infer<TSchema>>[] = [];
   
-  /** External checker (optional) */
+  /** External checker (optional) — deprecated, use deepValidation instead */
   protected externalChecker?: ExternalChecker<z.infer<TSchema>>;
+  
+  /** Deep validation rules keyed by source type (replaces externalChecker) */
+  protected deepValidation?: DeepValidationConfig<z.infer<TSchema>>;
   
   /** Coverage checker (optional) */
   protected coverageChecker?: CoverageChecker<z.infer<TSchema>>;
@@ -403,6 +444,13 @@ export abstract class Model<TSchema extends ZodType> {
    */
   getCoverageChecker(): CoverageChecker<z.infer<TSchema>> | undefined {
     return this.coverageChecker;
+  }
+  
+  /**
+   * Get deep validation config
+   */
+  getDeepValidation(): DeepValidationConfig<z.infer<TSchema>> | undefined {
+    return this.deepValidation;
   }
   
   /**

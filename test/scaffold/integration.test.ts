@@ -156,28 +156,23 @@ describe('scaffold integration with app-skelton README.md', () => {
       expect(le.content).toContain("from 'speckeeper/dsl'");
     });
 
-    it('FR model includes annotationChecker for implements (API) and verifiedBy (UT, IT)', () => {
+    it('FR model does not include externalChecker (replaced by global scanner)', () => {
       const req = modelFiles.find(f => f.relativePath === '_models/requirement.ts')!;
-      expect(req.content).toContain('protected externalChecker');
-      expect(req.content).toContain('annotationChecker');
-      expect(req.content).toContain('verifiedBy');
-      expect(req.content).toContain("artifact: 'test'");
+      expect(req.content).not.toContain('protected externalChecker');
+      expect(req.content).not.toContain('annotationChecker');
+      expect(req.content).toContain('protected lintRules');
     });
 
-    it('UC model includes annotationChecker for implements (API)', () => {
+    it('UC model does not include externalChecker (replaced by global scanner)', () => {
       const uc = modelFiles.find(f => f.relativePath === '_models/usecase.ts')!;
-      expect(uc.content).toContain('protected externalChecker');
-      expect(uc.content).toContain('annotationChecker');
-      expect(uc.content).toContain('implements');
-      expect(uc.content).toContain('openapi');
+      expect(uc.content).not.toContain('protected externalChecker');
+      expect(uc.content).not.toContain('annotationChecker');
     });
 
-    it('LDM model includes annotationChecker for implements (DDL)', () => {
+    it('LDM model does not include externalChecker (replaced by global scanner)', () => {
       const ldm = modelFiles.find(f => f.relativePath === '_models/logical-entity.ts')!;
-      expect(ldm.content).toContain('protected externalChecker');
-      expect(ldm.content).toContain('annotationChecker');
-      expect(ldm.content).toContain('implements');
-      expect(ldm.content).toContain('sqlschema');
+      expect(ldm.content).not.toContain('protected externalChecker');
+      expect(ldm.content).not.toContain('annotationChecker');
     });
   });
 

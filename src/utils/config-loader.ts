@@ -52,6 +52,9 @@ export interface SpeckeeperConfig {
   docsDir: string;
   specsDir: string;
   
+  // Global source definitions for spec ID scanning
+  sources?: import('../core/config-api.js').SourceConfig[];
+  
   // External SSOT paths
   externalSsot?: {
     openapi?: {
