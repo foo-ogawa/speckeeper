@@ -90,10 +90,9 @@ npx speckeeper scaffold --source requirements.md
 ```
 
 This generates:
-- `design/_models/` — Model classes with base schema (id, name, description, relations) and core factory imports. Customise after generation.
+- `design/_models/` — Model classes with base schema, lint rules, and `annotationChecker` bindings derived from `implements`/`verifiedBy` edges
 - `design/*.ts` — Spec data files using `defineSpecs()`
 - `design/index.ts` — Entry point via `mergeSpecs()`
-- Checker bindings from `implements`/`verifiedBy` edges are added as guidance comments
 
 See [Scaffold Mermaid Specification](./docs/scaffold-mermaid-spec.md) for the full input format.
 
@@ -184,25 +183,77 @@ Checks include:
 
 ### External SSOT Validation (check)
 
-Validate your specifications against actual implementation artifacts. speckeeper provides built-in checker factories via `speckeeper/dsl`:
+Validate your specifications against actual implementation artifacts. speckeeper scans source and test files for **annotation comments** (`@verifies`, `@implements`, `@traces`) to automatically detect which specs are covered — no manual relation wiring needed.
 
-| Factory | Target | Validates |
-|---------|--------|-----------|
-| `testChecker()` | Test code | Test file existence + spec ID references in describe/it/test blocks |
-| `externalOpenAPIChecker()` | OpenAPI spec | Spec ID existence (operationId, path, schema, x-spec-id), HTTP method, parameter/response property names and types |
-| `externalSqlSchemaChecker()` | SQL schema | Table existence, column existence, type containment (DDL type must be equal or wider than spec type) |
-| `relationCoverage()` | Cross-model | Coverage of a target model via relations |
+#### Annotation-based auto-detection
 
-Assign a checker to a model's `externalChecker` property. Scaffold emits guidance comments showing which factory to use based on your `implements` / `verifiedBy` edges.
+Add annotations to your source and test files:
+
+```typescript
+// tests/unit/auth.test.ts
+// @verifies FR-001, FR-001-01
+describe('User Authentication', () => { ... });
+```
+
+```typescript
+// src/auth/handler.ts
+// @implements FR-001
+export class AuthHandler { ... }
+```
+
+speckeeper scans for these annotations and automatically links specs to their implementation and tests. Annotations work in any comment style (`//`, `#`, `--`, `/* */`, `<!-- -->`).
+
+#### Artifact configuration
+
+Define scan targets per artifact class in your config:
+
+```typescript
+// speckeeper.config.ts
+export default defineConfig({
+  // ...
+  artifacts: {
+    test: {
+      globs: ['test/**/*.test.ts', 'tests/**/*.test.ts'],
+      contentPatterns: [/@verifies\s+([\w-]+(?:[,\s]+[\w-]+)*)/],
+    },
+    typescript: {
+      globs: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts'],
+      contentPatterns: [/@implements\s+([\w-]+(?:[,\s]+[\w-]+)*)/],
+    },
+    openapi: {
+      globs: ['api/openapi.yaml'],
+    },
+  },
+});
+```
+
+Scaffold auto-generates this config based on your Mermaid flowchart's external nodes and their artifact classes.
+
+#### Checker factories
+
+| Factory | Type | Validates |
+|---------|------|-----------|
+| `annotationChecker()` | Generic | Scans files for `@verifies`/`@implements`/`@traces` annotations matching spec IDs |
+| `annotationCoverage()` | Coverage | Computes coverage from annotation scan results (no manual relations needed) |
+| `externalOpenAPIChecker()` | Specialized | OpenAPI spec: operationId, path, schema, x-spec-id, HTTP method, parameter/response types |
+| `externalSqlSchemaChecker()` | Specialized | SQL schema: table existence, column existence, type containment |
+
+`annotationChecker()` is the generic checker. Specialized checkers (`externalOpenAPIChecker`, `externalSqlSchemaChecker`) extend it with source-level parsing for deeper validation. Scaffold generates the appropriate checker binding based on your artifact classes.
 
 ```typescript
 // design/_models/requirement.ts
-import { testChecker } from 'speckeeper/dsl';
+import { annotationChecker } from 'speckeeper/dsl';
 
 class RequirementModel extends Model<typeof RequirementSchema> {
   // ... schema, lintRules, etc.
 
-  protected externalChecker = testChecker<Requirement>();
+  protected externalChecker = annotationChecker<Requirement>({
+    checks: [
+      { artifact: 'test', relationType: 'verifiedBy' },
+      { artifact: 'typescript', relationType: 'implements' },
+    ],
+  });
 }
 ```
 
@@ -214,10 +265,14 @@ speckeeper check
   Design: design/
   Type:   test
 
+  Scanning artifacts...
+    test:       12 @verifies annotations in 8 files
+    typescript:  5 @implements annotations in 4 files
+
   ✓ All checks passed
 
-  Coverage: Requirement → UseCase
-    Coverage: 100% (7/7 use cases covered)
+  Coverage: Requirement (verifiedBy → test)
+    Coverage: 100% (7/7 requirements verified)
 ```
 
 You can also implement custom checkers for any external source by defining an `ExternalChecker<T>` directly. See [Model Definition Guide](./docs/model-guide.md) for details.
@@ -299,7 +354,7 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 }
 ```
 
-Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `testChecker`, `externalOpenAPIChecker`, `externalSqlSchemaChecker`, `relationCoverage`, and `baseSpecSchema`.
+Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `annotationChecker`, `annotationCoverage`, `externalOpenAPIChecker`, `externalSqlSchemaChecker`, `relationCoverage`, and `baseSpecSchema`.
 
 ## Documentation
 
