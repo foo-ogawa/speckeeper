@@ -605,6 +605,14 @@ interface TableDefinition {
 }
 
 /**
+ * Strip schema prefix (e.g. "public.users" → "users").
+ */
+function stripSchemaPrefix(name: string): string {
+  const dotIndex = name.lastIndexOf('.');
+  return dotIndex >= 0 ? name.substring(dotIndex + 1) : name;
+}
+
+/**
  * Parse DDL using node-sql-parser. Returns table definitions.
  */
 function parseDDLWithParser(content: string): TableDefinition[] | null {
@@ -619,10 +627,11 @@ function parseDDLWithParser(content: string): TableDefinition[] | null {
     for (const stmt of statements) {
       if (stmt.type !== 'create' || stmt.keyword !== 'table') continue;
 
-      const tableName: string = typeof stmt.table === 'string'
+      const rawName: string = typeof stmt.table === 'string'
         ? stmt.table
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : (stmt.table as any[])?.[0]?.table ?? '';
+      const tableName = stripSchemaPrefix(rawName);
 
       const columns: Array<{ name: string; type: string }> = (stmt.create_definitions || [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -657,7 +666,7 @@ function parseDDLWithParser(content: string): TableDefinition[] | null {
  */
 function parseDDLWithRegex(content: string): TableDefinition[] {
   const tables: TableDefinition[] = [];
-  const tableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:`|"|')?(\w+)(?:`|"|')?\s*\(([\s\S]*?)\);/gi;
+  const tableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(?:[`"']?\w+[`"']?\s*\.\s*)?)[`"']?(\w+)[`"']?\s*\(([\s\S]*?)\);/gi;
 
   let match;
   while ((match = tableRegex.exec(content)) !== null) {

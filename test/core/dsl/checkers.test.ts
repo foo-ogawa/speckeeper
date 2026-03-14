@@ -619,6 +619,44 @@ describe('externalSqlSchemaChecker', () => {
     });
   });
 
+  describe('schema-qualified table names', () => {
+    it('strips schema prefix (CREATE TABLE public.users → users)', () => {
+      const checker = externalSqlSchemaChecker<SimpleSpec>({
+        sourcePath: () => fixturePath('schema-qualified.schema.sql'),
+        mapper: () => ({
+          tableName: 'users',
+          columns: [{ name: 'id' }, { name: 'name' }, { name: 'email' }],
+        }),
+      });
+      const result = checker.check({ id: 'users', name: 'Users' }, undefined);
+      expect(result.warnings.filter(w => w.message.includes('not found'))).toHaveLength(0);
+    });
+
+    it('handles IF NOT EXISTS with schema prefix (CREATE TABLE IF NOT EXISTS public.orders)', () => {
+      const checker = externalSqlSchemaChecker<SimpleSpec>({
+        sourcePath: () => fixturePath('schema-qualified.schema.sql'),
+        mapper: () => ({
+          tableName: 'orders',
+          columns: [{ name: 'id' }, { name: 'user_id' }, { name: 'total' }],
+        }),
+      });
+      const result = checker.check({ id: 'orders', name: 'Orders' }, undefined);
+      expect(result.warnings.filter(w => w.message.includes('not found'))).toHaveLength(0);
+    });
+
+    it('handles IF NOT EXISTS without schema prefix', () => {
+      const checker = externalSqlSchemaChecker<SimpleSpec>({
+        sourcePath: () => fixturePath('schema-qualified.schema.sql'),
+        mapper: () => ({
+          tableName: 'products',
+          columns: [{ name: 'id' }, { name: 'name' }, { name: 'price' }],
+        }),
+      });
+      const result = checker.check({ id: 'products', name: 'Products' }, undefined);
+      expect(result.warnings.filter(w => w.message.includes('not found'))).toHaveLength(0);
+    });
+  });
+
 });
 
 // ---------------------------------------------------------------------------

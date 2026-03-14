@@ -1,0 +1,19 @@
+CREATE TABLE public.users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.orders (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES public.users(id),
+  total DECIMAL(10,2) NOT NULL,
+  status VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  price DECIMAL(8,2) NOT NULL
+);
