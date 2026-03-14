@@ -3,7 +3,6 @@ import type { MermaidNode, ResolvedEdge } from '../../src/scaffold/types.js';
 import {
   generateModelFile,
   generateAllModelFiles,
-  resolveCheckerBindings,
 } from '../../src/scaffold/model-generator.js';
 
 function makeNode(id: string, classes: string[], opts?: Partial<MermaidNode>): MermaidNode {
@@ -50,7 +49,7 @@ describe('generateModelFile', () => {
     expect(result.content).toContain('requireField');
   });
 
-  it('generates annotationChecker code for implements edge', () => {
+  it('does not generate externalChecker code (checker bindings removed)', () => {
     const nodes = new Map<string, MermaidNode>();
     const fr = makeNode('FR', ['speckeeper', 'requirement']);
     const api = makeNode('API', ['openapi']);
@@ -59,12 +58,11 @@ describe('generateModelFile', () => {
 
     const edge = makeEdge('FR', 'API', 'implements');
     const result = generateModelFile(fr, [], [edge], nodes);
-    expect(result.content).toContain('protected externalChecker');
-    expect(result.content).toContain('annotationChecker');
-    expect(result.content).toContain('externalOpenAPIChecker');
+    expect(result.content).not.toContain('protected externalChecker');
+    expect(result.content).not.toContain('annotationChecker');
   });
 
-  it('generates annotationChecker code for verifiedBy edge', () => {
+  it('generated model has basic structure without checker code', () => {
     const nodes = new Map<string, MermaidNode>();
     const fr = makeNode('FR', ['speckeeper', 'requirement']);
     const ut = makeNode('UT', ['test']);
@@ -73,59 +71,9 @@ describe('generateModelFile', () => {
 
     const edge = makeEdge('FR', 'UT', 'verifiedBy');
     const result = generateModelFile(fr, [], [edge], nodes);
-    expect(result.content).toContain('protected externalChecker');
-    expect(result.content).toContain('annotationChecker');
-    expect(result.content).toContain("artifact: 'test'");
-    expect(result.content).toContain("relationType: 'verifiedBy'");
-  });
-});
-
-describe('resolveCheckerBindings', () => {
-  it('returns empty array when no check edges', () => {
-    const nodes = new Map<string, MermaidNode>();
-    nodes.set('FR', makeNode('FR', ['speckeeper']));
-    const lintEdge = makeEdge('FR', 'UC', 'satisfies', 'lint');
-    const result = resolveCheckerBindings('FR', [lintEdge], nodes, 'speckeeper');
-    expect(result).toEqual([]);
-  });
-
-  it('skips speckeeper-to-speckeeper check edges', () => {
-    const nodes = new Map<string, MermaidNode>();
-    nodes.set('FR', makeNode('FR', ['speckeeper']));
-    nodes.set('SR', makeNode('SR', ['speckeeper']));
-    const edge = makeEdge('FR', 'SR', 'implements');
-    const result = resolveCheckerBindings('FR', [edge], nodes, 'speckeeper');
-    expect(result).toEqual([]);
-  });
-
-  it('detects implements edge to openapi target', () => {
-    const nodes = new Map<string, MermaidNode>();
-    nodes.set('FR', makeNode('FR', ['speckeeper']));
-    nodes.set('API', makeNode('API', ['openapi']));
-    const edge = makeEdge('FR', 'API', 'implements');
-    const result = resolveCheckerBindings('FR', [edge], nodes, 'speckeeper');
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({ edgeType: 'implements', targetNodeId: 'API', targetClass: 'openapi' });
-  });
-
-  it('detects verifiedBy edge to test target', () => {
-    const nodes = new Map<string, MermaidNode>();
-    nodes.set('FR', makeNode('FR', ['speckeeper']));
-    nodes.set('UT', makeNode('UT', ['test']));
-    const edge = makeEdge('FR', 'UT', 'verifiedBy');
-    const result = resolveCheckerBindings('FR', [edge], nodes, 'speckeeper');
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({ edgeType: 'verifiedBy', targetNodeId: 'UT', targetClass: 'test' });
-  });
-
-  it('de-duplicates edges to the same target', () => {
-    const nodes = new Map<string, MermaidNode>();
-    nodes.set('FR', makeNode('FR', ['speckeeper']));
-    nodes.set('UT', makeNode('UT', ['test']));
-    const e1 = makeEdge('FR', 'UT', 'verifiedBy');
-    const e2 = makeEdge('FR', 'UT', 'implements');
-    const result = resolveCheckerBindings('FR', [e1, e2], nodes, 'speckeeper');
-    expect(result).toHaveLength(1);
+    expect(result.content).not.toContain('protected externalChecker');
+    expect(result.content).toContain('protected exporters');
+    expect(result.content).toContain('protected lintRules');
   });
 });
 
@@ -170,7 +118,7 @@ describe('generateAllModelFiles', () => {
     expect(index!.content).toContain('mergeSpecs');
   });
 
-  it('aggregates edges across nodes of the same template for bindings', () => {
+  it('generated model does not include checker code even with edges', () => {
     const fr = makeNode('FR', ['speckeeper', 'requirement']);
     const sr = makeNode('SR', ['speckeeper', 'requirement']);
     const api = makeNode('API', ['openapi']);
@@ -186,9 +134,9 @@ describe('generateAllModelFiles', () => {
 
     const files = generateAllModelFiles(nodes, edges, allNodesMap);
     const model = files.find(f => f.relativePath === '_models/requirement.ts')!;
-    expect(model.content).toContain('annotationChecker');
-    expect(model.content).toContain('externalOpenAPIChecker');
-    expect(model.content).toContain("artifact: 'test'");
-    expect(model.content).toContain("artifact: 'openapi'");
+    expect(model.content).not.toContain('annotationChecker');
+    expect(model.content).not.toContain('externalOpenAPIChecker');
+    expect(model.content).not.toContain('protected externalChecker');
+    expect(model.content).toContain('protected lintRules');
   });
 });

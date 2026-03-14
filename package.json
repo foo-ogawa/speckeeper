@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",

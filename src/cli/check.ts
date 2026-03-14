@@ -1,15 +1,17 @@
 /**
  * Check Command
- * 
- * Check consistency with external SSOT using model class externalChecker
+ *
+ * Global scan across configured sources, then optional deep validation per model.
  */
 
 import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import { loadConfig } from '../utils/config-loader.js';
 import { getSpecsFromConfig, buildRegistryFromConfig, type SpecEntry, type CoverageResult } from '../core/model.js';
-import { parse as parseYaml } from 'yaml';
+import { runGlobalScan, runDeepValidation } from '../core/global-scanner.js';
+import type { SourceConfig } from '../core/config-api.js';
 
 // ============================================================================
 // Types
@@ -45,74 +47,120 @@ export async function checkCommand(
 ): Promise<void> {
   console.log(chalk.blue('speckeeper check'));
   console.log('');
-  
+
   const cwd = process.cwd();
   const config = await loadConfig(options.config);
   const checkType = type || options.type || 'all';
-  
+
   console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
   console.log(chalk.gray(`  Type:   ${checkType}`));
   console.log('');
-  
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const models = (config.models || []) as any[];
     const specs = config.specs;
-    
+    const sources: SourceConfig[] = config.sources ?? [];
+
     if (options.verbose) {
       console.log(chalk.gray(`  Registered models: ${models.map((m: { id: string }) => m.id).join(', ')}`));
+      console.log(chalk.gray(`  Sources: ${sources.length} configured`));
     }
-    
+
     const results: CheckResult[] = [];
-    
+
+    // Collect all spec IDs across all models
+    const allSpecIds: string[] = [];
+    const specIdToModel = new Map<string, { modelId: string; spec: unknown }>();
     for (const model of models) {
       const modelSpecs = getSpecsFromConfig(specs, model.id);
-      if (modelSpecs.length === 0) continue;
-      
       for (const spec of modelSpecs) {
-        const sourcePath = model.getExternalSourcePath(spec);
-        if (!sourcePath) continue;
-        
-        const fullPath = join(cwd, sourcePath);
-        if (!existsSync(fullPath)) {
-          results.push({
-            type: model.id,
-            success: false,
-            issues: [{
-              severity: 'error',
-              message: `External source not found: ${sourcePath}`,
-              specId: (spec as { id: string }).id,
-            }],
-          });
-          continue;
+        const specId = (spec as { id: string }).id;
+        allSpecIds.push(specId);
+        specIdToModel.set(specId, { modelId: model.id, spec });
+      }
+    }
+
+    if (sources.length > 0 && allSpecIds.length > 0) {
+      // Filter sources by checkType
+      const filteredSources = checkType === 'all'
+        ? sources
+        : sources.filter(s => s.type === checkType);
+
+      // Run global scan
+      const { matches, warnings: scanWarnings } = runGlobalScan(filteredSources, allSpecIds, cwd);
+
+      for (const sw of scanWarnings) {
+        results.push({
+          type: sw.sourceType,
+          success: true,
+          issues: [{
+            severity: 'warning',
+            message: sw.message,
+          }],
+        });
+      }
+
+      // For each spec, check matches + deep validation
+      for (const [specId, entry] of specIdToModel) {
+        const specMatches = matches.get(specId);
+
+        // Run deep validation if model has rules and there are matches
+        if (specMatches && specMatches.length > 0) {
+          const model = models.find((m: { id: string }) => m.id === entry.modelId);
+          const deepValidation = model?.getDeepValidation?.();
+          if (deepValidation) {
+            const deepResult = runDeepValidation(specId, specMatches, deepValidation, entry.spec);
+            if (deepResult.errors.length > 0 || deepResult.warnings.length > 0) {
+              results.push({
+                type: entry.modelId,
+                success: deepResult.success,
+                issues: [
+                  ...deepResult.errors.map((e: { message: string; specId?: string; field?: string }) => ({
+                    severity: 'error' as const, message: e.message, specId: e.specId, field: e.field,
+                  })),
+                  ...deepResult.warnings.map((w: { message: string; specId?: string; field?: string }) => ({
+                    severity: 'warning' as const, message: w.message, specId: w.specId, field: w.field,
+                  })),
+                ],
+              });
+            }
+          }
         }
-        
-        const externalData = loadExternalData(fullPath);
-        const checkResult = model.check(spec, externalData);
-        
-        if (!checkResult.success || checkResult.errors.length > 0 || checkResult.warnings.length > 0) {
-          results.push({
-            type: model.id,
-            success: checkResult.success,
-            issues: [
-              ...checkResult.errors.map((e: { message: string; specId?: string; field?: string }) => ({ severity: 'error' as const, message: e.message, specId: e.specId, field: e.field })),
-              ...checkResult.warnings.map((w: { message: string; specId?: string; field?: string }) => ({ severity: 'warning' as const, message: w.message, specId: w.specId, field: w.field })),
-            ],
-          });
+      }
+
+      // Report unmatched specs
+      if (options.verbose) {
+        for (const specId of allSpecIds) {
+          if (!matches.has(specId)) {
+            const entry = specIdToModel.get(specId);
+            results.push({
+              type: entry?.modelId ?? 'unknown',
+              success: true,
+              issues: [{
+                severity: 'warning',
+                message: `Spec ID "${specId}" not found in any configured source`,
+                specId,
+              }],
+            });
+          }
         }
       }
     }
-    
+
+    // Run per-model externalChecker for models that still define one (legacy support)
+    runLegacyChecks(models, specs, cwd, results);
+
     outputCheckResults(results);
-    
+
     if (options.coverage) {
       console.log('');
       console.log(chalk.blue('  Coverage checks...'));
       const coverageResults = runAllCoverageChecks(models, specs);
-      
+
       if (coverageResults.length > 0) {
         outputAllCoverageResults(coverageResults);
-        
+
         for (const check of coverageResults) {
           if (check.result.uncoveredItems.length > 0) {
             results.push({
@@ -126,7 +174,7 @@ export async function checkCommand(
             });
           }
         }
-        
+
         console.log('');
         console.log(chalk.gray('  ─────────────────────────────────────'));
         const allPassed = coverageResults.every(c => c.result.coveragePercent >= 80);
@@ -140,12 +188,12 @@ export async function checkCommand(
         console.log(chalk.gray('  No coverage checker found'));
       }
     }
-    
+
     const hasErrors = results.some(r => !r.success);
     if (hasErrors) {
       process.exit(1);
     }
-    
+
   } catch (error) {
     console.error(chalk.red('Check failed:'), error);
     process.exit(1);
@@ -153,21 +201,62 @@ export async function checkCommand(
 }
 
 // ============================================================================
-// Helpers
+// Legacy per-model checker (used when sources not configured)
 // ============================================================================
 
 function loadExternalData(filePath: string): unknown {
   const content = readFileSync(filePath, 'utf-8');
-  
+
   if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
     return parseYaml(content);
   }
-  
+
   if (filePath.endsWith('.json')) {
     return JSON.parse(content);
   }
-  
+
   return content;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runLegacyChecks(models: any[], specs: SpecEntry[] | undefined, cwd: string, results: CheckResult[]): void {
+  for (const model of models) {
+    const modelSpecs = getSpecsFromConfig(specs, model.id);
+    if (modelSpecs.length === 0) continue;
+
+    for (const spec of modelSpecs) {
+      const sourcePath = model.getExternalSourcePath?.(spec);
+      if (!sourcePath) continue;
+
+      const fullPath = join(cwd, sourcePath);
+      if (!existsSync(fullPath)) {
+        results.push({
+          type: model.id,
+          success: false,
+          issues: [{
+            severity: 'error',
+            message: `External source not found: ${sourcePath}`,
+            specId: (spec as { id: string }).id,
+          }],
+        });
+        continue;
+      }
+
+      const externalData = loadExternalData(fullPath);
+      const checkResult = model.check(spec, externalData);
+
+      if (!checkResult.success || checkResult.errors.length > 0 || checkResult.warnings.length > 0) {
+        results.push({
+          type: model.id,
+          success: checkResult.success,
+          issues: [
+            ...checkResult.errors.map((e: { message: string; specId?: string; field?: string }) => ({ severity: 'error' as const, message: e.message, specId: e.specId, field: e.field })),
+            ...checkResult.warnings.map((w: { message: string; specId?: string; field?: string }) => ({ severity: 'warning' as const, message: w.message, specId: w.specId, field: w.field })),
+          ],
+        });
+      }
+    }
+  }
 }
 
 function outputCheckResults(results: CheckResult[]): void {

@@ -31,6 +31,52 @@ export interface ArtifactConfig {
   contentPatterns?: RegExp[];
 }
 
+// ============================================================================
+// Global Source Scan Types
+// ============================================================================
+
+/** A single match found by a source scanner */
+export interface SourceMatch {
+  /** Matched spec ID */
+  specId: string;
+  /** Match location description (path key, table name, file:line, etc.) */
+  location: string;
+  /** Parsed object context for deep validation (e.g. OpenAPI operation, DDL table) */
+  context?: unknown;
+}
+
+/**
+ * Source scanner plugin interface.
+ * Built-in scanners exist for 'openapi', 'ddl', and 'annotation'.
+ * Users can provide custom scanners for additional file types.
+ */
+export interface SourceScanner {
+  /**
+   * Search for spec IDs in a parsed document or raw content.
+   * @param content - Parsed document (object for openapi/ddl) or raw string
+   * @param specIds - Set of all known spec IDs to search for
+   * @param filePath - Path to the source file being scanned
+   * @returns Array of matches found
+   */
+  findSpecIds(content: unknown, specIds: string[], filePath: string): SourceMatch[];
+}
+
+/** Source configuration for global scan */
+export interface SourceConfig {
+  /** Source type identifier. Built-in: 'openapi', 'ddl', 'annotation' */
+  type: string;
+  /** File path glob patterns to scan */
+  paths: string[];
+  /** Exclusion patterns */
+  exclude?: string[];
+  /** Relation type: how matches relate to specs */
+  relation: 'implements' | 'verifiedBy';
+  /** Content search patterns (for annotation type) */
+  contentPatterns?: RegExp[];
+  /** Custom scanner plugin (required when type is not a built-in) */
+  scanner?: SourceScanner;
+}
+
 /**
  * speckeeper configuration type
  */
@@ -78,6 +124,8 @@ export interface SpeckeeperConfigInput {
   };
   /** Artifact scan configurations keyed by artifact class (e.g. 'test', 'typescript', 'openapi') */
   artifacts?: Record<string, ArtifactConfig>;
+  /** Global source definitions for spec ID scanning */
+  sources?: SourceConfig[];
 }
 
 /**

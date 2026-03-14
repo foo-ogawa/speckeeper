@@ -3,9 +3,11 @@ import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
-  annotationChecker,
-  setArtifactsConfig,
-} from '../../src/core/dsl/checkers.js';
+  annotationScanner,
+  createAnnotationScanner,
+  runGlobalScan,
+} from '../../src/core/global-scanner.js';
+import type { SourceConfig } from '../../src/core/config-api.js';
 
 let tempDir: string;
 let originalCwd: string;
@@ -17,252 +19,148 @@ beforeEach(() => {
 
 afterEach(() => {
   process.chdir(originalCwd);
-  setArtifactsConfig({});
   rmSync(tempDir, { recursive: true, force: true });
 });
 
-describe('annotationChecker', () => {
-  it('detects basic @verifies annotation and returns success with matchedFiles', () => {
-    writeFileSync(join(tempDir, 'handler.ts'), '// @verifies FR-001\nfunction foo() {}');
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
+describe('annotationScanner', () => {
+  it('detects basic @verifies annotation', () => {
+    const content = '// @verifies FR-001\nfunction foo() {}';
+    const matches = annotationScanner.findSpecIds(content, ['FR-001'], 'handler.ts');
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
-
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toBeDefined();
-    expect(result.matchedFiles).toHaveLength(1);
-    expect(result.matchedFiles![0]).toMatchObject({
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toMatchObject({
       specId: 'FR-001',
-      filePath: 'handler.ts',
-      line: 1,
-      relationType: 'verifiedBy',
+      location: 'handler.ts:1',
     });
   });
 
   it('detects multiple comma-separated IDs in one line', () => {
-    writeFileSync(
-      join(tempDir, 'multi.ts'),
-      '// @verifies FR-001, FR-002, FR-003\nexport const x = 1;',
-    );
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
+    const content = '// @verifies FR-001, FR-002, FR-003\nexport const x = 1;';
+    const matches = annotationScanner.findSpecIds(content, ['FR-001', 'FR-002', 'FR-003'], 'multi.ts');
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-
-    const result1 = checker.check({ id: 'FR-001', name: 'F1' }, undefined);
-    const result2 = checker.check({ id: 'FR-002', name: 'F2' }, undefined);
-    const result3 = checker.check({ id: 'FR-003', name: 'F3' }, undefined);
-
-    expect(result1.matchedFiles).toHaveLength(1);
-    expect(result2.matchedFiles).toHaveLength(1);
-    expect(result3.matchedFiles).toHaveLength(1);
+    expect(matches).toHaveLength(3);
+    const foundIds = matches.map(m => m.specId).sort();
+    expect(foundIds).toEqual(['FR-001', 'FR-002', 'FR-003']);
   });
 
   it('detects space-separated IDs', () => {
-    writeFileSync(
-      join(tempDir, 'space.ts'),
-      '// @verifies FR-001 FR-002\nconst a = 1;',
-    );
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
+    const content = '// @verifies FR-001 FR-002\nconst a = 1;';
+    const matches = annotationScanner.findSpecIds(content, ['FR-001', 'FR-002'], 'space.ts');
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result1 = checker.check({ id: 'FR-001', name: 'F1' }, undefined);
-    const result2 = checker.check({ id: 'FR-002', name: 'F2' }, undefined);
+    expect(matches).toHaveLength(2);
+  });
 
-    expect(result1.matchedFiles).toHaveLength(1);
-    expect(result2.matchedFiles).toHaveLength(1);
+  it('detects @implements annotation', () => {
+    const content = '// @implements COMP-01\nclass Component {}';
+    const matches = annotationScanner.findSpecIds(content, ['COMP-01'], 'impl.ts');
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0].specId).toBe('COMP-01');
+  });
+
+  it('detects @traces annotation', () => {
+    const content = '// @traces REQ-001\nfunction doStuff() {}';
+    const matches = annotationScanner.findSpecIds(content, ['REQ-001'], 'trace.ts');
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0].specId).toBe('REQ-001');
   });
 
   it('detects annotations in different comment styles', () => {
-    writeFileSync(join(tempDir, 'script.py'), '# @verifies FR-001\nprint("ok")');
-    writeFileSync(join(tempDir, 'query.sql'), '-- @implements FR-001\nSELECT 1;');
-    writeFileSync(join(tempDir, 'block.ts'), '/* @verifies FR-001 */\nconst x = 1;');
-    writeFileSync(join(tempDir, 'page.html'), '<!-- @implements FR-001 -->\n<div></div>');
+    const pyContent = '# @verifies FR-001\nprint("ok")';
+    const sqlContent = '-- @implements FR-001\nSELECT 1;';
+    const blockContent = '/* @verifies FR-001 */\nconst x = 1;';
+    const htmlContent = '<!-- @implements FR-001 -->\n<div></div>';
 
-    setArtifactsConfig({
-      code: {
-        globs: ['**/*.py', '**/*.sql', '**/*.ts', '**/*.html'],
-      },
-    });
-    process.chdir(tempDir);
-
-    const checker = annotationChecker({
-      checks: [
-        { artifact: 'code', relationType: 'verifiedBy' },
-        { artifact: 'code', relationType: 'implements' },
-      ],
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
-
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toBeDefined();
-    expect(result.matchedFiles!.length).toBeGreaterThanOrEqual(2);
-    const filePaths = result.matchedFiles!.map((m) => m.filePath);
-    expect(filePaths).toContain('script.py');
-    expect(filePaths).toContain('query.sql');
-    expect(filePaths).toContain('block.ts');
-    expect(filePaths).toContain('page.html');
+    expect(annotationScanner.findSpecIds(pyContent, ['FR-001'], 'script.py')).toHaveLength(1);
+    expect(annotationScanner.findSpecIds(sqlContent, ['FR-001'], 'query.sql')).toHaveLength(1);
+    expect(annotationScanner.findSpecIds(blockContent, ['FR-001'], 'block.ts')).toHaveLength(1);
+    expect(annotationScanner.findSpecIds(htmlContent, ['FR-001'], 'page.html')).toHaveLength(1);
   });
 
-  it('generates warning when file exists but does not contain spec ID', () => {
-    writeFileSync(join(tempDir, 'other.ts'), '// @verifies FR-999\nfunction bar() {}');
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
-
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
-
-    expect(result.success).toBe(true);
-    expect(result.warnings.some((w) => w.message.includes('No annotation matches'))).toBe(true);
-    expect(result.matchedFiles).toBeUndefined();
+  it('does not match when spec ID is not in content', () => {
+    const content = '// @verifies FR-002\nfunction bar() {}';
+    const matches = annotationScanner.findSpecIds(content, ['FR-001'], 'other.ts');
+    expect(matches).toHaveLength(0);
   });
 
-  it('generates warning when glob matches no files', () => {
-    writeFileSync(join(tempDir, 'only.ts'), '// @verifies FR-001');
-    setArtifactsConfig({
-      code: { globs: ['**/*.py'] },
-    });
-    process.chdir(tempDir);
+  it('returns correct line number', () => {
+    const content = 'line1\nline2\n// @verifies FR-001\nline4';
+    const matches = annotationScanner.findSpecIds(content, ['FR-001'], 'test.ts');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].location).toBe('test.ts:3');
+  });
+});
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
+describe('createAnnotationScanner', () => {
+  it('uses custom content patterns', () => {
+    const scanner = createAnnotationScanner([/CUSTOM:([\w-]+)/g]);
+    const content = '// CUSTOM:FR-001\nconst x = 1;';
+    const matches = scanner.findSpecIds(content, ['FR-001'], 'custom.ts');
 
-    expect(result.success).toBe(true);
-    expect(result.warnings.some((w) => w.message.includes('No annotation matches'))).toBe(true);
-    expect(result.matchedFiles).toBeUndefined();
+    expect(matches).toHaveLength(1);
+    expect(matches[0].specId).toBe('FR-001');
   });
 
-  it('uses custom contentPatterns override instead of default', () => {
-    writeFileSync(join(tempDir, 'custom.ts'), '// CUSTOM:FR-001\nconst x = 1;');
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
+  it('does not match default patterns when custom is provided', () => {
+    const scanner = createAnnotationScanner([/CUSTOM:([\w-]+)/g]);
+    const content = '// @verifies FR-001\nconst x = 1;';
+    const matches = scanner.findSpecIds(content, ['FR-001'], 'nope.ts');
+
+    expect(matches).toHaveLength(0);
+  });
+});
+
+describe('runGlobalScan with annotation source', () => {
+  it('scans annotation files and returns matches', () => {
+    writeFileSync(join(tempDir, 'handler.ts'), '// @verifies FR-001\nfunction foo() {}');
+    writeFileSync(join(tempDir, 'impl.ts'), '// @implements FR-002\nclass Bar {}');
     process.chdir(tempDir);
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-      contentPatterns: [/CUSTOM:([\w-]+)/g],
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
+    const sources: SourceConfig[] = [{
+      type: 'annotation',
+      paths: ['**/*.ts'],
+      relation: 'verifiedBy',
+    }];
+    const { matches } = runGlobalScan(sources, ['FR-001', 'FR-002', 'FR-999'], tempDir);
 
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toHaveLength(1);
-    expect(result.matchedFiles![0].filePath).toBe('custom.ts');
+    expect(matches.has('FR-001')).toBe(true);
+    expect(matches.has('FR-002')).toBe(true);
+    expect(matches.has('FR-999')).toBe(false);
   });
 
-  it('scans both implements and verifiedBy when checks array has two entries', () => {
-    writeFileSync(
-      join(tempDir, 'both.ts'),
-      '// @verifies FR-001\n// @implements FR-001\nexport const x = 1;',
-    );
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
+  it('uses custom contentPatterns in annotation source', () => {
+    writeFileSync(join(tempDir, 'custom.ts'), '// TRACK:FR-001\nconst x = 1;');
     process.chdir(tempDir);
 
-    const checker = annotationChecker({
-      checks: [
-        { artifact: 'code', relationType: 'verifiedBy' },
-        { artifact: 'code', relationType: 'implements' },
-      ],
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
+    const sources: SourceConfig[] = [{
+      type: 'annotation',
+      paths: ['**/*.ts'],
+      relation: 'verifiedBy',
+      contentPatterns: [/TRACK:([\w-]+)/g],
+    }];
+    const { matches } = runGlobalScan(sources, ['FR-001'], tempDir);
 
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toBeDefined();
-    expect(result.matchedFiles!.length).toBe(2);
-    const relationTypes = result.matchedFiles!.map((m) => m.relationType);
-    expect(relationTypes).toContain('verifiedBy');
-    expect(relationTypes).toContain('implements');
+    expect(matches.has('FR-001')).toBe(true);
   });
 
-  it('detects @implements annotation with relationType implements', () => {
-    writeFileSync(join(tempDir, 'impl.ts'), '// @implements COMP-01\nclass Component {}');
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
-
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'implements',
-    });
-    const result = checker.check({ id: 'COMP-01', name: 'Component' }, undefined);
-
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toHaveLength(1);
-    expect(result.matchedFiles![0]).toMatchObject({
-      specId: 'COMP-01',
-      relationType: 'implements',
-    });
-  });
-
-  it('does not match when spec ID is in file but not in captured group for checked ID', () => {
-    writeFileSync(join(tempDir, 'other-id.ts'), '// @verifies FR-002\nfunction foo() {}');
-    setArtifactsConfig({
-      code: { globs: ['**/*.ts'] },
-    });
-    process.chdir(tempDir);
-
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
-
-    expect(result.success).toBe(true);
-    expect(result.warnings.some((w) => w.message.includes('No annotation matches'))).toBe(true);
-    expect(result.matchedFiles).toBeUndefined();
-  });
-
-  it('excludes files matching exclude patterns from scan', () => {
+  it('respects exclude patterns', () => {
     mkdirSync(join(tempDir, 'src'), { recursive: true });
     writeFileSync(join(tempDir, 'src', 'included.ts'), '// @verifies FR-001\nconst a = 1;');
     writeFileSync(join(tempDir, 'src', 'excluded.ts'), '// @verifies FR-001\nconst b = 2;');
-    setArtifactsConfig({
-      code: {
-        globs: ['**/*.ts'],
-        exclude: ['**/excluded.ts'],
-      },
-    });
     process.chdir(tempDir);
 
-    const checker = annotationChecker({
-      artifact: 'code',
-      relationType: 'verifiedBy',
-    });
-    const result = checker.check({ id: 'FR-001', name: 'Feature' }, undefined);
+    const sources: SourceConfig[] = [{
+      type: 'annotation',
+      paths: ['**/*.ts'],
+      exclude: ['**/excluded.ts'],
+      relation: 'verifiedBy',
+    }];
+    const { matches } = runGlobalScan(sources, ['FR-001'], tempDir);
 
-    expect(result.success).toBe(true);
-    expect(result.matchedFiles).toHaveLength(1);
-    expect(result.matchedFiles![0].filePath).toBe('src/included.ts');
-    expect(result.matchedFiles!.some((m) => m.filePath.includes('excluded'))).toBe(false);
+    expect(matches.has('FR-001')).toBe(true);
+    const allMatches = matches.get('FR-001')!;
+    expect(allMatches).toHaveLength(1);
+    expect(allMatches[0].filePath).toBe('src/included.ts');
   });
 });
