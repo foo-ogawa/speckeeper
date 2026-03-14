@@ -354,13 +354,27 @@ export interface GlobalScanOutput {
 }
 
 /**
+ * Lookup key map: specId -> Record<sourceType, lookupKey>.
+ * When a model's spec ID differs from the external identifier
+ * (e.g. entity "user" vs DDL table "users"), the check command
+ * builds this map so the scanner searches for the correct key.
+ */
+export type LookupKeyMap = Map<string, Record<string, string>>;
+
+/**
  * Run global scan across all configured sources.
  * Returns a map of specId -> matches for all spec IDs found.
+ *
+ * @param sources - Source configurations to scan
+ * @param specIds - All known spec IDs
+ * @param basePath - Base directory for resolving file paths
+ * @param lookupKeyMap - Optional per-spec, per-source-type key overrides
  */
 export function runGlobalScan(
   sources: SourceConfig[],
   specIds: string[],
   basePath?: string,
+  lookupKeyMap?: LookupKeyMap,
 ): GlobalScanOutput {
   const cwd = basePath ?? process.cwd();
   const result: GlobalScanResult = new Map();
@@ -375,6 +389,15 @@ export function runGlobalScan(
       });
       continue;
     }
+
+    // Build lookup key -> original specId mapping for this source type
+    const keyToSpecId = new Map<string, string>();
+    for (const specId of specIds) {
+      const overrides = lookupKeyMap?.get(specId);
+      const key = overrides?.[source.type] ?? specId;
+      keyToSpecId.set(key, specId);
+    }
+    const keysToSearch = Array.from(keyToSpecId.keys());
 
     const allFiles = new Set<string>();
     for (const pattern of source.paths) {
@@ -408,7 +431,7 @@ export function runGlobalScan(
 
       let matches: SourceMatch[];
       try {
-        matches = scanner.findSpecIds(content, specIds, relPath);
+        matches = scanner.findSpecIds(content, keysToSearch, relPath);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         warnings.push({
@@ -420,18 +443,21 @@ export function runGlobalScan(
       }
 
       for (const match of matches) {
+        // Map the lookup key back to the original specId
+        const originalSpecId = keyToSpecId.get(match.specId) ?? match.specId;
         const globalMatch: GlobalScanMatch = {
           ...match,
+          specId: originalSpecId,
           sourceType: source.type,
           relation: source.relation,
           filePath: relPath,
         };
 
-        const existing = result.get(match.specId);
+        const existing = result.get(originalSpecId);
         if (existing) {
           existing.push(globalMatch);
         } else {
-          result.set(match.specId, [globalMatch]);
+          result.set(originalSpecId, [globalMatch]);
         }
       }
     }

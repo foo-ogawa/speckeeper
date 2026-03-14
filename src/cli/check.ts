@@ -10,7 +10,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import { loadConfig } from '../utils/config-loader.js';
 import { getSpecsFromConfig, buildRegistryFromConfig, type SpecEntry, type CoverageResult } from '../core/model.js';
-import { runGlobalScan, runDeepValidation } from '../core/global-scanner.js';
+import { runGlobalScan, runDeepValidation, type LookupKeyMap } from '../core/global-scanner.js';
 import type { SourceConfig } from '../core/config-api.js';
 
 // ============================================================================
@@ -69,15 +69,29 @@ export async function checkCommand(
 
     const results: CheckResult[] = [];
 
-    // Collect all spec IDs across all models
+    // Collect all spec IDs and build lookup key map
     const allSpecIds: string[] = [];
     const specIdToModel = new Map<string, { modelId: string; spec: unknown }>();
+    const lookupKeyMap: LookupKeyMap = new Map();
     for (const model of models) {
       const modelSpecs = getSpecsFromConfig(specs, model.id);
+      const modelLookupKeys = model.getLookupKeys?.();
       for (const spec of modelSpecs) {
         const specId = (spec as { id: string }).id;
         allSpecIds.push(specId);
         specIdToModel.set(specId, { modelId: model.id, spec });
+
+        if (modelLookupKeys) {
+          const overrides: Record<string, string> = {};
+          for (const [sourceType, mapper] of Object.entries(modelLookupKeys)) {
+            if (typeof mapper === 'function') {
+              overrides[sourceType] = mapper(spec);
+            }
+          }
+          if (Object.keys(overrides).length > 0) {
+            lookupKeyMap.set(specId, overrides);
+          }
+        }
       }
     }
 
@@ -87,8 +101,11 @@ export async function checkCommand(
         ? sources
         : sources.filter(s => s.type === checkType);
 
-      // Run global scan
-      const { matches, warnings: scanWarnings } = runGlobalScan(filteredSources, allSpecIds, cwd);
+      // Run global scan (with lookup key overrides)
+      const { matches, warnings: scanWarnings } = runGlobalScan(
+        filteredSources, allSpecIds, cwd,
+        lookupKeyMap.size > 0 ? lookupKeyMap : undefined,
+      );
 
       for (const sw of scanWarnings) {
         results.push({

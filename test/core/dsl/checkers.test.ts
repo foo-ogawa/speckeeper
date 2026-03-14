@@ -8,6 +8,7 @@ import {
   ddlScanner,
   runGlobalScan,
   runDeepValidation,
+  type LookupKeyMap,
 } from '../../../src/core/global-scanner.js';
 import type { SourceConfig } from '../../../src/core/config-api.js';
 
@@ -454,5 +455,100 @@ describe('relationCoverage', () => {
     };
     const result = coverage.check(specs, registry);
     expect(result.covered).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runGlobalScan with lookupKeyMap
+// ---------------------------------------------------------------------------
+
+describe('runGlobalScan with lookupKeyMap', () => {
+  it('matches DDL table via lookup key instead of spec ID', () => {
+    const sources: SourceConfig[] = [{
+      type: 'ddl',
+      paths: ['test/core/dsl/fixtures/valid.schema.sql'],
+      relation: 'implements',
+    }];
+    // Spec ID is "user-entity" but DDL table is "users"
+    const lookupKeyMap: LookupKeyMap = new Map([
+      ['user-entity', { ddl: 'users' }],
+    ]);
+    const { matches } = runGlobalScan(sources, ['user-entity'], undefined, lookupKeyMap);
+    expect(matches.has('user-entity')).toBe(true);
+    const m = matches.get('user-entity')!;
+    expect(m[0].specId).toBe('user-entity');
+    expect(m[0].sourceType).toBe('ddl');
+  });
+
+  it('does not match when lookup key does not exist in DDL', () => {
+    const sources: SourceConfig[] = [{
+      type: 'ddl',
+      paths: ['test/core/dsl/fixtures/valid.schema.sql'],
+      relation: 'implements',
+    }];
+    const lookupKeyMap: LookupKeyMap = new Map([
+      ['user-entity', { ddl: 'nonexistent_table' }],
+    ]);
+    const { matches } = runGlobalScan(sources, ['user-entity'], undefined, lookupKeyMap);
+    expect(matches.has('user-entity')).toBe(false);
+  });
+
+  it('uses spec ID as-is for source types without lookup key override', () => {
+    const sources: SourceConfig[] = [
+      {
+        type: 'openapi',
+        paths: ['test/core/dsl/fixtures/valid.openapi.yaml'],
+        relation: 'implements',
+      },
+      {
+        type: 'ddl',
+        paths: ['test/core/dsl/fixtures/valid.schema.sql'],
+        relation: 'implements',
+      },
+    ];
+    // Only DDL has a lookup key override; OpenAPI uses "listUsers" as-is
+    const lookupKeyMap: LookupKeyMap = new Map([
+      ['listUsers', { ddl: 'users' }],
+    ]);
+    const { matches } = runGlobalScan(sources, ['listUsers'], undefined, lookupKeyMap);
+    expect(matches.has('listUsers')).toBe(true);
+    const m = matches.get('listUsers')!;
+    const sourceTypes = m.map(x => x.sourceType);
+    expect(sourceTypes).toContain('openapi');
+    expect(sourceTypes).toContain('ddl');
+  });
+
+  it('falls back to spec ID when lookupKeyMap is not provided', () => {
+    const sources: SourceConfig[] = [{
+      type: 'ddl',
+      paths: ['test/core/dsl/fixtures/valid.schema.sql'],
+      relation: 'implements',
+    }];
+    const { matches } = runGlobalScan(sources, ['users']);
+    expect(matches.has('users')).toBe(true);
+  });
+
+  it('supports deep validation after lookup key match', () => {
+    const sources: SourceConfig[] = [{
+      type: 'ddl',
+      paths: ['test/core/dsl/fixtures/valid.schema.sql'],
+      relation: 'implements',
+    }];
+    const lookupKeyMap: LookupKeyMap = new Map([
+      ['user-entity', { ddl: 'users' }],
+    ]);
+    const { matches } = runGlobalScan(sources, ['user-entity'], undefined, lookupKeyMap);
+    const specMatches = matches.get('user-entity') ?? [];
+    expect(specMatches).toHaveLength(1);
+
+    const result = runDeepValidation('user-entity', specMatches, {
+      ddl: {
+        mapper: () => ({
+          tableName: 'users',
+          columns: [{ name: 'id' }, { name: 'name' }],
+        }),
+      },
+    }, { id: 'user-entity', name: 'User Entity' });
+    expect(result.warnings).toHaveLength(0);
   });
 });

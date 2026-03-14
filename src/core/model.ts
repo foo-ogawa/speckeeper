@@ -119,6 +119,17 @@ export interface DeepValidationConfig<T> {
 }
 
 /**
+ * Lookup key configuration keyed by source type.
+ * When a model's spec ID differs from the external identifier
+ * (e.g. entity ID "user" vs DDL table name "users"),
+ * define a mapper per source type to derive the external key.
+ * If not defined for a source type, spec.id is used as-is.
+ */
+export interface LookupKeyConfig<T> {
+  [sourceType: string]: ((spec: T) => string) | undefined;
+}
+
+/**
  * Coverage result
  */
 export interface CoverageResult {
@@ -244,6 +255,9 @@ export abstract class Model<TSchema extends ZodType> {
   
   /** Deep validation rules keyed by source type (replaces externalChecker) */
   protected deepValidation?: DeepValidationConfig<z.infer<TSchema>>;
+  
+  /** Lookup key overrides per source type (when spec ID differs from external identifier) */
+  protected lookupKeys?: LookupKeyConfig<z.infer<TSchema>>;
   
   /** Coverage checker (optional) */
   protected coverageChecker?: CoverageChecker<z.infer<TSchema>>;
@@ -451,6 +465,23 @@ export abstract class Model<TSchema extends ZodType> {
    */
   getDeepValidation(): DeepValidationConfig<z.infer<TSchema>> | undefined {
     return this.deepValidation;
+  }
+  
+  /**
+   * Get lookup key config
+   */
+  getLookupKeys(): LookupKeyConfig<z.infer<TSchema>> | undefined {
+    return this.lookupKeys;
+  }
+  
+  /**
+   * Resolve the lookup key for a spec and source type.
+   * Returns the lookup key if an override is defined, otherwise spec.id.
+   */
+  resolveLookupKey(spec: z.infer<TSchema>, sourceType: string): string {
+    const mapper = this.lookupKeys?.[sourceType];
+    if (mapper) return mapper(spec);
+    return (spec as { id: string }).id;
   }
   
   /**

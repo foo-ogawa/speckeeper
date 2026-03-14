@@ -32,6 +32,11 @@ export type {
   SpecEntry,
   SpecModule,
   MergedDesign,
+  LookupKeyConfig,
+  DeepValidationConfig,
+  DeepValidationRule,
+  OpenAPIValidationMapping,
+  DDLValidationMapping,
 } from './core/model.js';
 
 // Relation utilities

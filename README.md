@@ -290,6 +290,28 @@ class EntityModel extends Model<typeof EntitySchema> {
 
 Without `deepValidation`, speckeeper still performs existence checks for all spec IDs across all configured sources.
 
+#### Lookup keys (when spec ID differs from external identifier)
+
+By default, the global scanner searches for each spec's `id` in external sources. When the external identifier differs — for example, entity ID `"user"` vs DDL table name `"users"` — define `lookupKeys` on the model to map per source type:
+
+```typescript
+class EntityModel extends Model<typeof EntitySchema> {
+  readonly id = 'entity';
+  readonly name = 'Entity';
+  readonly idPrefix = 'ENT';
+  readonly schema = EntitySchema;
+
+  protected lookupKeys: LookupKeyConfig<Entity> = {
+    ddl: (spec) => spec.tableName,
+    openapi: (spec) => spec.schemaName ?? spec.id,
+  };
+}
+```
+
+With this configuration, when scanning DDL sources the scanner searches for `spec.tableName` instead of `spec.id`. If a match is found, the result is mapped back to the original spec ID for reporting and deep validation.
+
+`lookupKeys` is optional per source type — any source type not listed falls back to `spec.id`.
+
 #### Custom scanners
 
 For file formats not covered by the built-in scanners, provide a custom `SourceScanner` plugin:

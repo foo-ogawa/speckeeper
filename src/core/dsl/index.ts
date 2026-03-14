@@ -48,4 +48,5 @@ export type {
   GlobalScanResult,
   GlobalScanOutput,
   ScanWarning,
+  LookupKeyMap,
 } from '../global-scanner.js';
