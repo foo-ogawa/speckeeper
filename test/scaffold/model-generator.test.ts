@@ -50,7 +50,7 @@ describe('generateModelFile', () => {
     expect(result.content).toContain('requireField');
   });
 
-  it('appends checker binding comments for implements edge', () => {
+  it('generates annotationChecker code for implements edge', () => {
     const nodes = new Map<string, MermaidNode>();
     const fr = makeNode('FR', ['speckeeper', 'requirement']);
     const api = makeNode('API', ['openapi']);
@@ -59,11 +59,12 @@ describe('generateModelFile', () => {
 
     const edge = makeEdge('FR', 'API', 'implements');
     const result = generateModelFile(fr, [], [edge], nodes);
-    expect(result.content).toContain('Checker Bindings');
+    expect(result.content).toContain('protected externalChecker');
+    expect(result.content).toContain('annotationChecker');
     expect(result.content).toContain('externalOpenAPIChecker');
   });
 
-  it('appends checker binding comments for verifiedBy edge', () => {
+  it('generates annotationChecker code for verifiedBy edge', () => {
     const nodes = new Map<string, MermaidNode>();
     const fr = makeNode('FR', ['speckeeper', 'requirement']);
     const ut = makeNode('UT', ['test']);
@@ -72,8 +73,10 @@ describe('generateModelFile', () => {
 
     const edge = makeEdge('FR', 'UT', 'verifiedBy');
     const result = generateModelFile(fr, [], [edge], nodes);
-    expect(result.content).toContain('Checker Bindings');
-    expect(result.content).toContain('testChecker');
+    expect(result.content).toContain('protected externalChecker');
+    expect(result.content).toContain('annotationChecker');
+    expect(result.content).toContain("artifact: 'test'");
+    expect(result.content).toContain("relationType: 'verifiedBy'");
   });
 });
 
@@ -183,7 +186,9 @@ describe('generateAllModelFiles', () => {
 
     const files = generateAllModelFiles(nodes, edges, allNodesMap);
     const model = files.find(f => f.relativePath === '_models/requirement.ts')!;
+    expect(model.content).toContain('annotationChecker');
     expect(model.content).toContain('externalOpenAPIChecker');
-    expect(model.content).toContain('testChecker');
+    expect(model.content).toContain("artifact: 'test'");
+    expect(model.content).toContain("artifact: 'openapi'");
   });
 });

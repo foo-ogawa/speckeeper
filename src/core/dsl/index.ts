@@ -17,7 +17,21 @@ export { markdownExporter } from './exporters.js';
 export type { MarkdownExporterConfig } from './exporters.js';
 
 // Checker factories
-export { testChecker, externalOpenAPIChecker, externalSqlSchemaChecker, relationCoverage } from './checkers.js';
+export {
+  testChecker,
+  externalOpenAPIChecker,
+  externalSqlSchemaChecker,
+  relationCoverage,
+  annotationChecker,
+  annotationCoverage,
+  setArtifactsConfig,
+  getArtifactsConfig,
+} from './checkers.js';
+export type {
+  AnnotationCheckerConfig,
+  AnnotationCheckEntry,
+  AnnotationCoverageConfig,
+} from './checkers.js';
 
 // Type compatibility utility
 export { isTypeContainedBy } from './type-compat.js';

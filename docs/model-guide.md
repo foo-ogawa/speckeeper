@@ -129,6 +129,13 @@ export interface CheckResult {
   success: boolean;
   errors: { message: string; field?: string; specId?: string }[];
   warnings: { message: string; field?: string; specId?: string }[];
+  /** Files where annotations matching this spec were found */
+  matchedFiles?: Array<{
+    specId: string;
+    filePath: string;
+    line: number;
+    relationType: 'verifiedBy' | 'implements' | 'traces';
+  }>;
 }
 
 /**
@@ -159,13 +166,6 @@ export interface CoverageChecker<T> {
   /** Target model ID for coverage (e.g. 'requirement') */
   targetModel: string;
   /** Description of coverage check */
-  description: string;
-  /** Execute coverage check */
-  check: (
-    specs: T[],
-    registry: Record<string, Map<string, unknown>>
-  ) => CoverageResult;
-}
 ```
 <!--@embedoc:end-->
 
@@ -175,6 +175,13 @@ export interface CoverageChecker<T> {
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
+  /** Execute coverage check */
+  check: (
+    specs: T[],
+    registry: Record<string, Map<string, unknown>>
+  ) => CoverageResult;
+}
+
 // ============================================================================
 // Renderer (for embeds)
 // ============================================================================
@@ -216,13 +223,6 @@ export interface Renderer<T> {
  */
 export abstract class Model<TSchema extends ZodType> {
   /** Singleton instance storage (per subclass) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static _instances: WeakMap<new () => any, Model<ZodType>> = new WeakMap();
-
-  /**
-   * Get singleton instance of the model
-   * Usage: RequirementModel.instance
-   */
 ```
 <!--@embedoc:end-->
 

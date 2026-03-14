@@ -1,8 +1,25 @@
 import type { ModelTemplateParams } from './types.js';
+import { generateCheckerCode } from '../artifact-defaults.js';
 
 export function generateBaseModel(params: ModelTemplateParams): string {
   const schemaName = `${params.modelName}Schema`;
   const className = `${params.modelName}Model`;
+
+  const hasCheckerBindings =
+    params.checkerBindings && params.checkerBindings.length > 0;
+  const checkerGen = hasCheckerBindings
+    ? generateCheckerCode(params.checkerBindings!, params.modelName)
+    : null;
+
+  const dslImportItems = ['requireField'];
+  if (checkerGen) {
+    dslImportItems.push(...checkerGen.dslImports);
+  }
+  const dslImportLine = `import { ${dslImportItems.join(', ')} } from 'speckeeper/dsl';`;
+
+  const externalCheckerLine = checkerGen
+    ? `\n  ${checkerGen.code}`
+    : '';
 
   return `/**
  * ${params.modelName} Model Definition
@@ -12,7 +29,7 @@ export function generateBaseModel(params: ModelTemplateParams): string {
 import { z } from 'zod';
 import { Model, RelationSchema } from 'speckeeper';
 import type { LintRule, Exporter, ModelLevel } from 'speckeeper';
-import { requireField } from 'speckeeper/dsl';
+${dslImportLine}
 
 // =============================================================================
 // Schema Definition
@@ -48,7 +65,7 @@ class ${className} extends Model<typeof ${schemaName}> {
     requireField<${params.modelName}>('description'),
   ];
 
-  protected exporters: Exporter<${params.modelName}>[] = [];
+  protected exporters: Exporter<${params.modelName}>[] = [];${externalCheckerLine}
 }
 
 export { ${className} };

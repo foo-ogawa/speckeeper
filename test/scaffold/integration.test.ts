@@ -156,23 +156,26 @@ describe('scaffold integration with app-skelton README.md', () => {
       expect(le.content).toContain("from 'speckeeper/dsl'");
     });
 
-    it('FR model includes checker bindings for implements (API) and verifiedBy (UT, IT)', () => {
+    it('FR model includes annotationChecker for implements (API) and verifiedBy (UT, IT)', () => {
       const req = modelFiles.find(f => f.relativePath === '_models/requirement.ts')!;
-      expect(req.content).toContain('Checker Bindings');
+      expect(req.content).toContain('protected externalChecker');
+      expect(req.content).toContain('annotationChecker');
       expect(req.content).toContain('verifiedBy');
-      expect(req.content).toContain('testChecker');
+      expect(req.content).toContain("artifact: 'test'");
     });
 
-    it('UC model includes checker binding for implements (API)', () => {
+    it('UC model includes annotationChecker for implements (API)', () => {
       const uc = modelFiles.find(f => f.relativePath === '_models/usecase.ts')!;
-      expect(uc.content).toContain('Checker Bindings');
+      expect(uc.content).toContain('protected externalChecker');
+      expect(uc.content).toContain('annotationChecker');
       expect(uc.content).toContain('implements');
       expect(uc.content).toContain('openapi');
     });
 
-    it('LDM model includes checker binding for implements (DDL)', () => {
+    it('LDM model includes annotationChecker for implements (DDL)', () => {
       const ldm = modelFiles.find(f => f.relativePath === '_models/logical-entity.ts')!;
-      expect(ldm.content).toContain('Checker Bindings');
+      expect(ldm.content).toContain('protected externalChecker');
+      expect(ldm.content).toContain('annotationChecker');
       expect(ldm.content).toContain('implements');
       expect(ldm.content).toContain('sqlschema');
     });

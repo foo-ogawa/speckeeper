@@ -21,6 +21,16 @@ import { registerModelDefinitions } from './model-registry.js';
 // Config Types
 // ============================================================================
 
+/** Artifact scan configuration */
+export interface ArtifactConfig {
+  /** File path glob patterns to scan */
+  globs: string[];
+  /** Exclusion patterns */
+  exclude?: string[];
+  /** Content search patterns (RegExp). First capture group = spec IDs (comma or space separated) */
+  contentPatterns?: RegExp[];
+}
+
 /**
  * speckeeper configuration type
  */
@@ -66,6 +76,8 @@ export interface SpeckeeperConfigInput {
     /** Disable specific rules */
     disabledRules?: string[];
   };
+  /** Artifact scan configurations keyed by artifact class (e.g. 'test', 'typescript', 'openapi') */
+  artifacts?: Record<string, ArtifactConfig>;
 }
 
 /**
