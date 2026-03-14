@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    poolMatchGlobs: [['**/annotation-checker.test.ts', 'forks']],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

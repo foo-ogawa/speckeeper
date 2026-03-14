@@ -71,6 +71,13 @@ export interface CheckResult {
   success: boolean;
   errors: { message: string; field?: string; specId?: string }[];
   warnings: { message: string; field?: string; specId?: string }[];
+  /** Files where annotations matching this spec were found */
+  matchedFiles?: Array<{
+    specId: string;
+    filePath: string;
+    line: number;
+    relationType: 'verifiedBy' | 'implements' | 'traces';
+  }>;
 }
 
 /**

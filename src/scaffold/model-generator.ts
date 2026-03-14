@@ -13,6 +13,8 @@ import { isCheckEdge } from './edge-vocabulary.js';
 import { resolveModelTemplate } from './template-registry.js';
 import { MODEL_TEMPLATE_FUNCTIONS } from './templates/index.js';
 
+export { ARTIFACT_CLASS_DEFAULTS } from './artifact-defaults.js';
+
 // ---------------------------------------------------------------------------
 // Checker binding resolution
 // ---------------------------------------------------------------------------
@@ -59,8 +61,8 @@ export function resolveCheckerBindings(
 /**
  * Generate _models/*.ts file for a single speckeeper-managed node.
  *
- * Checker bindings from implements/verifiedBy edges are appended as
- * commented configuration that users can activate.
+ * Checker bindings from implements/verifiedBy edges are passed to the template
+ * which generates annotationChecker() configuration code inside the model class.
  */
 export function generateModelFile(
   node: MermaidNode,
@@ -71,60 +73,31 @@ export function generateModelFile(
   const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
   const templateFn = MODEL_TEMPLATE_FUNCTIONS[templateInfo.templateName];
 
+  const bindings = allNodes
+    ? resolveCheckerBindings(node.id, outgoingEdges, allNodes, 'speckeeper')
+    : [];
+
+  const checkerBindings =
+    bindings.length > 0
+      ? bindings.map((b) => ({ edgeType: b.edgeType, targetClass: b.targetClass }))
+      : undefined;
+
   const params = {
     modelId: templateInfo.fileName,
     modelName: templateInfo.modelName,
     idPrefix: templateInfo.defaultIdPrefix,
     level: templateInfo.defaultLevel,
     description: node.label ?? node.id,
+    checkerBindings,
   };
 
-  let content: string;
-  if (!templateFn) {
-    content = MODEL_TEMPLATE_FUNCTIONS['base'](params);
-  } else {
-    content = templateFn(params);
-  }
-
-  const bindings = allNodes
-    ? resolveCheckerBindings(node.id, outgoingEdges, allNodes, 'speckeeper')
-    : [];
-
-  if (bindings.length > 0) {
-    content += generateCheckerBindingComment(bindings);
-  }
+  const content =
+    !templateFn ? MODEL_TEMPLATE_FUNCTIONS['base'](params) : templateFn(params);
 
   return {
     relativePath: `_models/${templateInfo.fileName}.ts`,
     content,
   };
-}
-
-const CHECKER_FACTORY_MAP: Record<string, string> = {
-  openapi: 'externalOpenAPIChecker',
-  sqlschema: 'externalSqlSchemaChecker',
-  test: 'testChecker',
-};
-
-function generateCheckerBindingComment(bindings: CheckerBinding[]): string {
-  const lines = [
-    '',
-    '// =============================================================================',
-    '// Checker Bindings (auto-detected from flowchart edges)',
-    '// =============================================================================',
-    '//',
-    '// Import and assign to externalChecker in the Model class:',
-    "// import { " + bindings.map(b => CHECKER_FACTORY_MAP[b.targetClass] ?? 'externalSsotChecker').join(', ') + " } from 'speckeeper/dsl';",
-    '//',
-  ];
-
-  for (const b of bindings) {
-    const factory = CHECKER_FACTORY_MAP[b.targetClass] ?? `/* custom checker for '${b.targetClass}' */`;
-    lines.push(`// ${b.edgeType} → ${b.targetNodeId} (class: ${b.targetClass}): ${factory}`);
-  }
-
-  lines.push('');
-  return lines.join('\n');
 }
 
 /**

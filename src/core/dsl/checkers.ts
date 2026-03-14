@@ -10,6 +10,7 @@ import { glob } from 'glob';
 import { parse as parseYaml } from 'yaml';
 import nodeSqlParser from 'node-sql-parser';
 import type { ExternalChecker, CheckResult, CoverageChecker, CoverageResult } from '../model.js';
+import type { ArtifactConfig } from '../config-api.js';
 import { isTypeContainedBy } from './type-compat.js';
 
 // ---------------------------------------------------------------------------
@@ -78,6 +79,281 @@ export function testChecker<T extends { id: string }>(
       }
 
       return { success: errors.length === 0, errors, warnings };
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Annotation checker (target type: "annotation")
+// ---------------------------------------------------------------------------
+
+export type AnnotationRelationType = 'verifiedBy' | 'implements' | 'traces';
+
+export interface AnnotationCheckEntry {
+  artifact: string;
+  relationType: AnnotationRelationType;
+  contentPatterns?: RegExp[];
+  checker?: ExternalChecker<{ id: string }>;
+}
+
+export interface AnnotationCheckerConfig<_T extends { id: string }> {
+  artifact?: string;
+  relationType?: AnnotationRelationType;
+  checks?: AnnotationCheckEntry[];
+  contentPatterns?: RegExp[];
+}
+
+function relationTypeToAnnotation(relationType: AnnotationRelationType): string {
+  return relationType === 'verifiedBy' ? 'verifies' : relationType;
+}
+
+function getDefaultPatternForRelation(relationType: AnnotationRelationType): RegExp {
+  const ann = relationTypeToAnnotation(relationType);
+  return new RegExp(`@${ann}\\s+([\\w-]+(?:[,\\s]+[\\w-]+)*)`, 'g');
+}
+
+function extractSpecIds(captured: string): string[] {
+  return captured.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+}
+
+let _artifactsConfig: Record<string, ArtifactConfig> | undefined;
+
+export function setArtifactsConfig(config: Record<string, ArtifactConfig>): void {
+  _artifactsConfig = config;
+}
+
+export function getArtifactsConfig(): Record<string, ArtifactConfig> | undefined {
+  return _artifactsConfig;
+}
+
+type MatchedFile = NonNullable<CheckResult['matchedFiles']>[number];
+
+function runAnnotationScan(
+  specId: string,
+  artifact: string,
+  relationType: AnnotationRelationType,
+  contentPatterns: RegExp[],
+  basePath: string,
+): { matchedFiles: MatchedFile[]; warnings: CheckResult['warnings'] } {
+  const matchedFiles: MatchedFile[] = [];
+  const warnings: CheckResult['warnings'] = [];
+
+  const artifactsConfig = getArtifactsConfig();
+  const artifactConfig = artifactsConfig?.[artifact];
+  if (!artifactConfig) {
+    warnings.push({
+      message: `Artifact config "${artifact}" not found; set artifacts in config and call setArtifactsConfig()`,
+      specId,
+    });
+    return { matchedFiles, warnings };
+  }
+
+  const allFiles = new Set<string>();
+  for (const pattern of artifactConfig.globs) {
+    const found = glob.sync(pattern, {
+      cwd: basePath,
+      ignore: artifactConfig.exclude ?? [],
+    });
+    for (const f of found) {
+      allFiles.add(f);
+    }
+  }
+
+  const patterns =
+    contentPatterns.length > 0
+      ? contentPatterns
+      : [getDefaultPatternForRelation(relationType)];
+
+  for (const filePath of allFiles) {
+    const fullPath = join(basePath, filePath);
+    let content: string;
+    try {
+      content = readFileSync(fullPath, 'utf-8');
+    } catch {
+      continue;
+    }
+
+    const lines = content.split('\n');
+    for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
+      const line = lines[lineNum - 1];
+      for (const re of patterns) {
+        const copy = new RegExp(re.source, re.flags);
+        let m: RegExpExecArray | null;
+        while ((m = copy.exec(line)) !== null) {
+          const ids = extractSpecIds(m[1] ?? '');
+          if (ids.includes(specId)) {
+            matchedFiles.push({ specId, filePath, line: lineNum, relationType });
+          }
+        }
+      }
+    }
+  }
+
+  return { matchedFiles, warnings };
+}
+
+export function annotationChecker<T extends { id: string }>(
+  config?: AnnotationCheckerConfig<T>,
+): ExternalChecker<T> {
+  return {
+    targetType: 'annotation',
+    sourcePath: () => '.',
+    check: (spec, _externalData): CheckResult => {
+      const errors: CheckResult['errors'] = [];
+      const warnings: CheckResult['warnings'] = [];
+      const allMatchedFiles: MatchedFile[] = [];
+
+      const basePath = process.cwd();
+
+      const checks: AnnotationCheckEntry[] =
+        config?.artifact && config?.relationType
+          ? [
+              {
+                artifact: config.artifact,
+                relationType: config.relationType,
+                contentPatterns: config.contentPatterns,
+              },
+            ]
+          : config?.checks ?? [];
+
+      for (const entry of checks) {
+        if (entry.checker) {
+          const result = entry.checker.check(spec, undefined);
+          errors.push(...result.errors);
+          warnings.push(...result.warnings);
+          if (result.matchedFiles) {
+            allMatchedFiles.push(...result.matchedFiles);
+          }
+        } else {
+          const patterns =
+            entry.contentPatterns ??
+            getArtifactsConfig()?.[entry.artifact]?.contentPatterns ??
+            [];
+          const { matchedFiles, warnings: w } = runAnnotationScan(
+            spec.id,
+            entry.artifact,
+            entry.relationType,
+            Array.isArray(patterns) ? patterns : [patterns],
+            basePath,
+          );
+          warnings.push(...w);
+          allMatchedFiles.push(...matchedFiles);
+        }
+      }
+
+      if (checks.length > 0 && allMatchedFiles.length === 0) {
+        warnings.push({
+          message: `No annotation matches found for spec "${spec.id}"`,
+          specId: spec.id,
+        });
+      }
+
+      return {
+        success: errors.length === 0,
+        errors,
+        warnings,
+        matchedFiles: allMatchedFiles.length > 0 ? allMatchedFiles : undefined,
+      };
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Annotation coverage checker
+// ---------------------------------------------------------------------------
+
+export interface AnnotationCoverageConfig {
+  artifact: string;
+  relationType: AnnotationRelationType;
+  description: string;
+  contentPatterns?: RegExp[];
+}
+
+export function annotationCoverage<T extends { id: string }>(
+  config: AnnotationCoverageConfig,
+): CoverageChecker<T> {
+  return {
+    targetModel: 'annotation',
+    description: config.description,
+    check: (specs, _registry): CoverageResult => {
+      const basePath = process.cwd();
+      const allSpecIds = new Set(specs.map((s) => s.id));
+      const coveredIds = new Set<string>();
+
+      const artifactsConfig = getArtifactsConfig();
+      const artifactConfig = artifactsConfig?.[config.artifact];
+      if (!artifactConfig) {
+        return {
+          total: allSpecIds.size,
+          covered: 0,
+          uncovered: allSpecIds.size,
+          coveragePercent: 0,
+          coveredItems: [],
+          uncoveredItems: Array.from(allSpecIds).map((id) => ({ id })),
+        };
+      }
+
+      const allFiles = new Set<string>();
+      for (const pattern of artifactConfig.globs) {
+        const found = glob.sync(pattern, {
+          cwd: basePath,
+          ignore: artifactConfig.exclude ?? [],
+        });
+        for (const f of found) {
+          allFiles.add(f);
+        }
+      }
+
+      const patterns =
+        config.contentPatterns ??
+        artifactConfig.contentPatterns ??
+        [getDefaultPatternForRelation(config.relationType)];
+
+      const patternList = Array.isArray(patterns) ? patterns : [patterns];
+
+      for (const filePath of allFiles) {
+        const fullPath = join(basePath, filePath);
+        let content: string;
+        try {
+          content = readFileSync(fullPath, 'utf-8');
+        } catch {
+          continue;
+        }
+
+        const lines = content.split('\n');
+        for (const line of lines) {
+          for (const re of patternList) {
+            const copy = new RegExp(re.source, re.flags);
+            let m: RegExpExecArray | null;
+            while ((m = copy.exec(line)) !== null) {
+              const ids = extractSpecIds(m[1] ?? '');
+              for (const id of ids) {
+                if (allSpecIds.has(id)) {
+                  coveredIds.add(id);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const coveredItems = Array.from(coveredIds).map((id) => ({ id }));
+      const uncoveredItems = Array.from(allSpecIds)
+        .filter((id) => !coveredIds.has(id))
+        .map((id) => ({ id }));
+
+      const total = allSpecIds.size;
+      const covered = coveredItems.length;
+      const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
+
+      return {
+        total,
+        covered,
+        uncovered: total - covered,
+        coveragePercent,
+        coveredItems,
+        uncoveredItems,
+      };
     },
   };
 }

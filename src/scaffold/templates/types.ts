@@ -15,5 +15,10 @@ export interface ModelTemplateParams {
   level: ModelLevel;
   /** Description derived from mermaid label */
   description: string;
+  /** Checker bindings from implements/verifiedBy edges */
+  checkerBindings?: Array<{
+    edgeType: 'implements' | 'verifiedBy';
+    targetClass: string;
+  }>;
 }
 
