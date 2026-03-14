@@ -68,6 +68,8 @@ export async function checkCommand(
     }
 
     const results: CheckResult[] = [];
+    const transitiveRelations = config.coverage?.transitiveRelations ?? [];
+    let transitiveCoverageData: TransitiveCoverageResult | undefined;
 
     // Collect all spec IDs and build lookup key map
     const allSpecIds: string[] = [];
@@ -146,10 +148,24 @@ export async function checkCommand(
         }
       }
 
-      // Report unmatched specs
+      // Compute transitive coverage if configured
+      const directlyCovered = new Set(matches.keys());
+      let coveredSet = directlyCovered;
+
+      if (transitiveRelations.length > 0) {
+        const allSpecsWithRelations = allSpecIds.map(id => {
+          const entry = specIdToModel.get(id);
+          const spec = entry?.spec as { id: string; relations?: Array<{ type: string; target: string }> } | undefined;
+          return { id, relations: spec?.relations };
+        });
+        transitiveCoverageData = computeTransitiveCoverage(directlyCovered, allSpecsWithRelations, transitiveRelations);
+        coveredSet = transitiveCoverageData.coveredSet;
+      }
+
+      // Report unmatched specs (excluding transitively covered)
       if (options.verbose) {
         for (const specId of allSpecIds) {
-          if (!matches.has(specId)) {
+          if (!coveredSet.has(specId)) {
             const entry = specIdToModel.get(specId);
             results.push({
               type: entry?.modelId ?? 'unknown',
@@ -191,18 +207,53 @@ export async function checkCommand(
             });
           }
         }
+      }
+
+      // Transitive coverage report
+      if (transitiveCoverageData && transitiveRelations.length > 0) {
+        const total = allSpecIds.length;
+        const directCount = transitiveCoverageData.directCount;
+        const transitiveCount = transitiveCoverageData.transitiveCount;
+        const covered = directCount + transitiveCount;
+        const uncovered = total - covered;
+        const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
 
         console.log('');
-        console.log(chalk.gray('  ─────────────────────────────────────'));
-        const allPassed = coverageResults.every(c => c.result.coveragePercent >= 80);
-        if (allPassed) {
-          console.log(chalk.green('  ✓ All coverage checks passed (≥80%)'));
-        } else {
-          const failed = coverageResults.filter(c => c.result.coveragePercent < 80);
-          console.log(chalk.yellow(`  ⚠ ${failed.length} coverage check(s) below 80%`));
+        console.log(chalk.blue(`  Transitive coverage (via ${transitiveRelations.join(', ')})`));
+        console.log(chalk.gray(`  ─────────────────────────────────────`));
+        console.log(chalk.gray(`  Total:     ${total}`));
+        console.log(chalk.green(`  Covered:   ${covered}  (${directCount} direct + ${transitiveCount} transitive)`));
+        console.log(chalk.yellow(`  Uncovered: ${uncovered}`));
+        const color = coveragePercent >= 80 ? chalk.green :
+                      coveragePercent >= 50 ? chalk.yellow : chalk.red;
+        console.log(color(`  Coverage:  ${coveragePercent}%`));
+
+        if (uncovered > 0) {
+          const uncoveredIds = allSpecIds.filter(id => !transitiveCoverageData!.coveredSet.has(id));
+          const display = uncoveredIds.slice(0, 10);
+          console.log('');
+          console.log(chalk.yellow('  Uncovered items:'));
+          for (const id of display) {
+            const entry = specIdToModel.get(id);
+            console.log(chalk.yellow(`    - ${id} (${entry?.modelId ?? 'unknown'})`));
+          }
+          if (uncoveredIds.length > 10) {
+            console.log(chalk.yellow(`    ... and ${uncoveredIds.length - 10} more`));
+          }
         }
-      } else {
+      }
+
+      console.log('');
+      console.log(chalk.gray('  ─────────────────────────────────────'));
+      const allCoverageResults = [...coverageResults];
+      const allPassed = allCoverageResults.every(c => c.result.coveragePercent >= 80);
+      if (coverageResults.length === 0 && !transitiveCoverageData) {
         console.log(chalk.gray('  No coverage checker found'));
+      } else if (allPassed) {
+        console.log(chalk.green('  ✓ All coverage checks passed (≥80%)'));
+      } else {
+        const failed = allCoverageResults.filter(c => c.result.coveragePercent < 80);
+        console.log(chalk.yellow(`  ⚠ ${failed.length} coverage check(s) below 80%`));
       }
     }
 
@@ -215,6 +266,62 @@ export async function checkCommand(
     console.error(chalk.red('Check failed:'), error);
     process.exit(1);
   }
+}
+
+// ============================================================================
+// Transitive Coverage
+// ============================================================================
+
+export interface TransitiveCoverageResult {
+  coveredSet: Set<string>;
+  directCount: number;
+  transitiveCount: number;
+}
+
+/**
+ * Compute transitive coverage via fixed-point iteration.
+ * A spec is transitively covered if ALL specs that relate to it
+ * (via a transitive relation type) are themselves covered.
+ */
+export function computeTransitiveCoverage(
+  directlyCovered: Set<string>,
+  allSpecs: Array<{ id: string; relations?: Array<{ type: string; target: string }> }>,
+  transitiveRelations: string[],
+): TransitiveCoverageResult {
+  if (transitiveRelations.length === 0) {
+    return { coveredSet: new Set(directlyCovered), directCount: directlyCovered.size, transitiveCount: 0 };
+  }
+
+  // Build reverse relation map: targetId -> sourceIds[]
+  const reverseRelations = new Map<string, string[]>();
+  for (const spec of allSpecs) {
+    if (!spec.relations) continue;
+    for (const rel of spec.relations) {
+      if (!transitiveRelations.includes(rel.type)) continue;
+      const existing = reverseRelations.get(rel.target) ?? [];
+      existing.push(spec.id);
+      reverseRelations.set(rel.target, existing);
+    }
+  }
+
+  const coveredSet = new Set(directlyCovered);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [targetId, sourceIds] of reverseRelations) {
+      if (coveredSet.has(targetId)) continue;
+      if (sourceIds.length > 0 && sourceIds.every(id => coveredSet.has(id))) {
+        coveredSet.add(targetId);
+        changed = true;
+      }
+    }
+  }
+
+  return {
+    coveredSet,
+    directCount: directlyCovered.size,
+    transitiveCount: coveredSet.size - directlyCovered.size,
+  };
 }
 
 // ============================================================================

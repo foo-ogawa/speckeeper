@@ -10,6 +10,7 @@ import {
   runDeepValidation,
   type LookupKeyMap,
 } from '../../../src/core/global-scanner.js';
+import { computeTransitiveCoverage } from '../../../src/cli/check.js';
 import type { SourceConfig } from '../../../src/core/config-api.js';
 
 interface SimpleSpec {
@@ -550,5 +551,93 @@ describe('runGlobalScan with lookupKeyMap', () => {
       },
     }, { id: 'user-entity', name: 'User Entity' });
     expect(result.warnings).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeTransitiveCoverage
+// ---------------------------------------------------------------------------
+
+describe('computeTransitiveCoverage', () => {
+  it('returns only direct coverage when transitiveRelations is empty', () => {
+    const direct = new Set(['FR-001', 'FR-002']);
+    const specs = [
+      { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'FR-002', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, []);
+    expect(result.coveredSet.size).toBe(2);
+    expect(result.transitiveCount).toBe(0);
+    expect(result.coveredSet.has('UC-001')).toBe(false);
+  });
+
+  it('transitively covers target when all sources are covered', () => {
+    const direct = new Set(['FR-001', 'FR-002']);
+    const specs = [
+      { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'FR-002', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies']);
+    expect(result.coveredSet.has('UC-001')).toBe(true);
+    expect(result.directCount).toBe(2);
+    expect(result.transitiveCount).toBe(1);
+  });
+
+  it('does not transitively cover target when some sources are uncovered', () => {
+    const direct = new Set(['FR-001']);
+    const specs = [
+      { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'FR-002', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies']);
+    expect(result.coveredSet.has('UC-001')).toBe(false);
+    expect(result.transitiveCount).toBe(0);
+  });
+
+  it('does not transitively cover target when no sources exist', () => {
+    const direct = new Set(['FR-001']);
+    const specs = [
+      { id: 'FR-001' },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies']);
+    expect(result.coveredSet.has('UC-001')).toBe(false);
+  });
+
+  it('handles multi-level transitive chains', () => {
+    const direct = new Set(['TEST-001']);
+    const specs = [
+      { id: 'TEST-001', relations: [{ type: 'verifies', target: 'FR-001' }] },
+      { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies', 'verifies']);
+    expect(result.coveredSet.has('FR-001')).toBe(true);
+    expect(result.coveredSet.has('UC-001')).toBe(true);
+    expect(result.transitiveCount).toBe(2);
+  });
+
+  it('ignores non-transitive relation types', () => {
+    const direct = new Set(['FR-001']);
+    const specs = [
+      { id: 'FR-001', relations: [{ type: 'dependsOn', target: 'UC-001' }] },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies']);
+    expect(result.coveredSet.has('UC-001')).toBe(false);
+  });
+
+  it('handles specs without relations gracefully', () => {
+    const direct = new Set(['FR-001']);
+    const specs = [
+      { id: 'FR-001' },
+      { id: 'UC-001' },
+    ];
+    const result = computeTransitiveCoverage(direct, specs, ['satisfies']);
+    expect(result.coveredSet.size).toBe(1);
+    expect(result.coveredSet.has('FR-001')).toBe(true);
   });
 });

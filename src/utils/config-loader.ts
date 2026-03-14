@@ -113,6 +113,11 @@ export interface SpeckeeperConfig {
   
   // Spec data entries (from design/index.ts via mergeSpecs())
   specs?: import('../core/model.js').SpecEntry[];
+  
+  // Coverage configuration
+  coverage?: {
+    transitiveRelations?: string[];
+  };
 }
 
 // Default configuration

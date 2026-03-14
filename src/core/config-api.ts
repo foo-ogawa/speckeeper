@@ -126,6 +126,11 @@ export interface SpeckeeperConfigInput {
   artifacts?: Record<string, ArtifactConfig>;
   /** Global source definitions for spec ID scanning */
   sources?: SourceConfig[];
+  /** Coverage configuration */
+  coverage?: {
+    /** Relation types that enable transitive coverage (e.g. ['satisfies']) */
+    transitiveRelations?: string[];
+  };
 }
 
 /**

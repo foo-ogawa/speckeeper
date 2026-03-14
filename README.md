@@ -348,6 +348,43 @@ speckeeper check
   ✓ All checks passed
 ```
 
+#### Transitive coverage
+
+Narrative-level specs (e.g. UseCases) rarely have direct `@verifies UC-001` annotations in code. Instead, they are verified indirectly through a chain: UseCase is satisfied by Requirements, and those Requirements are verified by tests.
+
+Configure `coverage.transitiveRelations` to enable automatic transitive coverage:
+
+```typescript
+// speckeeper.config.ts
+export default defineConfig({
+  sources: [/* ... */],
+  coverage: {
+    transitiveRelations: ['satisfies'],
+  },
+});
+```
+
+When `speckeeper check --coverage` runs:
+
+1. The global scan determines which specs are **directly covered** (found in external sources)
+2. For each transitive relation type, the framework walks the relation graph
+3. A spec is **transitively covered** if ALL specs that relate to it via a transitive relation are themselves covered (directly or transitively)
+
+No per-model code is needed. Coverage is computed purely from relation data and config.
+
+```bash
+$ npx speckeeper check test --coverage
+
+  Transitive coverage (via satisfies)
+  ─────────────────────────────────────
+  Total:     12
+  Covered:   11  (8 direct + 3 transitive)
+  Uncovered: 1
+  Coverage:  92%
+```
+
+Multi-level chains are supported. For example, with `transitiveRelations: ['satisfies', 'verifies']`, if TEST-001 verifies FR-001, and FR-001 satisfies UC-001, then UC-001 is transitively covered when TEST-001 is directly matched.
+
 ## Model Levels & Traceability
 
 speckeeper organizes models by abstraction level:
