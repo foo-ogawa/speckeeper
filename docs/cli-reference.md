@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.9.2
+**Version:** 0.9.4
 
 ## Table of Contents
 
