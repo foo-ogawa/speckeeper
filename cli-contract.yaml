@@ -1,0 +1,574 @@
+# yaml-language-server: $schema=./node_modules/cli-contracts/schemas/cli-contract.schema.json
+cliContracts: 0.1.0
+
+info:
+  title: speckeeper CLI
+  version: 0.9.3
+  description: >-
+    TypeScript-first specification validation framework — validate design
+    consistency, external SSOT integrity, and traceability with type-safe
+    TypeScript DSL. Supports design lint, external source checks (OpenAPI,
+    DDL, annotations), drift detection, impact analysis, and scaffolding
+    from Mermaid flowcharts.
+  license:
+    name: MIT
+
+commandSets:
+  speckeeper:
+    summary: Requirements and design management framework with TypeScript DSL.
+    executable: speckeeper
+
+    globalOptions:
+      - name: version
+        aliases: [V]
+        description: Print version and exit.
+        schema:
+          type: boolean
+
+      - name: help
+        aliases: [h]
+        description: Show help and exit.
+        schema:
+          type: boolean
+
+    commands:
+      # ── init ──────────────────────────────────────────
+      init:
+        summary: Initialize a new speckeeper project with starter templates.
+        description: >-
+          Copies starter template files (speckeeper.config.ts, design/
+          directory structure) into the current project. Provides a minimal
+          working setup with generic models and example specs.
+        usage:
+          - speckeeper init
+          - speckeeper init --force
+
+        options:
+          - name: force
+            aliases: [f]
+            description: Overwrite existing files.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: Project initialized successfully.
+            stdout:
+              format: text
+
+          '1':
+            description: Initialization failed (files already exist without --force).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: false
+          sideEffects:
+            - file_write
+
+      # ── build ─────────────────────────────────────────
+      build:
+        summary: Generate docs/ and specs/ from TypeScript models.
+        description: >-
+          Loads the design TypeScript models and generates machine-readable
+          specs/ output and optionally human-readable docs/ output. Supports
+          markdown, JSON, or both formats. Can watch for file changes and
+          auto-regenerate.
+        usage:
+          - speckeeper build
+          - speckeeper build --format json --output ./out
+          - speckeeper build --watch --verbose
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: output
+            aliases: [o]
+            description: Base output directory path.
+            valueName: path
+            schema:
+              type: string
+              default: "."
+
+          - name: format
+            aliases: [f]
+            description: "Output format: markdown, json, both."
+            valueName: format
+            schema:
+              type: string
+              default: both
+              enum: [markdown, json, both]
+
+          - name: watch
+            aliases: [w]
+            description: Watch for changes and auto-regenerate.
+            schema:
+              type: boolean
+              default: false
+
+          - name: verbose
+            aliases: [v]
+            description: Show detailed output.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: Build completed successfully.
+            stdout:
+              format: text
+
+          '1':
+            description: Build failed (config error, model loading error, or generation error).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: true
+          sideEffects:
+            - file_write
+
+      # ── lint ──────────────────────────────────────────
+      lint:
+        summary: Check design integrity (ID duplicates, references, layer violations, etc.).
+        description: >-
+          Validates design models for structural integrity. Checks include
+          ID uniqueness, ID naming conventions, reference integrity, circular
+          dependency detection, phase gate enforcement, and custom model-specific
+          lint rules. Optionally auto-fixes issues.
+        usage:
+          - speckeeper lint
+          - speckeeper lint --strict --format github
+          - speckeeper lint --phase HLD --fix
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: phase
+            aliases: [p]
+            description: "Phase gate to check against: REQ, HLD, LLD, OPS."
+            valueName: phase
+            schema:
+              type: string
+              enum: [REQ, HLD, LLD, OPS]
+
+          - name: strict
+            aliases: [s]
+            description: Treat warnings as errors.
+            schema:
+              type: boolean
+              default: false
+
+          - name: fix
+            description: Attempt to fix auto-fixable issues.
+            schema:
+              type: boolean
+              default: false
+
+          - name: format
+            aliases: [f]
+            description: "Output format: text, json, github."
+            valueName: format
+            schema:
+              type: string
+              default: text
+              enum: [text, json, github]
+
+        exits:
+          '0':
+            description: No lint issues found (or all issues auto-fixed).
+            stdout:
+              format: text
+
+          '1':
+            description: Lint issues found (errors or warnings with --strict).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: true
+          sideEffects: []
+
+      # ── drift ─────────────────────────────────────────
+      drift:
+        summary: Check if generated files have been manually edited.
+        description: >-
+          Compares generated files against their expected content to detect
+          manual edits (drift). Useful for CI pipelines to ensure generated
+          docs/ files stay in sync with model definitions. Can auto-update
+          drifted files.
+        usage:
+          - speckeeper drift
+          - speckeeper drift --fail-on-drift
+          - speckeeper drift --update --format diff
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: update
+            aliases: [u]
+            description: Auto-update if differences are found.
+            schema:
+              type: boolean
+              default: false
+
+          - name: format
+            aliases: [f]
+            description: "Output format: text, json, diff."
+            valueName: format
+            schema:
+              type: string
+              default: text
+              enum: [text, json, diff]
+
+          - name: fail-on-drift
+            description: Exit with code 1 if drift is detected (for CI).
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: No drift detected (or drift auto-updated with --update).
+            stdout:
+              format: text
+
+          '1':
+            description: Drift detected (with --fail-on-drift), or update failed.
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: true
+          sideEffects: []
+          safeDryRunOption: Omit --update to run in read-only mode.
+
+      # ── check ─────────────────────────────────────────
+      check:
+        summary: Check external SSOT conformance (including custom models).
+        description: >-
+          Validates specifications against actual implementation artifacts
+          using a global source scan. Performs existence checks (is the spec
+          ID found in configured sources?), optional structural checks (via
+          deep validation), and optional type checks. Sources include OpenAPI,
+          DDL, annotations, and custom scanners. Supports filtering by check
+          type and test coverage reporting.
+        usage:
+          - speckeeper check
+          - speckeeper check external-ssot --verbose
+          - speckeeper check test --coverage
+          - speckeeper check openapi --strict
+
+        arguments:
+          - name: type
+            index: 0
+            required: false
+            description: >-
+              Type of check to run. Filters sources by type. When omitted,
+              checks all configured sources.
+            schema:
+              type: string
+              enum: [external-ssot, openapi, ddl, iac, custom, all, test]
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: strict
+            description: Treat warnings as errors.
+            schema:
+              type: boolean
+              default: false
+
+          - name: verbose
+            aliases: [v]
+            description: Show detailed output (e.g. list unmatched specs).
+            schema:
+              type: boolean
+              default: false
+
+          - name: coverage
+            description: Check if all testable acceptance criteria are covered by TestRefs.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: All checks passed (all specs found in sources, deep validation passed).
+            stdout:
+              format: text
+
+          '1':
+            description: Check failures found (missing specs, structural mismatches, or coverage gaps).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: true
+          sideEffects: []
+
+      # ── new ───────────────────────────────────────────
+      new:
+        summary: Create a new element with auto-generated ID.
+        description: >-
+          Generates a new design element file with a unique auto-generated ID
+          based on the model's ID prefix and existing elements. Supports all
+          built-in model types and uses templates for file generation.
+        usage:
+          - speckeeper new requirement --name "User Authentication"
+          - speckeeper new entity --kind functional
+          - speckeeper new usecase --template custom-template.ts
+
+        arguments:
+          - name: type
+            index: 0
+            required: true
+            description: >-
+              Element type to create: requirement, usecase, entity, component,
+              screen, flow, error-case, term.
+            schema:
+              type: string
+              enum: [requirement, usecase, entity, component, screen, flow, error-case, term]
+
+        options:
+          - name: kind
+            aliases: [k]
+            description: Sub-kind (e.g. functional, non-functional for requirements).
+            valueName: kind
+            schema:
+              type: string
+
+          - name: name
+            aliases: [n]
+            description: Name of the element.
+            valueName: name
+            schema:
+              type: string
+
+          - name: output
+            aliases: [o]
+            description: Output directory path.
+            valueName: path
+            schema:
+              type: string
+
+          - name: template
+            aliases: [t]
+            description: Path to template file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+        exits:
+          '0':
+            description: Element file created with auto-generated ID.
+            stdout:
+              format: text
+
+          '1':
+            description: Creation failed (invalid type, template error, or write error).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: false
+          sideEffects:
+            - file_write
+
+      # ── impact ────────────────────────────────────────
+      impact:
+        summary: Analyze impact of changes to an ID.
+        description: >-
+          Performs change impact analysis by traversing the relation graph
+          starting from the specified spec ID. Shows upstream (dependants)
+          and/or downstream (dependencies) elements up to the configured
+          depth. Supports text, JSON, and Mermaid diagram output.
+        usage:
+          - speckeeper impact FR-001
+          - speckeeper impact ENT-ORDER --direction upstream --depth 5
+          - speckeeper impact COMP-AUTH --format mermaid
+
+        arguments:
+          - name: id
+            index: 0
+            required: true
+            description: "Spec ID to analyze (e.g. REQ-001, ENT-ORDER, COMP-AUTH)."
+            schema:
+              type: string
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: depth
+            aliases: [d]
+            description: Analysis depth (reference tracking level).
+            valueName: depth
+            schema:
+              type: string
+              default: "3"
+
+          - name: direction
+            description: "Analysis direction: upstream, downstream, both."
+            valueName: direction
+            schema:
+              type: string
+              default: both
+              enum: [upstream, downstream, both]
+
+          - name: format
+            aliases: [f]
+            description: "Output format: text, json, mermaid."
+            valueName: format
+            schema:
+              type: string
+              default: text
+              enum: [text, json, mermaid]
+
+        exits:
+          '0':
+            description: Impact analysis completed and displayed.
+            stdout:
+              format: text
+
+          '1':
+            description: Analysis failed (ID not found or config error).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: true
+          sideEffects: []
+
+      # ── scaffold ──────────────────────────────────────
+      scaffold:
+        summary: Generate _models/ from a Mermaid flowchart definition.
+        description: >-
+          Parses a Mermaid flowchart from a Markdown file and generates
+          TypeScript model classes, spec data files, and an index file in
+          the design directory. Uses class-based artifact resolution to
+          determine model types from Mermaid node classes.
+        usage:
+          - speckeeper scaffold --source requirements.md
+          - speckeeper scaffold --source flow.md --output design/ --force
+          - speckeeper scaffold --source arch.md --dry-run
+
+        options:
+          - name: source
+            aliases: [s]
+            description: Path to Markdown file containing Mermaid flowchart.
+            valueName: path
+            required: true
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: output
+            aliases: [o]
+            description: Output directory.
+            valueName: path
+            schema:
+              type: string
+              default: design/
+
+          - name: force
+            aliases: [f]
+            description: Overwrite existing files.
+            schema:
+              type: boolean
+              default: false
+
+          - name: dry-run
+            description: Preview generated files without writing.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: >-
+              Model files generated (or previewed with --dry-run) successfully.
+            stdout:
+              format: text
+
+          '1':
+            description: >-
+              Scaffold failed (source file not found, invalid Mermaid syntax,
+              or write error).
+            stderr:
+              format: text
+
+        x-agent:
+          riskLevel: low
+          requiresConfirmation: false
+          idempotent: false
+          sideEffects:
+            - file_write
+          safeDryRunOption: --dry-run

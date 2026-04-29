@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -24,7 +24,9 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "docs",
+    "cli-contract.yaml"
   ],
   "scripts": {
     "build": "tsup",
@@ -38,6 +40,8 @@
     "prepublishOnly": "npm run build",
     "docs": "embedoc build",
     "docs:watch": "embedoc watch",
+    "contract:validate": "npx cli-contracts validate",
+    "contract:generate": "npx cli-contracts generate",
     "ci": "npm run ci:validate && npm run ci:generate && npm run ci:verify",
     "ci:validate": "npm run typecheck && npm run lint && npm run lint:design && npm run build && npx speckeeper lint && npm run test:run",
     "ci:generate": "embedoc build",
@@ -73,6 +77,7 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^1.6.1",
+    "cli-contracts": "^0.2.0",
     "eslint": "^9.39.2",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",

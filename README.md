@@ -151,6 +151,8 @@ npx speckeeper impact FR-001
 
 ## CLI Commands
 
+> **Full CLI reference:** [docs/cli-reference.md](./docs/cli-reference.md) | **Machine-readable contract:** [cli-contract.yaml](./cli-contract.yaml)
+
 | Command | Description |
 |---------|-------------|
 | `speckeeper init` | Initialize a new project with starter templates |
