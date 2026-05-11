@@ -38,9 +38,14 @@ export const specQualityReviewer: AgentContract = {
   purpose: "Review design specifications for quality, verifiability, consistency, and traceability. Evaluates requirements from a PM/architect perspective, identifying ambiguity, untestable criteria, mixed abstraction levels, and missing traceability links.",
   mode: "read-only",
   dispatch_only: false,
-  can_read_artifacts: [],
+  can_read_artifacts: [
+  "spec-definitions",
+  "agent-review-output"
+],
   can_write_artifacts: [],
-  can_execute_tools: [],
+  can_execute_tools: [
+  "speckeeper-cli"
+],
   can_invoke_agents: [],
   can_return_handoffs: [
   "requirement-audit-result",
@@ -64,7 +69,7 @@ export const specQualityReviewer: AgentContract = {
   "Reference speckeeper lint results when findings overlap",
   "Candidate trace links must always include confidence scores",
   "explain output must use language suitable for PM and executive audiences",
-  "Output must conform to AgentAuditResult schema",
+  "Output must conform to the task’s result handoff schema: RequirementAuditResult, TraceLinkResult, ImpactExplainResult, or AcceptanceCriteriaResult",
   "Findings must use speckeeper category vocabulary (verifiability, ambiguity, granularity, terminology, design-mixing, traceability, completeness)",
   "Each finding must include a recommendation when severity is warning or above"
 ],
@@ -93,6 +98,11 @@ export const specQualityReviewer: AgentContract = {
     "id": "R-SPEC-005",
     "description": "Explain output must be readable by non-technical stakeholders",
     "severity": "mandatory"
+  },
+  {
+    "id": "R-SPEC-006",
+    "description": "Terminology inconsistencies across spec models must be flagged with specific examples",
+    "severity": "mandatory"
   }
 ],
   escalation_criteria: [
@@ -102,6 +112,22 @@ export const specQualityReviewer: AgentContract = {
   },
   {
     "condition": "No specs found in the loaded configuration",
+    "action": "stop_and_report"
+  },
+  {
+    "condition": "speckeeper-cli execution fails (lint or impact returns unexpected error)",
+    "action": "stop_and_report"
+  },
+  {
+    "condition": "Output schema validation fails on generated result",
+    "action": "stop_and_report"
+  },
+  {
+    "condition": "Stdin is absent or malformed for explain-impact-result task",
+    "action": "stop_and_report"
+  },
+  {
+    "condition": "Context exceeds LLM context window limit",
     "action": "stop_and_report"
   }
 ],

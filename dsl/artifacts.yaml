@@ -1,0 +1,31 @@
+spec-definitions:
+  type: doc
+  description: >-
+    Design spec definition files (TypeScript DSL) loaded from the
+    design/ directory via speckeeper.config.ts. These are the primary
+    input for all LLM review tasks.
+  owner: spec-quality-reviewer
+  producers: []
+  editors: []
+  consumers:
+    - spec-quality-reviewer
+  states: [draft, reviewed]
+  required_validations:
+    - spec-lint-validation
+  visibility: project
+
+agent-review-output:
+  type: doc
+  description: >-
+    Structured output from spec-quality-reviewer agent tasks.
+    Conforms to AgentAuditResult schema or its domain-specific
+    extensions (TraceLinkResult, ImpactExplainResult, AcceptanceCriteriaResult).
+  owner: spec-quality-reviewer
+  producers:
+    - spec-quality-reviewer
+  editors: []
+  consumers: []
+  states: [generated, validated]
+  required_validations:
+    - output-schema-validation
+  visibility: project

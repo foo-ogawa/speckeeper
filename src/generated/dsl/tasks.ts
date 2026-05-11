@@ -31,7 +31,9 @@ export const auditRequirementQuality: TaskContract = {
   workflow: "requirement-audit",
   invocation_handoff: "spec-review-request",
   result_handoff: "requirement-audit-result",
-  input_artifacts: [],
+  input_artifacts: [
+  "spec-definitions"
+],
   responsibilities: [
   "Evaluate all specs for verifiability and measurability",
   "Detect ambiguous or vague wording",
@@ -43,7 +45,7 @@ export const auditRequirementQuality: TaskContract = {
   "All target specs have been evaluated",
   "Findings classified by severity and category",
   "Each finding includes a recommendation",
-  "Output conforms to AgentAuditResult schema"
+  "Output conforms to RequirementAuditResult schema"
 ],
   optional: false,
 };
@@ -58,7 +60,9 @@ export const proposeTraceLinks: TaskContract = {
   workflow: "trace-link-proposal",
   invocation_handoff: "spec-review-request",
   result_handoff: "trace-link-result",
-  input_artifacts: [],
+  input_artifacts: [
+  "spec-definitions"
+],
   responsibilities: [
   "Analyze spec definitions and global scanner results",
   "Identify candidate links between specs and external artifacts",
@@ -84,7 +88,9 @@ export const explainImpactResult: TaskContract = {
   workflow: "impact-explanation",
   invocation_handoff: "spec-review-request",
   result_handoff: "impact-explain-result",
-  input_artifacts: [],
+  input_artifacts: [
+  "spec-definitions"
+],
   responsibilities: [
   "Summarize impact output for non-technical readers",
   "Provide concrete next steps as recommendedActions",
@@ -109,7 +115,9 @@ export const proposeAcceptanceCriteria: TaskContract = {
   workflow: "acceptance-proposal",
   invocation_handoff: "spec-review-request",
   result_handoff: "acceptance-criteria-result",
-  input_artifacts: [],
+  input_artifacts: [
+  "spec-definitions"
+],
   responsibilities: [
   "Analyze target spec definitions and related specs",
   "Propose testable acceptance criteria for each spec",
@@ -119,7 +127,7 @@ export const proposeAcceptanceCriteria: TaskContract = {
   "Proposed criteria are specific and testable",
   "Each proposal includes a rationale",
   "Criteria do not duplicate existing acceptance conditions",
-  "Output conforms to AcceptanceCriteriaResult schema"
+  "Output conforms to AcceptanceCriteriaResult handoff schema"
 ],
   optional: false,
 };

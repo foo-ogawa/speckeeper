@@ -1,0 +1,53 @@
+speckeeper-cli:
+  kind: cli
+  description: >-
+    speckeeper CLI tool — lint, impact, and LLM-powered analysis
+    commands for design spec management.
+  input_artifacts:
+    - spec-definitions
+  output_artifacts:
+    - agent-review-output
+  invokable_by:
+    - spec-quality-reviewer
+  side_effects: []
+  commands:
+    - command: lint
+      category: validation
+      reads:
+        - spec-definitions
+      writes: []
+      purpose: Run mechanical lint checks on design specs
+    - command: impact
+      category: analysis
+      reads:
+        - spec-definitions
+      writes: []
+      purpose: Analyze impact of spec changes on dependent entities
+    - command: audit-requirements
+      category: agent
+      reads:
+        - spec-definitions
+      writes:
+        - agent-review-output
+      purpose: LLM-powered audit of requirement quality
+    - command: propose-trace-links
+      category: agent
+      reads:
+        - spec-definitions
+      writes:
+        - agent-review-output
+      purpose: LLM-powered proposal of traceability links
+    - command: explain-impact
+      category: agent
+      reads:
+        - spec-definitions
+      writes:
+        - agent-review-output
+      purpose: LLM-powered explanation of impact analysis results
+    - command: propose-acceptance-criteria
+      category: agent
+      reads:
+        - spec-definitions
+      writes:
+        - agent-review-output
+      purpose: LLM-powered proposal of acceptance criteria

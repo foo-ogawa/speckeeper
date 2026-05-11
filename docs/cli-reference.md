@@ -15,6 +15,10 @@ TypeScript-first specification validation framework — validate design consiste
   - [new](#speckeeper-new)
   - [impact](#speckeeper-impact)
   - [scaffold](#speckeeper-scaffold)
+  - [audit-requirements](#speckeeper-audit-requirements)
+  - [propose-trace-links](#speckeeper-propose-trace-links)
+  - [explain-impact](#speckeeper-explain-impact)
+  - [propose-acceptance-criteria](#speckeeper-propose-acceptance-criteria)
 
 ---
 
@@ -64,11 +68,12 @@ speckeeper init --force
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: false
   sideEffects: 
     - file_write
+  safeDryRunOption: Omit --force to fail safely when files already exist.
 ```
 
 ---
@@ -120,6 +125,8 @@ x-agent:
   idempotent: true
   sideEffects: 
     - file_write
+  sideEffectNote: When --watch is used, the process runs indefinitely and is unsuitable for non-interactive agent invocation.
+  safeDryRunOption: Omit --watch for a single-pass build.
 ```
 
 ---
@@ -156,11 +163,11 @@ speckeeper lint --phase HLD --fix
 
 **Exit 0:** No lint issues found (or all issues auto-fixed).
 
-- **stdout:** format=`text`
+- **stdout:** format=`{options.format}`
 
 **Exit 1:** Lint issues found (errors or warnings with --strict).
 
-- **stderr:** format=`text`
+- **stdout:** format=`{options.format}`
 
 #### Extensions
 
@@ -170,7 +177,9 @@ x-agent:
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
-
+    - file_write
+  sideEffectNote: file_write applies only when --fix is provided. Without --fix the command is read-only.
+  safeDryRunOption: Omit --fix to run in read-only mode.
 ```
 
 ---
@@ -206,21 +215,22 @@ speckeeper drift --update --format diff
 
 **Exit 0:** No drift detected (or drift auto-updated with --update).
 
-- **stdout:** format=`text`
+- **stdout:** format=`{options.format}`
 
 **Exit 1:** Drift detected (with --fail-on-drift), or update failed.
 
-- **stderr:** format=`text`
+- **stdout:** format=`{options.format}`
 
 #### Extensions
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
-
+    - file_write
+  sideEffectNote: file_write applies only when --update is provided. Without --update the command is read-only.
   safeDryRunOption: Omit --update to run in read-only mode.
 ```
 
@@ -317,10 +327,11 @@ speckeeper new usecase --template custom-template.ts
 | `--name` | -n | No |  | Name of the element. |
 | `--output` | -o | No |  | Output directory path. |
 | `--template` | -t | No |  | Path to template file. |
+| `--dry-run` |  | No | `false` | Preview generated file content and ID without writing to disk. |
 
 #### Exit Codes
 
-**Exit 0:** Element file created with auto-generated ID.
+**Exit 0:** Element file created (or previewed with --dry-run) with auto-generated ID.
 
 - **stdout:** format=`text`
 
@@ -337,6 +348,7 @@ x-agent:
   idempotent: false
   sideEffects: 
     - file_write
+  safeDryRunOption: --dry-run
 ```
 
 ---
@@ -370,7 +382,7 @@ speckeeper impact COMP-AUTH --format mermaid
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
-| `--depth` | -d | No | `"3"` | Analysis depth (reference tracking level). |
+| `--depth` | -d | No | `3` | Analysis depth (reference tracking level). |
 | `--direction` |  | No | `"both"` | Analysis direction: upstream, downstream, both. |
 | `--format` | -f | No | `"text"` | Output format: text, json, mermaid. |
 
@@ -378,7 +390,7 @@ speckeeper impact COMP-AUTH --format mermaid
 
 **Exit 0:** Impact analysis completed and displayed.
 
-- **stdout:** format=`text`
+- **stdout:** format=`{options.format}`
 
 **Exit 1:** Analysis failed (ID not found or config error).
 
@@ -438,12 +450,324 @@ speckeeper scaffold --source arch.md --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: false
   sideEffects: 
     - file_write
+  sideEffectNote: --force overwrites existing TypeScript model source files.
   safeDryRunOption: --dry-run
+```
+
+---
+
+### audit-requirements
+
+Run LLM-based requirement quality audit.
+
+Performs semantic analysis of design specs using LLM to identify quality issues that static lint cannot detect. Evaluates verifiability, ambiguity, granularity, terminology consistency, and design-mixing. Requires agent-contracts-runtime as an optional peer dependency.
+
+**Usage:**
+
+```
+speckeeper audit-requirements
+```
+```
+speckeeper audit-requirements --adapter gemini --dry-run
+```
+```
+speckeeper audit-requirements --report-format json --output audit.json
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--adapter` | -a | No |  | SDK adapter to use for LLM execution. |
+| `--model` |  | No |  | LLM model override. |
+| `--dry-run` | -n | No | `false` | Output the constructed prompt without calling LLM. |
+| `--show-prompt` |  | No | `false` | Display the constructed LLM prompt on stderr. |
+| `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
+| `--output` | -o | No |  | Write result to a file instead of stdout. |
+| `--report-format` |  | No | `"json"` | Output format for the audit report. |
+
+#### Exit Codes
+
+**Exit 0:** Audit completed, no blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 1:** Unexpected error.
+
+- **stderr:** format=`text`
+
+**Exit 2:** Configuration or input error.
+
+- **stderr:** format=`text`
+
+**Exit 10:** Completed with blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+
+- **stderr:** format=`text`
+
+**Exit 12:** LLM provider or adapter error.
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent: 
+  riskLevel: low
+  requiresConfirmation: false
+  idempotent: true
+  sideEffects: 
+    - network
+    - file_write
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  safeDryRunOption: --dry-run
+  expectedDurationMs: 120000
+  retryableExitCodes: 
+    - 12
+```
+
+---
+
+### propose-trace-links
+
+LLM-based traceability link proposal.
+
+Analyzes spec definitions and external source scan results to propose candidate traceability links between specs and implementation artifacts. Each link includes a confidence score and rationale.
+
+**Usage:**
+
+```
+speckeeper propose-trace-links
+```
+```
+speckeeper propose-trace-links --adapter claude --report-format json
+```
+```
+speckeeper propose-trace-links --dry-run
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--adapter` | -a | No |  | SDK adapter to use for LLM execution. |
+| `--model` |  | No |  | LLM model override. |
+| `--dry-run` | -n | No | `false` | Output the constructed prompt without calling LLM. |
+| `--show-prompt` |  | No | `false` | Display the constructed LLM prompt on stderr. |
+| `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
+| `--output` | -o | No |  | Write result to a file instead of stdout. |
+| `--report-format` |  | No | `"json"` | Output format for the report. |
+
+#### Exit Codes
+
+**Exit 0:** Proposal completed, no blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 1:** Unexpected error.
+
+- **stderr:** format=`text`
+
+**Exit 2:** Configuration or input error.
+
+- **stderr:** format=`text`
+
+**Exit 10:** Completed with blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+
+- **stderr:** format=`text`
+
+**Exit 12:** LLM provider or adapter error.
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent: 
+  riskLevel: low
+  requiresConfirmation: false
+  idempotent: true
+  sideEffects: 
+    - network
+    - file_write
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  safeDryRunOption: --dry-run
+  expectedDurationMs: 120000
+  retryableExitCodes: 
+    - 12
+```
+
+---
+
+### explain-impact
+
+LLM-based explanation of impact analysis output.
+
+Reads JSON output from speckeeper impact on stdin and generates a human-readable explanation suitable for PM/executive audiences. Includes affected artifact categorization, test considerations, and release risk assessment.
+
+**Usage:**
+
+```
+speckeeper impact FR-001 --format json | speckeeper explain-impact
+```
+```
+speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--adapter` | -a | No |  | SDK adapter to use for LLM execution. |
+| `--model` |  | No |  | LLM model override. |
+| `--dry-run` | -n | No | `false` | Output the constructed prompt without calling LLM. |
+| `--show-prompt` |  | No | `false` | Display the constructed LLM prompt on stderr. |
+| `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
+| `--output` | -o | No |  | Write result to a file instead of stdout. |
+| `--report-format` |  | No | `"json"` | Output format for the report. |
+
+#### Exit Codes
+
+**Exit 0:** Explanation completed successfully.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 1:** Unexpected error.
+
+- **stderr:** format=`text`
+
+**Exit 2:** Configuration or input error.
+
+- **stderr:** format=`text`
+
+**Exit 3:** No input on stdin.
+
+- **stderr:** format=`text`
+
+**Exit 10:** Completed with blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+
+- **stderr:** format=`text`
+
+**Exit 12:** LLM provider or adapter error.
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent: 
+  riskLevel: low
+  requiresConfirmation: false
+  idempotent: true
+  sideEffects: 
+    - network
+    - file_write
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  safeDryRunOption: --dry-run
+  expectedDurationMs: 120000
+  retryableExitCodes: 
+    - 12
+```
+
+---
+
+### propose-acceptance-criteria
+
+LLM-based acceptance criteria proposal.
+
+Analyzes design specs and proposes testable acceptance criteria for each target spec. Optionally takes spec IDs as arguments to scope the proposal. Criteria are proposed in Given/When/Then or verification format.
+
+**Usage:**
+
+```
+speckeeper propose-acceptance-criteria
+```
+```
+speckeeper propose-acceptance-criteria FR-001 FR-002
+```
+```
+speckeeper propose-acceptance-criteria --adapter gemini --dry-run
+```
+
+#### Arguments
+
+| Name | Required | Description |
+|---|---|---|
+| `specIds` *(variadic)* | No | Spec IDs to propose criteria for. Defaults to all specs if omitted. |
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--adapter` | -a | No |  | SDK adapter to use for LLM execution. |
+| `--model` |  | No |  | LLM model override. |
+| `--dry-run` | -n | No | `false` | Output the constructed prompt without calling LLM. |
+| `--show-prompt` |  | No | `false` | Display the constructed LLM prompt on stderr. |
+| `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
+| `--output` | -o | No |  | Write result to a file instead of stdout. |
+| `--report-format` |  | No | `"json"` | Output format for the report. |
+
+#### Exit Codes
+
+**Exit 0:** Proposal completed, no blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 1:** Unexpected error.
+
+- **stderr:** format=`text`
+
+**Exit 2:** Configuration or input error.
+
+- **stderr:** format=`text`
+
+**Exit 10:** Completed with blocking findings.
+
+- **stdout:** format=`{options.report-format}`
+
+**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+
+- **stderr:** format=`text`
+
+**Exit 12:** LLM provider or adapter error.
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent: 
+  riskLevel: low
+  requiresConfirmation: false
+  idempotent: true
+  sideEffects: 
+    - network
+    - file_write
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  safeDryRunOption: --dry-run
+  expectedDurationMs: 120000
+  retryableExitCodes: 
+    - 12
 ```
 
 ---

@@ -63,11 +63,12 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: false
           sideEffects:
             - file_write
+          safeDryRunOption: Omit --force to fail safely when files already exist.
 
       # ── build ─────────────────────────────────────────
       build:
@@ -142,6 +143,10 @@ commandSets:
           idempotent: true
           sideEffects:
             - file_write
+          sideEffectNote: >-
+            When --watch is used, the process runs indefinitely and is
+            unsuitable for non-interactive agent invocation.
+          safeDryRunOption: Omit --watch for a single-pass build.
 
       # ── lint ──────────────────────────────────────────
       lint:
@@ -202,18 +207,23 @@ commandSets:
           '0':
             description: No lint issues found (or all issues auto-fixed).
             stdout:
-              format: text
+              format: '{options.format}'
 
           '1':
             description: Lint issues found (errors or warnings with --strict).
-            stderr:
-              format: text
+            stdout:
+              format: '{options.format}'
 
         x-agent:
           riskLevel: low
           requiresConfirmation: false
           idempotent: true
-          sideEffects: []
+          sideEffects:
+            - file_write
+          sideEffectNote: >-
+            file_write applies only when --fix is provided.
+            Without --fix the command is read-only.
+          safeDryRunOption: Omit --fix to run in read-only mode.
 
       # ── drift ─────────────────────────────────────────
       drift:
@@ -266,18 +276,22 @@ commandSets:
           '0':
             description: No drift detected (or drift auto-updated with --update).
             stdout:
-              format: text
+              format: '{options.format}'
 
           '1':
             description: Drift detected (with --fail-on-drift), or update failed.
-            stderr:
-              format: text
+            stdout:
+              format: '{options.format}'
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: true
-          sideEffects: []
+          sideEffects:
+            - file_write
+          sideEffectNote: >-
+            file_write applies only when --update is provided.
+            Without --update the command is read-only.
           safeDryRunOption: Omit --update to run in read-only mode.
 
       # ── check ─────────────────────────────────────────
@@ -411,9 +425,15 @@ commandSets:
               exists: true
               encoding: utf-8
 
+          - name: dry-run
+            description: Preview generated file content and ID without writing to disk.
+            schema:
+              type: boolean
+              default: false
+
         exits:
           '0':
-            description: Element file created with auto-generated ID.
+            description: Element file created (or previewed with --dry-run) with auto-generated ID.
             stdout:
               format: text
 
@@ -428,6 +448,7 @@ commandSets:
           idempotent: false
           sideEffects:
             - file_write
+          safeDryRunOption: --dry-run
 
       # ── impact ────────────────────────────────────────
       impact:
@@ -465,10 +486,11 @@ commandSets:
           - name: depth
             aliases: [d]
             description: Analysis depth (reference tracking level).
-            valueName: depth
+            valueName: n
             schema:
-              type: string
-              default: "3"
+              type: integer
+              minimum: 1
+              default: 3
 
           - name: direction
             description: "Analysis direction: upstream, downstream, both."
@@ -491,7 +513,7 @@ commandSets:
           '0':
             description: Impact analysis completed and displayed.
             stdout:
-              format: text
+              format: '{options.format}'
 
           '1':
             description: Analysis failed (ID not found or config error).
@@ -566,11 +588,13 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: false
           sideEffects:
             - file_write
+          sideEffectNote: >-
+            --force overwrites existing TypeScript model source files.
           safeDryRunOption: --dry-run
 
       # ── audit-requirements ──────────────────────────────
@@ -619,6 +643,12 @@ commandSets:
               type: boolean
               default: false
 
+          - name: show-prompt
+            description: Display the constructed LLM prompt on stderr.
+            schema:
+              type: boolean
+              default: false
+
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
             valueName: level
@@ -635,7 +665,6 @@ commandSets:
               type: string
             file:
               mode: write
-              mediaType: application/json
               encoding: utf-8
 
           - name: report-format
@@ -644,7 +673,7 @@ commandSets:
             schema:
               type: string
               enum: [json, text, yaml]
-              default: text
+              default: json
 
         exits:
           '0':
@@ -685,11 +714,11 @@ commandSets:
           riskLevel: low
           requiresConfirmation: false
           idempotent: true
-          sideEffects: [network]
+          sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
-            Filesystem write only when --output is specified.
-          safeDryRunOption: dry-run
+            Filesystem write when --output is specified.
+          safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
 
@@ -739,6 +768,12 @@ commandSets:
               type: boolean
               default: false
 
+          - name: show-prompt
+            description: Display the constructed LLM prompt on stderr.
+            schema:
+              type: boolean
+              default: false
+
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
             valueName: level
@@ -755,7 +790,6 @@ commandSets:
               type: string
             file:
               mode: write
-              mediaType: application/json
               encoding: utf-8
 
           - name: report-format
@@ -776,6 +810,11 @@ commandSets:
 
           '1':
             description: Unexpected error.
+            stderr:
+              format: text
+
+          '2':
+            description: Configuration or input error.
             stderr:
               format: text
 
@@ -800,10 +839,11 @@ commandSets:
           riskLevel: low
           requiresConfirmation: false
           idempotent: true
-          sideEffects: [network]
+          sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
-          safeDryRunOption: dry-run
+            Filesystem write when --output is specified.
+          safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
 
@@ -819,7 +859,27 @@ commandSets:
           - speckeeper impact FR-001 --format json | speckeeper explain-impact
           - speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude
 
+        stdin:
+          required: true
+          format: json
+          description: >-
+            JSON output from speckeeper impact --format json.
+            Must contain target, targetType, and impactedNodes fields.
+          schema:
+            $ref: '#/components/schemas/ImpactAnalysisOutput'
+
         options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
@@ -841,6 +901,12 @@ commandSets:
               type: boolean
               default: false
 
+          - name: show-prompt
+            description: Display the constructed LLM prompt on stderr.
+            schema:
+              type: boolean
+              default: false
+
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
             valueName: level
@@ -857,7 +923,6 @@ commandSets:
               type: string
             file:
               mode: write
-              mediaType: application/json
               encoding: utf-8
 
           - name: report-format
@@ -882,9 +947,21 @@ commandSets:
               format: text
 
           '2':
+            description: Configuration or input error.
+            stderr:
+              format: text
+
+          '3':
             description: No input on stdin.
             stderr:
               format: text
+
+          '10':
+            description: Completed with blocking findings.
+            stdout:
+              format: '{options.report-format}'
+              schema:
+                $ref: '#/components/schemas/ImpactExplainResult'
 
           '11':
             description: Runtime dependency missing (agent-contracts-runtime).
@@ -900,10 +977,11 @@ commandSets:
           riskLevel: low
           requiresConfirmation: false
           idempotent: true
-          sideEffects: [network]
+          sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
-          safeDryRunOption: dry-run
+            Filesystem write when --output is specified.
+          safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
 
@@ -964,6 +1042,12 @@ commandSets:
               type: boolean
               default: false
 
+          - name: show-prompt
+            description: Display the constructed LLM prompt on stderr.
+            schema:
+              type: boolean
+              default: false
+
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
             valueName: level
@@ -980,7 +1064,6 @@ commandSets:
               type: string
             file:
               mode: write
-              mediaType: application/json
               encoding: utf-8
 
           - name: report-format
@@ -1001,6 +1084,11 @@ commandSets:
 
           '1':
             description: Unexpected error.
+            stderr:
+              format: text
+
+          '2':
+            description: Configuration or input error.
             stderr:
               format: text
 
@@ -1025,10 +1113,11 @@ commandSets:
           riskLevel: low
           requiresConfirmation: false
           idempotent: true
-          sideEffects: [network]
+          sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
-          safeDryRunOption: dry-run
+            Filesystem write when --output is specified.
+          safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
 
@@ -1130,3 +1219,48 @@ components:
                       type: string
                   rationale:
                     type: string
+
+    ImpactAnalysisOutput:
+      type: object
+      description: >-
+        JSON output from speckeeper impact --format json.
+        Used as stdin input for explain-impact command.
+      required: [target, targetType, impactedNodes]
+      properties:
+        target:
+          type: string
+          description: The spec ID that was analyzed.
+        targetType:
+          type: string
+          description: Type of the target spec (requirement, usecase, entity, etc.).
+        direction:
+          type: string
+          enum: [upstream, downstream, both]
+        depth:
+          type: integer
+        impactedNodes:
+          type: array
+          items:
+            type: object
+            required: [id, type, depth, impactType]
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              depth:
+                type: integer
+              impactType:
+                type: string
+                enum: [direct, indirect]
+              relations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    from:
+                      type: string
+                    to:
+                      type: string

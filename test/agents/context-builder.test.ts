@@ -16,8 +16,6 @@ describe("buildExplainImpactContext", () => {
     expect(ctx).toContain("Source Command: `impact FR-001`");
     expect(ctx).toContain("```json");
     expect(ctx).toContain(json);
-    expect(ctx).toContain("Instructions");
-    expect(ctx).toContain("PM and executive stakeholders");
   });
 
   it("works without source command", () => {
@@ -28,12 +26,11 @@ describe("buildExplainImpactContext", () => {
     expect(ctx).not.toContain("Source Command");
   });
 
-  it("includes release risk assessment instruction", () => {
+  it("includes impact output section", () => {
     const json = JSON.stringify({ target: "ENT-ORDER", impactedNodes: [] });
     const ctx = buildExplainImpactContext(json);
 
-    expect(ctx).toContain("Release risk assessment");
-    expect(ctx).toContain("Affected artifacts");
-    expect(ctx).toContain("Test considerations");
+    expect(ctx).toContain("## Impact Output");
+    expect(ctx).toContain("ENT-ORDER");
   });
 });

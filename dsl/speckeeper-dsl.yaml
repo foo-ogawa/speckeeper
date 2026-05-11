@@ -10,12 +10,19 @@ system:
 
 agents: { $ref: "./agents/" }
 tasks: { $ref: "./tasks.yaml" }
+artifacts: { $ref: "./artifacts.yaml" }
+tools: { $ref: "./tools.yaml" }
+validations: { $ref: "./validations.yaml" }
 handoff_types: { $ref: "./handoff-types.yaml" }
 
 guardrails:
   output-schema-conformance:
     description: >-
-      Ensure all agent outputs conform to AgentAuditResult schema.
+      Ensure all agent outputs conform to their task-specific result handoff schema:
+      audit-requirement-quality → RequirementAuditResult,
+      propose-trace-links → TraceLinkResult,
+      explain-impact-result → ImpactExplainResult,
+      propose-acceptance-criteria → AcceptanceCriteriaResult.
       Validation is performed at runtime via Zod schema in handoff definition.
     scope:
       agents:
@@ -79,6 +86,13 @@ workflow:
       - type: delegate
         task: audit-requirement-quality
         from_agent: spec-quality-reviewer
+    x-exit-conditions:
+      success:
+        - RequirementAuditResult is produced and passes schema validation
+      failure:
+        - Output schema validation fails — stop_and_report
+        - No specs found in configuration — stop_and_report
+        - LLM adapter returns an error — stop_and_report
 
   trace-link-proposal:
     description: Propose candidate traceability links between specs and external artifacts
@@ -89,6 +103,13 @@ workflow:
       - type: delegate
         task: propose-trace-links
         from_agent: spec-quality-reviewer
+    x-exit-conditions:
+      success:
+        - TraceLinkResult is produced and passes schema validation
+      failure:
+        - Output schema validation fails — stop_and_report
+        - No specs found in configuration — stop_and_report
+        - LLM adapter returns an error — stop_and_report
 
   impact-explanation:
     description: Explain impact analysis results in human-readable form
@@ -99,6 +120,13 @@ workflow:
       - type: delegate
         task: explain-impact-result
         from_agent: spec-quality-reviewer
+    x-exit-conditions:
+      success:
+        - ImpactExplainResult is produced and passes schema validation
+      failure:
+        - Stdin is empty or contains invalid JSON — stop_and_report
+        - Output schema validation fails — stop_and_report
+        - LLM adapter returns an error — stop_and_report
 
   acceptance-proposal:
     description: Propose acceptance criteria drafts for specs
@@ -109,3 +137,10 @@ workflow:
       - type: delegate
         task: propose-acceptance-criteria
         from_agent: spec-quality-reviewer
+    x-exit-conditions:
+      success:
+        - AcceptanceCriteriaResult is produced and passes schema validation
+      failure:
+        - Output schema validation fails — stop_and_report
+        - No specs found in configuration — stop_and_report
+        - LLM adapter returns an error — stop_and_report

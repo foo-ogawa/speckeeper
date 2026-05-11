@@ -122,18 +122,6 @@ export async function buildAuditRequirementsContext(
     }
   }
 
-  sections.push(
-    "## Instructions\n\n" +
-    "Evaluate all specs for:\n" +
-    "- Verifiability: Can each requirement be objectively tested?\n" +
-    "- Ambiguity: Are there vague terms without quantification?\n" +
-    "- Granularity: Is the abstraction level consistent within each model?\n" +
-    "- Terminology: Are terms used consistently across models?\n" +
-    "- Design mixing: Are implementation details mixed into requirements?\n" +
-    "- Completeness: Are there obvious gaps in coverage?\n\n" +
-    "Use category vocabulary: verifiability, ambiguity, granularity, terminology, design-mixing, completeness, traceability.",
-  );
-
   return sections.join("\n\n");
 }
 
@@ -186,19 +174,6 @@ export async function buildProposeTraceLinksContext(
     }
   }
 
-  sections.push(
-    "## Instructions\n\n" +
-    "Analyze the spec definitions and propose candidate traceability links.\n" +
-    "For each candidate link, provide:\n" +
-    "- from: source spec ID\n" +
-    "- relation: relation type (implements, verifiedBy, satisfies, derivedFrom, etc.)\n" +
-    "- to: target identifier\n" +
-    "- confidence: 0-1 score\n" +
-    "- reason: rationale for the proposed link\n\n" +
-    "Do NOT duplicate existing relations listed above.\n" +
-    "Focus on cross-model links that strengthen traceability.",
-  );
-
   return sections.join("\n\n");
 }
 
@@ -215,21 +190,6 @@ export function buildExplainImpactContext(
   }
 
   sections.push(`## Impact Output\n\n\`\`\`json\n${stdinJson}\n\`\`\``);
-  sections.push(
-    "## Instructions\n\n" +
-    "Explain this speckeeper impact analysis output in human-readable form.\n" +
-    "The explanation should be suitable for:\n" +
-    "- PM and executive stakeholders\n" +
-    "- Sprint planning discussions\n" +
-    "- Change request documentation\n\n" +
-    "Provide:\n" +
-    "- A clear summary of what would be affected\n" +
-    "- Affected artifacts categorized by type (spec, api, ddl, test, annotation)\n" +
-    "- Test considerations for the change\n" +
-    "- Release risk assessment (low, medium, high)\n" +
-    "- Concrete action items as recommendedActions.",
-  );
-
   return sections.join("\n\n");
 }
 
@@ -298,20 +258,6 @@ export async function buildProposeAcceptanceCriteriaContext(
       sections.push(`- [${issue.severity}] [${issue.specId}] ${issue.message}`);
     }
   }
-
-  sections.push(
-    "## Instructions\n\n" +
-    "For each target spec, propose testable acceptance criteria.\n" +
-    "Each proposal should include:\n" +
-    "- specId: the spec this applies to\n" +
-    "- criteria: array of specific, testable acceptance criteria strings\n" +
-    "- rationale: why these criteria are appropriate\n\n" +
-    "Criteria must be:\n" +
-    "- Specific and unambiguous\n" +
-    "- Independently testable\n" +
-    "- Written in Given/When/Then or verification format\n" +
-    "- Not duplicating existing acceptance criteria if any exist in the spec.",
-  );
 
   return sections.join("\n\n");
 }
