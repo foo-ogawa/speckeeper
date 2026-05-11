@@ -9,6 +9,10 @@
 | init | Initialize a new speckeeper project with starter templates |
 | new | Create a new element with auto-generated ID |
 | scaffold | Generate _models/ from a mermaid flowchart definition |
+| audit-requirements | Semantic requirement quality audit via LLM (verifiability, ambiguity, granularity, terminology, design-mixing) |
+| propose-trace-links | Propose candidate traceability links between specs with confidence scores and rationale |
+| explain-impact | Translate impact analysis JSON (from stdin) into human-readable explanation for PM/executive audiences |
+| propose-acceptance-criteria | Propose testable acceptance criteria in Given/When/Then format for specified specs |
 | impact | Analyze the change impact scope of a specified ID |
 
 ---
@@ -290,6 +294,183 @@ speckeeper scaffold -s spec.md --dry-run
 |------|-------------|
 | 0 | Scaffold successful |
 | 1 | Scaffold error |
+
+---
+
+## CMD-AUDIT-REQ: audit-requirements
+
+Semantic requirement quality audit via LLM (verifiability, ambiguity, granularity, terminology, design-mixing)
+
+### Usage
+
+```bash
+speckeeper audit-requirements [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -c, --config | option | path |  | - | Path to config file |
+| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| --model | option | string |  | - | LLM model override |
+| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
+| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| -o, --output | option | path |  | - | Write result to file instead of stdout |
+| --report-format | option | enum |  | json | Output format for audit report |
+| --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
+
+### Examples
+
+```bash
+speckeeper audit-requirements
+speckeeper audit-requirements --adapter openai --dry-run
+speckeeper audit-requirements --report-format json --output audit.json
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | No blocking findings |
+| 1 | Unexpected error |
+| 2 | Configuration or input error |
+| 10 | Completed with blocking findings |
+| 11 | Runtime dependency missing |
+| 12 | LLM provider or adapter error |
+
+---
+
+## CMD-PROPOSE-TRACE: propose-trace-links
+
+Propose candidate traceability links between specs with confidence scores and rationale
+
+### Usage
+
+```bash
+speckeeper propose-trace-links [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -c, --config | option | path |  | - | Path to config file |
+| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| --model | option | string |  | - | LLM model override |
+| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
+| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| -o, --output | option | path |  | - | Write result to file instead of stdout |
+| --report-format | option | enum |  | json | Output format for report |
+| --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
+
+### Examples
+
+```bash
+speckeeper propose-trace-links
+speckeeper propose-trace-links --adapter claude --report-format json
+speckeeper propose-trace-links --dry-run
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | No blocking findings |
+| 1 | Unexpected error |
+| 2 | Configuration or input error |
+| 10 | Completed with blocking findings |
+| 11 | Runtime dependency missing |
+| 12 | LLM provider or adapter error |
+
+---
+
+## CMD-EXPLAIN-IMPACT: explain-impact
+
+Translate impact analysis JSON (from stdin) into human-readable explanation for PM/executive audiences
+
+### Usage
+
+```bash
+speckeeper explain-impact [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -c, --config | option | path |  | - | Path to config file |
+| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| --model | option | string |  | - | LLM model override |
+| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
+| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| -o, --output | option | path |  | - | Write result to file instead of stdout |
+| --report-format | option | enum |  | json | Output format for report |
+| --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
+
+### Examples
+
+```bash
+speckeeper impact FR-001 --format json | speckeeper explain-impact
+speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Explanation completed |
+| 1 | Unexpected error |
+| 2 | Configuration or input error |
+| 3 | No input on stdin |
+| 10 | Completed with blocking findings |
+| 11 | Runtime dependency missing |
+| 12 | LLM provider or adapter error |
+
+---
+
+## CMD-PROPOSE-AC: propose-acceptance-criteria
+
+Propose testable acceptance criteria in Given/When/Then format for specified specs
+
+### Usage
+
+```bash
+speckeeper propose-acceptance-criteria [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| <specIds> | argument | string |  | - | Spec IDs to propose criteria for (defaults to all) |
+| -c, --config | option | path |  | - | Path to config file |
+| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| --model | option | string |  | - | LLM model override |
+| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
+| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| -o, --output | option | path |  | - | Write result to file instead of stdout |
+| --report-format | option | enum |  | json | Output format for report |
+| --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
+
+### Examples
+
+```bash
+speckeeper propose-acceptance-criteria
+speckeeper propose-acceptance-criteria FR-001 FR-002
+speckeeper propose-acceptance-criteria --adapter gemini --dry-run
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | No blocking findings |
+| 1 | Unexpected error |
+| 2 | Configuration or input error |
+| 10 | Completed with blocking findings |
+| 11 | Runtime dependency missing |
+| 12 | LLM provider or adapter error |
 
 ---
 
