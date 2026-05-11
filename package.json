@@ -86,7 +86,7 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^1.6.1",
-    "agent-contracts": "^0.17.1",
+    "agent-contracts": "^0.21.0",
     "agent-contracts-runtime": "^0.13.0",
     "cli-contracts": "^0.6.0",
     "eslint": "^9.39.2",
