@@ -109,7 +109,10 @@ export interface Exporter<T> {
   format: 'markdown' | 'json' | 'mermaid';
   single?: (spec: T) => string;
   index?: (specs: T[]) => string;
+  /** Subdirectory under docsDir (used with single + index/index.md) */
   outputDir?: string;
+  /** Direct output file path relative to docsDir (used with index-only exporters) */
+  outputFile?: string;
   filename?: (spec: T) => string;
 }
 
@@ -138,6 +141,63 @@ export interface CheckResult {
   }>;
 }
 
+// ============================================================================
+// Deep Validation (replaces per-model externalChecker)
+// ============================================================================
+
+/** OpenAPI deep validation mapping */
+export interface OpenAPIValidationMapping {
+  path: string;
+  method?: string;
+  parameters?: Array<{ name: string; in?: string; type?: string }>;
+  responseProperties?: Array<{ name: string; type?: string }>;
+}
+
+/** DDL deep validation mapping */
+export interface DDLValidationMapping {
+  tableName: string;
+  columns?: Array<{ name: string; type?: string }>;
+  checkTypes?: boolean;
+}
+
+/**
+ * Deep validation rule for a specific source type.
+ * The mapper extracts expected structure from a spec for detailed comparison
+ * against the matched source object.
+ */
+export interface DeepValidationRule<T, TMapping = unknown> {
+```
+<!--@embedoc:end-->
+
+### Model Class
+
+<!--@embedoc:code_snippet file="src/core/model.ts" start="109" end="156" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+**src/core/model.ts (Model Class Properties)**
+
+```typescript
+}
+
+/**
+ * Deep validation configuration keyed by source type.
+ * Models define this to enable Level 2/3 checks beyond existence.
+ */
+export interface DeepValidationConfig<T> {
+  openapi?: DeepValidationRule<T, OpenAPIValidationMapping>;
+  ddl?: DeepValidationRule<T, DDLValidationMapping>;
+  [sourceType: string]: DeepValidationRule<T, unknown> | undefined;
+}
+
+/**
+ * Lookup key configuration keyed by source type.
+ * When a model's spec ID differs from the external identifier
+ * (e.g. entity ID "user" vs DDL table name "users"),
+ * define a mapper per source type to derive the external key.
+ * If not defined for a source type, spec.id is used as-is.
+ */
+export interface LookupKeyConfig<T> {
+  [sourceType: string]: ((spec: T) => string) | undefined;
+}
+
 /**
  * Coverage result
  */
@@ -163,66 +223,6 @@ export interface CoverageResult {
  * Example: Whether TestRef covers acceptanceCriteria of Requirement
  */
 export interface CoverageChecker<T> {
-  /** Target model ID for coverage (e.g. 'requirement') */
-  targetModel: string;
-  /** Description of coverage check */
-```
-<!--@embedoc:end-->
-
-### Model Class
-
-<!--@embedoc:code_snippet file="src/core/model.ts" start="109" end="156" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
-**src/core/model.ts (Model Class Properties)**
-
-```typescript
-  /** Execute coverage check */
-  check: (
-    specs: T[],
-    registry: Record<string, Map<string, unknown>>
-  ) => CoverageResult;
-}
-
-// ============================================================================
-// Renderer (for embeds)
-// ============================================================================
-
-/**
- * Render context
- * Simplified version compatible with embedoc's EmbedContext
- */
-export interface RenderContext {
-  /** Parameters (filter conditions other than format, etc.) */
-  params: Record<string, string | undefined>;
-  /** Markdown helpers */
-  markdown: {
-    /** Generate table */
-    table: (headers: string[], rows: (string | unknown)[][]) => string;
-  };
-}
-
-/**
- * Renderer definition
- * 
- * Model-specific rendering called from embeds
- */
-export interface Renderer<T> {
-  /** Format ID ('table', 'list', 'detail', 'spec-chapter', etc.) */
-  format: string;
-  /** Rendering process */
-  render: (specs: T[], ctx: RenderContext) => string;
-}
-
-// ============================================================================
-// Model Base Class
-// ============================================================================
-
-/**
- * Model base class
- * 
- * @template TSchema - Zod schema type
- */
-export abstract class Model<TSchema extends ZodType> {
-  /** Singleton instance storage (per subclass) */
 ```
 <!--@embedoc:end-->
 
@@ -493,46 +493,6 @@ class TestRefModel extends Model<typeof TestRefSchema> {
   protected exporters: Exporter<TestRef>[] = [
     {
       format: 'markdown',
-      single: (spec) => {
-        const lines: string[] = [];
-        lines.push(`# ${spec.id}: ${spec.description}`);
-        lines.push('');
-        lines.push('## Test Source');
-        lines.push('');
-        lines.push(`- **Path**: \`${spec.source.path}\``);
-        lines.push(`- **Framework**: ${spec.source.framework}`);
-        if (spec.source.resultPath) {
-          lines.push(`- **Result JSON**: \`${spec.source.resultPath}\``);
-        }
-        lines.push('');
-
-        lines.push('## Verified Requirements');
-        lines.push('');
-        for (const reqId of spec.verifiesRequirements) {
-          lines.push(`- ${reqId}`);
-        }
-        lines.push('');
-
-        if (spec.implementsCommand) {
-          lines.push('## Implemented Command');
-          lines.push('');
-          lines.push(`- ${spec.implementsCommand}`);
-          lines.push('');
-        }
-
-        if (spec.testCasePatterns && spec.testCasePatterns.length > 0) {
-          lines.push('## Test Case Patterns');
-          lines.push('');
-          lines.push('| Acceptance Criteria ID | Pattern | Description |');
-          lines.push('|------------------------|---------|-------------|');
-          for (const p of spec.testCasePatterns) {
-            lines.push(`| ${p.acceptanceCriteriaId} | \`${p.pattern}\` | ${p.description || '-'} |`);
-          }
-          lines.push('');
-        }
-
-        return lines.join('\n');
-      },
       index: (specs) => {
         const lines: string[] = [];
         lines.push('# Test Reference List');
@@ -541,13 +501,57 @@ class TestRefModel extends Model<typeof TestRefSchema> {
         lines.push('|----|-------------|-----------|-------------------|');
         for (const spec of specs) {
           lines.push(
-            `| [${spec.id}](./${spec.id}.md) | ${spec.description} | ${spec.source.framework} | ${spec.verifiesRequirements.length} |`,
+            `| ${spec.id} | ${spec.description} | ${spec.source.framework} | ${spec.verifiesRequirements.length} |`,
           );
         }
-        return lines.join('\n');
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.description}`);
+          lines.push('');
+          lines.push('### Test Source');
+          lines.push('');
+          lines.push(`- **Path**: \`${spec.source.path}\``);
+          lines.push(`- **Framework**: ${spec.source.framework}`);
+          if (spec.source.resultPath) {
+            lines.push(`- **Result JSON**: \`${spec.source.resultPath}\``);
+          }
+          lines.push('');
+
+          lines.push('### Verified Requirements');
+          lines.push('');
+          for (const reqId of spec.verifiesRequirements) {
+            lines.push(`- ${reqId}`);
+          }
+          lines.push('');
+
+          if (spec.implementsCommand) {
+            lines.push('### Implemented Command');
+            lines.push('');
+            lines.push(`- ${spec.implementsCommand}`);
+            lines.push('');
+          }
+
+          if (spec.testCasePatterns && spec.testCasePatterns.length > 0) {
+            lines.push('### Test Case Patterns');
+            lines.push('');
+            lines.push('| Acceptance Criteria ID | Pattern | Description |');
+            lines.push('|------------------------|---------|-------------|');
+            for (const p of spec.testCasePatterns) {
+              lines.push(`| ${p.acceptanceCriteriaId} | \`${p.pattern}\` | ${p.description || '-'} |`);
+            }
+            lines.push('');
+          }
+
+          lines.push('---');
+          lines.push('');
+        }
+
+        return lines.join('\n').replace(/\n---\n\n$/s, '\n');
       },
-      outputDir: 'test-refs',
-      filename: (spec) => spec.id,
+      outputFile: 'design/test-refs.md',
     },
   ];
 
