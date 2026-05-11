@@ -52,7 +52,7 @@ speckeeper init --force
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
-| `--force` | -f | No | `false` | Overwrite existing files. |
+| `--force` | -F | No | `false` | Overwrite existing files. |
 
 #### Exit Codes
 
@@ -69,11 +69,11 @@ speckeeper init --force
 ```yaml
 x-agent: 
   riskLevel: medium
-  requiresConfirmation: false
+  requiresConfirmation: true
   idempotent: false
   sideEffects: 
     - file_write
-  safeDryRunOption: Omit --force to fail safely when files already exist.
+  sideEffectNote: Creates config file and design/ directory structure. With --force, overwrites existing files.
 ```
 
 ---
@@ -125,8 +125,7 @@ x-agent:
   idempotent: true
   sideEffects: 
     - file_write
-  sideEffectNote: When --watch is used, the process runs indefinitely and is unsuitable for non-interactive agent invocation.
-  safeDryRunOption: Omit --watch for a single-pass build.
+  sideEffectNote: When --watch is used, the process runs indefinitely and is unsuitable for non-interactive agent invocation. Always writes generated files to docs/ and specs/.
 ```
 
 ---
@@ -226,7 +225,7 @@ speckeeper drift --update --format diff
 ```yaml
 x-agent: 
   riskLevel: medium
-  requiresConfirmation: false
+  requiresConfirmation: true
   idempotent: true
   sideEffects: 
     - file_write
@@ -271,16 +270,17 @@ speckeeper check openapi --strict
 | `--strict` |  | No | `false` | Treat warnings as errors. |
 | `--verbose` | -v | No | `false` | Show detailed output (e.g. list unmatched specs). |
 | `--coverage` |  | No | `false` | Check if all testable acceptance criteria are covered by TestRefs. |
+| `--format` | -f | No | `"text"` | Output format: text, json, github. |
 
 #### Exit Codes
 
 **Exit 0:** All checks passed (all specs found in sources, deep validation passed).
 
-- **stdout:** format=`text`
+- **stdout:** format=`{options.format}`
 
 **Exit 1:** Check failures found (missing specs, structural mismatches, or coverage gaps).
 
-- **stderr:** format=`text`
+- **stdout:** format=`{options.format}`
 
 #### Extensions
 
@@ -348,6 +348,7 @@ x-agent:
   idempotent: false
   sideEffects: 
     - file_write
+  sideEffectNote: Creates a new TypeScript spec file with auto-generated ID. With --dry-run, only previews the generated content without writing.
   safeDryRunOption: --dry-run
 ```
 
@@ -433,7 +434,7 @@ speckeeper scaffold --source arch.md --dry-run
 |---|---|---|---|---|
 | `--source` | -s | Yes |  | Path to Markdown file containing Mermaid flowchart. |
 | `--output` | -o | No | `"design/"` | Output directory. |
-| `--force` | -f | No | `false` | Overwrite existing files. |
+| `--force` | -F | No | `false` | Overwrite existing files. |
 | `--dry-run` |  | No | `false` | Preview generated files without writing. |
 
 #### Exit Codes
@@ -450,8 +451,8 @@ speckeeper scaffold --source arch.md --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: false
+  riskLevel: high
+  requiresConfirmation: true
   idempotent: false
   sideEffects: 
     - file_write
@@ -522,13 +523,13 @@ speckeeper audit-requirements --report-format json --output audit.json
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
     - network
     - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
   safeDryRunOption: --dry-run
   expectedDurationMs: 120000
   retryableExitCodes: 
@@ -598,13 +599,13 @@ speckeeper propose-trace-links --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
     - network
     - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
   safeDryRunOption: --dry-run
   expectedDurationMs: 120000
   retryableExitCodes: 
@@ -675,13 +676,13 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
     - network
     - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
   safeDryRunOption: --dry-run
   expectedDurationMs: 120000
   retryableExitCodes: 
@@ -757,13 +758,13 @@ speckeeper propose-acceptance-criteria --adapter gemini --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: low
+  riskLevel: medium
   requiresConfirmation: false
   idempotent: true
   sideEffects: 
     - network
     - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified.
+  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
   safeDryRunOption: --dry-run
   expectedDurationMs: 120000
   retryableExitCodes: 

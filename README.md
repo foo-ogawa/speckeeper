@@ -156,14 +156,20 @@ npx speckeeper impact FR-001
 | Command | Description |
 |---------|-------------|
 | `speckeeper init` | Initialize a new project with starter templates |
+| `speckeeper build` | Generate `docs/` and `specs/` from TypeScript models |
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
 | `speckeeper check test --coverage` | Verify test coverage for requirements |
-| `speckeeper scaffold` | Generate model skeletons from a mermaid flowchart |
 | `speckeeper drift` | Detect manual edits to generated `docs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
+| `speckeeper new <type>` | Create a new element with auto-generated ID |
+| `speckeeper scaffold` | Generate `_models/` from a Mermaid flowchart |
+| `speckeeper audit-requirements` | LLM-based requirement quality audit |
+| `speckeeper propose-trace-links` | LLM-based traceability link proposal |
+| `speckeeper explain-impact` | LLM-based explanation of impact analysis output |
+| `speckeeper propose-acceptance-criteria` | LLM-based acceptance criteria proposal |
 
-**Note**: `speckeeper build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
+LLM commands require `agent-contracts-runtime` as an optional peer dependency. Use `--dry-run` to preview the constructed prompt without calling the LLM provider.
 
 ## Validation Features
 

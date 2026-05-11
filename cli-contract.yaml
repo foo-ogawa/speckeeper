@@ -45,7 +45,7 @@ commandSets:
 
         options:
           - name: force
-            aliases: [f]
+            aliases: [F]
             description: Overwrite existing files.
             schema:
               type: boolean
@@ -64,11 +64,13 @@ commandSets:
 
         x-agent:
           riskLevel: medium
-          requiresConfirmation: false
+          requiresConfirmation: true
           idempotent: false
           sideEffects:
             - file_write
-          safeDryRunOption: Omit --force to fail safely when files already exist.
+          sideEffectNote: >-
+            Creates config file and design/ directory structure.
+            With --force, overwrites existing files.
 
       # ── build ─────────────────────────────────────────
       build:
@@ -146,7 +148,7 @@ commandSets:
           sideEffectNote: >-
             When --watch is used, the process runs indefinitely and is
             unsuitable for non-interactive agent invocation.
-          safeDryRunOption: Omit --watch for a single-pass build.
+            Always writes generated files to docs/ and specs/.
 
       # ── lint ──────────────────────────────────────────
       lint:
@@ -285,7 +287,7 @@ commandSets:
 
         x-agent:
           riskLevel: medium
-          requiresConfirmation: false
+          requiresConfirmation: true
           idempotent: true
           sideEffects:
             - file_write
@@ -352,16 +354,25 @@ commandSets:
               type: boolean
               default: false
 
+          - name: format
+            aliases: [f]
+            description: "Output format: text, json, github."
+            valueName: format
+            schema:
+              type: string
+              default: text
+              enum: [text, json, github]
+
         exits:
           '0':
             description: All checks passed (all specs found in sources, deep validation passed).
             stdout:
-              format: text
+              format: '{options.format}'
 
           '1':
             description: Check failures found (missing specs, structural mismatches, or coverage gaps).
-            stderr:
-              format: text
+            stdout:
+              format: '{options.format}'
 
         x-agent:
           riskLevel: low
@@ -448,6 +459,9 @@ commandSets:
           idempotent: false
           sideEffects:
             - file_write
+          sideEffectNote: >-
+            Creates a new TypeScript spec file with auto-generated ID.
+            With --dry-run, only previews the generated content without writing.
           safeDryRunOption: --dry-run
 
       # ── impact ────────────────────────────────────────
@@ -561,7 +575,7 @@ commandSets:
               default: design/
 
           - name: force
-            aliases: [f]
+            aliases: [F]
             description: Overwrite existing files.
             schema:
               type: boolean
@@ -588,8 +602,8 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: false
+          riskLevel: high
+          requiresConfirmation: true
           idempotent: false
           sideEffects:
             - file_write
@@ -711,13 +725,15 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: true
           sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
             Filesystem write when --output is specified.
+            Exit 10 = valid output with blocking findings (stdout contains result).
+            Exit 11 = missing runtime dependency (non-retryable).
           safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
@@ -836,13 +852,15 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: true
           sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
             Filesystem write when --output is specified.
+            Exit 10 = valid output with blocking findings (stdout contains result).
+            Exit 11 = missing runtime dependency (non-retryable).
           safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
@@ -974,13 +992,15 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: true
           sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
             Filesystem write when --output is specified.
+            Exit 10 = valid output with blocking findings (stdout contains result).
+            Exit 11 = missing runtime dependency (non-retryable).
           safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
@@ -1110,13 +1130,15 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
+          riskLevel: medium
           requiresConfirmation: false
           idempotent: true
           sideEffects: [network, file_write]
           sideEffectNote: >-
             Network calls to LLM provider when adapter is not mock.
             Filesystem write when --output is specified.
+            Exit 10 = valid output with blocking findings (stdout contains result).
+            Exit 11 = missing runtime dependency (non-retryable).
           safeDryRunOption: --dry-run
           expectedDurationMs: 120000
           retryableExitCodes: [12]
