@@ -1,0 +1,111 @@
+version: 1
+system:
+  id: speckeeper
+  name: Speckeeper Agent System
+  default_workflow_order:
+    - requirement-audit
+    - trace-link-proposal
+    - impact-explanation
+    - acceptance-proposal
+
+agents: { $ref: "./agents/" }
+tasks: { $ref: "./tasks.yaml" }
+handoff_types: { $ref: "./handoff-types.yaml" }
+
+guardrails:
+  output-schema-conformance:
+    description: >-
+      Ensure all agent outputs conform to AgentAuditResult schema.
+      Validation is performed at runtime via Zod schema in handoff definition.
+    scope:
+      agents:
+        - spec-quality-reviewer
+      tasks:
+        - audit-requirement-quality
+        - propose-trace-links
+        - explain-impact-result
+        - propose-acceptance-criteria
+    rationale: >-
+      Structured output conformance is critical for CLI parsing and
+      downstream tooling integration.
+
+  no-spec-modification:
+    description: >-
+      Agent must never modify spec definition files.
+      Agent operates in read-only mode for analysis only.
+    scope:
+      agents:
+        - spec-quality-reviewer
+    rationale: >-
+      spec-quality-reviewer is a static analysis agent.
+      Spec ID assignment and file editing are human responsibilities.
+
+  confidence-threshold:
+    description: >-
+      Findings with confidence below 0.5 must include an explicit
+      uncertainty disclaimer in their recommendation.
+    scope:
+      tasks:
+        - audit-requirement-quality
+        - propose-trace-links
+        - propose-acceptance-criteria
+    rationale: >-
+      Low-confidence findings without disclaimers may mislead
+      stakeholders into accepting inaccurate trace links or criteria.
+
+guardrail_policies:
+  spec-quality-policy:
+    description: >-
+      Policy governing spec quality review operations.
+      Groups all guardrails applicable to the spec-quality-reviewer agent.
+    rules:
+      - guardrail: output-schema-conformance
+        severity: critical
+        action: block
+      - guardrail: no-spec-modification
+        severity: critical
+        action: block
+      - guardrail: confidence-threshold
+        severity: warning
+        action: warn
+
+workflow:
+  requirement-audit:
+    description: Audit requirement specs for quality, verifiability, and consistency
+    trigger: cli-command
+    entry_conditions:
+      - Design models are loaded and specs are available
+    steps:
+      - type: delegate
+        task: audit-requirement-quality
+        from_agent: spec-quality-reviewer
+
+  trace-link-proposal:
+    description: Propose candidate traceability links between specs and external artifacts
+    trigger: cli-command
+    entry_conditions:
+      - Design models and global scanner results are available
+    steps:
+      - type: delegate
+        task: propose-trace-links
+        from_agent: spec-quality-reviewer
+
+  impact-explanation:
+    description: Explain impact analysis results in human-readable form
+    trigger: cli-command
+    entry_conditions:
+      - JSON output from speckeeper impact is available on stdin
+    steps:
+      - type: delegate
+        task: explain-impact-result
+        from_agent: spec-quality-reviewer
+
+  acceptance-proposal:
+    description: Propose acceptance criteria drafts for specs
+    trigger: cli-command
+    entry_conditions:
+      - Target specs are loaded and available
+    steps:
+      - type: delegate
+        task: propose-acceptance-criteria
+        from_agent: spec-quality-reviewer
