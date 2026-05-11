@@ -19,7 +19,7 @@ async function createAdapter(runtimePkg: string, name: string, config: AuditConf
           "Get your key from: https://cursor.com/dashboard/integrations",
         );
       }
-      return mod.CursorSdkAdapter.create({ apiKey, model: config.model ?? "claude-opus-4-6" });
+      return mod.CursorSdkAdapter.create({ apiKey, model: config.model ?? "claude-sonnet-4" });
     }
     case "claude": {
       const mod = await import(`${runtimePkg}/adapters/claude-agent-sdk`);
