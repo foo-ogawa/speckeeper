@@ -36,6 +36,7 @@ design/*.ts
 - **Traceability** — Track relationships across model levels (L0-L3) with impact analysis
 - **Scaffold from Mermaid** — Generate `_models/` skeletons from a mermaid flowchart with class-based artifact resolution
 - **Custom models** — Extend with domain-specific models (Runbooks, Policies, etc.)
+- **Agent-native** — Domain-specific semantic reasoning is encapsulated inside the toolchain itself. Higher-level agents do not need to know every design quality heuristic — they invoke speckeeper and consume structured findings
 - **CI-ready** — Built-in lint, drift detection, and coverage checks
 
 ## Installation
@@ -145,6 +146,10 @@ npx speckeeper check test --coverage
 
 # Analyze change impact
 npx speckeeper impact FR-001
+
+# LLM-powered quality audit (optional — requires agent-contracts-runtime + API key)
+npm install --save-dev agent-contracts-runtime
+npx speckeeper audit-requirements --adapter openai
 ```
 
 > **Alternative**: `npx speckeeper init` creates a minimal project with generic starter templates. Use this if you prefer to build models from scratch. See [Model Definition Guide](./docs/model-guide.md) for details.
@@ -153,17 +158,46 @@ npx speckeeper impact FR-001
 
 > **Full CLI reference:** [docs/cli-reference.md](./docs/cli-reference.md) | **Machine-readable contract:** [cli-contract.yaml](./cli-contract.yaml)
 
+### Deterministic Commands
+
 | Command | Description |
 |---------|-------------|
 | `speckeeper init` | Initialize a new project with starter templates |
+| `speckeeper build` | Generate `docs/` and `specs/` from TypeScript models |
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
 | `speckeeper check test --coverage` | Verify test coverage for requirements |
-| `speckeeper scaffold` | Generate model skeletons from a mermaid flowchart |
 | `speckeeper drift` | Detect manual edits to generated `docs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
+| `speckeeper new <type>` | Create a new element with auto-generated ID |
+| `speckeeper scaffold` | Generate `_models/` from a Mermaid flowchart |
 
-**Note**: `speckeeper build` generates machine-readable `specs/` output. For human-readable docs (`docs/`), use [embedoc](https://www.npmjs.com/package/embedoc) or similar tools with the model rendering API.
+### LLM-Powered Commands
+
+| Command | Description |
+|---------|-------------|
+| `speckeeper audit-requirements` | Semantic requirement quality audit via LLM |
+| `speckeeper propose-trace-links` | Propose candidate traceability links with confidence scores |
+| `speckeeper explain-impact` | Explain impact analysis output in human-readable form (accepts JSON from `impact` via stdin) |
+| `speckeeper propose-acceptance-criteria` | Propose testable acceptance criteria in Given/When/Then format |
+
+LLM-powered commands are read-only by default. `audit-requirements` and `explain-impact` do not modify files or state. `propose-*` commands produce proposals; generated output should be reviewed before use. LLM commands do not replace deterministic gates — they are an additional semantic review layer on top of `lint`, `check`, and `impact`.
+
+All LLM commands require `agent-contracts-runtime` (optional peer dependency) and an adapter key, and support `--dry-run` to inspect the prompt without calling the LLM.
+
+```bash
+# Audit requirement quality
+npx speckeeper audit-requirements --adapter openai
+
+# Propose traceability links
+npx speckeeper propose-trace-links --adapter cursor
+
+# Explain impact analysis for a PR comment
+npx speckeeper impact FR-001 --format json | npx speckeeper explain-impact --adapter openai
+
+# Inspect the prompt without calling the LLM
+npx speckeeper audit-requirements --dry-run
+```
 
 ## Validation Features
 
@@ -466,11 +500,97 @@ class RunbookModel extends Model<typeof RunbookSchema> {
 
 Core DSL factories (`speckeeper/dsl`) include `requireField`, `arrayMinLength`, `idFormat`, `childIdFormat`, `markdownExporter`, `annotationCoverage`, `relationCoverage`, and `baseSpecSchema`. Global scanner utilities (`openapiScanner`, `ddlScanner`, `annotationScanner`, `createAnnotationScanner`) are also re-exported for advanced use.
 
+## CI Integration
+
+```yaml
+name: Design Validation
+on:
+  pull_request:
+    paths: ['design/**', 'speckeeper.config.ts']
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx speckeeper lint --strict
+      - run: npx speckeeper check
+      - run: npx speckeeper drift --fail-on-drift
+      # Optional: LLM semantic audit (requires API key)
+      # - run: npx speckeeper audit-requirements --adapter openai --report-format json --fail-on error
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+```
+
+## Agent-Native Toolchain
+
+speckeeper is designed for development workflows where AI agents are first-class participants in design review, traceability analysis, and quality assurance. It encapsulates domain-specific semantic reasoning inside the toolchain itself, returning structured results that humans, CI systems, and AI agents consume in the same way.
+
+### Deterministic checks first
+
+Anything that can be validated mechanically is validated deterministically: ID uniqueness, reference integrity, circular dependency detection, phase gate enforcement, external SSOT conformance, drift detection, and impact analysis via relation graph traversal.
+
+### Semantic audit inside the toolchain
+
+Domain-specific reasoning that is difficult to express as static rules is handled by LLM-based commands:
+
+- **`audit-requirements`** — Requirement verifiability, ambiguity, granularity, terminology consistency, and design-mixing detection
+- **`propose-trace-links`** — Identify candidate traceability links between specs and implementation artifacts with confidence scores and rationale
+- **`explain-impact`** — Translate machine-readable impact analysis output into human-readable explanations for PM and executive stakeholders
+- **`propose-acceptance-criteria`** — Generate testable acceptance criteria in Given/When/Then or verification format
+
+### Structured findings
+
+LLM output is not free-form text. Results conform to typed schemas such as `RequirementAuditResult`, `TraceLinkResult`, `ImpactExplainResult`, and `AcceptanceCriteriaResult`. Audit-style results are compatible with the common `AgentAuditResult` / `AgentFinding` shape so that higher-level workflow agents can aggregate findings across toolchains.
+
+### Tool-owned domain knowledge
+
+speckeeper owns the rules and reasoning for design specification quality. Instead of embedding design review heuristics into a top-level agent prompt, domain expertise is encapsulated inside the tool. Higher-level agents only need to invoke the command and interpret the structured output.
+
+### Agent-readable interface
+
+Tool capabilities are described in machine-readable form via [cli-contract.yaml](cli-contract.yaml): artifacts read/written, side effects, risk levels, confirmation requirements, and output schemas.
+
+### LLM Adapter Configuration
+
+| Adapter | Default Model | Environment Variable |
+|---------|---------------|---------------------|
+| `cursor` | runtime default | `CURSOR_API_KEY` |
+| `openai` | runtime default | `OPENAI_API_KEY` |
+| `gemini` | runtime default | `GEMINI_API_KEY` |
+| `claude` | runtime default | `ANTHROPIC_API_KEY` |
+| `mock` | — | — |
+
+Default models are defined by `agent-contracts-runtime` and may change between releases. Use `--model` to pin a specific model.
+
+```bash
+# Install the runtime dependency to enable LLM features
+npm install agent-contracts-runtime
+```
+
+## Technology Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Language | TypeScript (Node.js) |
+| Schema validation | [Zod](https://github.com/colinhacks/zod) |
+| LLM integration | [agent-contracts-runtime](https://www.npmjs.com/package/agent-contracts-runtime) (optional peer dep) |
+| Agent DSL | [agent-contracts](https://www.npmjs.com/package/agent-contracts) — agent/task/workflow definitions |
+| CLI contract | [cli-contracts](https://www.npmjs.com/package/cli-contracts) — machine-readable interface spec |
+| Package manager | npm |
+
 ## Documentation
 
 - **[Model Definition Guide](./docs/model-guide.md)** — Start here for model customization and API reference
 - [Framework Requirements Specification](./docs/framework_requirements_spec.md) — Detailed feature specifications
 - [Model Entity Catalog](./docs/model_entity_catalog.md) — Model hierarchy and relation types
+- [docs/cli-reference.md](./docs/cli-reference.md) — Generated CLI reference (commands, options, exit codes, AI agent policies)
+- [cli-contract.yaml](./cli-contract.yaml) — Machine-readable CLI contract ([CLI Contracts](https://www.npmjs.com/package/cli-contracts) format)
+- [dsl/](./dsl/) — Agent DSL definitions (agent, tasks, workflows, handoff types, guardrails)
 
 ## Compatibility
 

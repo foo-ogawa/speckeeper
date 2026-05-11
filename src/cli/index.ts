@@ -12,6 +12,10 @@ import { newCommand } from './new.js';
 import { impactCommand } from './impact.js';
 import { runInit } from './init.js';
 import { scaffoldCommand } from './scaffold.js';
+import { commandAuditRequirements } from './audit-requirements.js';
+import { commandProposeTraceLinks } from './propose-trace-links.js';
+import { commandExplainImpact } from './explain-impact-result.js';
+import { commandProposeAcceptanceCriteria } from './propose-acceptance-criteria.js';
 
 function getVersion(): string {
   try {
@@ -117,6 +121,94 @@ program
   .option('-f, --force', 'Overwrite existing files')
   .option('--dry-run', 'Preview generated files without writing')
   .action(scaffoldCommand);
+
+// ── LLM-powered commands ──────────────────────────────────────
+
+const llmOptions = (cmd: Command) => cmd
+  .option('-a, --adapter <name>', 'SDK adapter (cursor, claude, openai, gemini, mock)')
+  .option('--model <name>', 'LLM model override')
+  .option('-n, --dry-run', 'Output prompt without calling LLM')
+  .option('--fail-on <level>', 'Minimum severity for non-zero exit (warning, error, critical)', 'error')
+  .option('-o, --output <file>', 'Write result to a file instead of stdout')
+  .option('--report-format <fmt>', 'Output format (json, text, yaml)', 'text');
+
+llmOptions(
+  program
+    .command('audit-requirements')
+    .description('LLM-based requirement quality audit')
+    .option('-c, --config <path>', 'Path to config file'),
+).action((opts: {
+  config?: string; adapter?: string; model?: string; dryRun?: boolean;
+  failOn?: string; output?: string; reportFormat?: string;
+}) => {
+  commandAuditRequirements({
+    config: opts.config,
+    adapter: opts.adapter,
+    model: opts.model,
+    dryRun: opts.dryRun,
+    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+    output: opts.output,
+    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+  });
+});
+
+llmOptions(
+  program
+    .command('propose-trace-links')
+    .description('LLM-based traceability link proposal')
+    .option('-c, --config <path>', 'Path to config file'),
+).action((opts: {
+  config?: string; adapter?: string; model?: string; dryRun?: boolean;
+  failOn?: string; output?: string; reportFormat?: string;
+}) => {
+  commandProposeTraceLinks({
+    config: opts.config,
+    adapter: opts.adapter,
+    model: opts.model,
+    dryRun: opts.dryRun,
+    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+    output: opts.output,
+    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+  });
+});
+
+llmOptions(
+  program
+    .command('explain-impact')
+    .description('LLM-based explanation of impact analysis output'),
+).action((opts: {
+  adapter?: string; model?: string; dryRun?: boolean;
+  failOn?: string; output?: string; reportFormat?: string;
+}) => {
+  commandExplainImpact({
+    adapter: opts.adapter,
+    model: opts.model,
+    dryRun: opts.dryRun,
+    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+    output: opts.output,
+    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+  });
+});
+
+llmOptions(
+  program
+    .command('propose-acceptance-criteria [specIds...]')
+    .description('LLM-based acceptance criteria proposal')
+    .option('-c, --config <path>', 'Path to config file'),
+).action((specIds: string[], opts: {
+  config?: string; adapter?: string; model?: string; dryRun?: boolean;
+  failOn?: string; output?: string; reportFormat?: string;
+}) => {
+  commandProposeAcceptanceCriteria(specIds, {
+    config: opts.config,
+    adapter: opts.adapter,
+    model: opts.model,
+    dryRun: opts.dryRun,
+    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+    output: opts.output,
+    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+  });
+});
 
 // Parse arguments
 program.parse();

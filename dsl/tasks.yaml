@@ -1,0 +1,97 @@
+audit-requirement-quality:
+  description: Audit design specs for quality, verifiability, and consistency
+  target_agent: spec-quality-reviewer
+  allowed_from_agents:
+    - spec-quality-reviewer
+  workflow: requirement-audit
+  input_artifacts:
+    - spec-definitions
+  invocation_handoff: spec-review-request
+  result_handoff: requirement-audit-result
+  validations:
+    - spec-lint-validation
+    - output-schema-validation
+    - output-semantic-validation
+  responsibilities:
+    - Evaluate all specs for verifiability and measurability
+    - Detect ambiguous or vague wording
+    - Identify mixed requirement vs design content
+    - Check terminology consistency across models
+    - Assess granularity appropriateness
+  completion_criteria:
+    - All target specs have been evaluated
+    - Findings classified by severity and category
+    - Each finding includes a recommendation
+    - Output conforms to RequirementAuditResult schema
+
+propose-trace-links:
+  description: Propose candidate traceability links between specs and external artifacts
+  target_agent: spec-quality-reviewer
+  allowed_from_agents:
+    - spec-quality-reviewer
+  workflow: trace-link-proposal
+  input_artifacts:
+    - spec-definitions
+  invocation_handoff: spec-review-request
+  result_handoff: trace-link-result
+  validations:
+    - spec-lint-validation
+    - output-schema-validation
+    - output-semantic-validation
+  responsibilities:
+    - Analyze spec definitions and global scanner results
+    - Identify candidate links between specs and external artifacts
+    - Assign confidence scores to each candidate
+    - Provide rationale for each proposed link
+  completion_criteria:
+    - All specs and scanner results have been cross-referenced
+    - Each candidate link has a confidence score and rationale
+    - Existing relations are not duplicated
+    - Output conforms to TraceLinkResult schema
+
+explain-impact-result:
+  description: Explain speckeeper impact command output in human-readable form
+  target_agent: spec-quality-reviewer
+  allowed_from_agents:
+    - spec-quality-reviewer
+  workflow: impact-explanation
+  input_artifacts:
+    - spec-definitions
+  invocation_handoff: spec-review-request
+  result_handoff: impact-explain-result
+  validations:
+    - output-schema-validation
+    - output-semantic-validation
+  responsibilities:
+    - Summarize impact output for non-technical readers
+    - Provide concrete next steps as recommendedActions
+    - Explain spec relationships in plain language
+  completion_criteria:
+    - Explanation accurately summarizes the impact output
+    - Action items are concrete and actionable
+    - Technical terms explained for PM/executive audiences
+    - Severity reflects urgency of the underlying change
+
+propose-acceptance-criteria:
+  description: Propose acceptance criteria drafts for design specs
+  target_agent: spec-quality-reviewer
+  allowed_from_agents:
+    - spec-quality-reviewer
+  workflow: acceptance-proposal
+  input_artifacts:
+    - spec-definitions
+  invocation_handoff: spec-review-request
+  result_handoff: acceptance-criteria-result
+  validations:
+    - spec-lint-validation
+    - output-schema-validation
+    - output-semantic-validation
+  responsibilities:
+    - Analyze target spec definitions and related specs
+    - Propose testable acceptance criteria for each spec
+    - Provide rationale for each proposed criterion
+  completion_criteria:
+    - Proposed criteria are specific and testable
+    - Each proposal includes a rationale
+    - Criteria do not duplicate existing acceptance conditions
+    - Output conforms to AcceptanceCriteriaResult handoff schema

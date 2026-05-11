@@ -1,0 +1,34 @@
+spec-lint-validation:
+  target_artifact: spec-definitions
+  kind: mechanical
+  executor_type: tool
+  executor: speckeeper-cli
+  blocking: true
+  x-description: >-
+    Design integrity check via speckeeper lint command.
+    Verifies ID uniqueness, reference integrity, naming conventions,
+    and model-specific lint rules before LLM analysis.
+
+output-schema-validation:
+  target_artifact: agent-review-output
+  kind: schema
+  executor_type: tool
+  executor: speckeeper-cli
+  blocking: true
+  x-description: >-
+    Zod schema validation of agent output at runtime.
+    Ensures LLM responses conform to the handoff result schema
+    (RequirementAuditResult, TraceLinkResult, etc.) before CLI
+    formatting and exit code computation.
+
+output-semantic-validation:
+  target_artifact: agent-review-output
+  kind: semantic
+  executor_type: agent
+  executor: spec-quality-reviewer
+  blocking: false
+  x-description: >-
+    Semantic self-check of agent output quality. Verifies that
+    findings include actionable recommendations, confidence scores
+    meet threshold requirements, and category vocabulary is used
+    consistently.
