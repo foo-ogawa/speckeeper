@@ -203,6 +203,99 @@ export const commands: CLICommand[] = [
     exitCodes: [{ code: 0, description: 'Scaffold successful' }, { code: 1, description: 'Scaffold error' }],
   },
 
+  // speckeeper audit-requirements - LLM-based requirement quality audit
+  {
+    id: 'CMD-AUDIT-REQ',
+    name: 'audit-requirements',
+    description: 'Semantic requirement quality audit via LLM (verifiability, ambiguity, granularity, terminology, design-mixing)',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
+      { kind: 'option', name: 'adapter', alias: 'a', type: 'enum', description: 'SDK adapter for LLM execution', required: false, choices: ['cursor', 'claude', 'openai', 'gemini', 'mock'] },
+      { kind: 'option', name: 'model', type: 'string', description: 'LLM model override', required: false },
+      { kind: 'option', name: 'dry-run', alias: 'n', type: 'boolean', description: 'Output constructed prompt without calling LLM', required: false, default: false },
+      { kind: 'option', name: 'fail-on', type: 'enum', description: 'Minimum severity for non-zero exit', required: false, choices: ['warning', 'error', 'critical'], default: 'error' },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Write result to file instead of stdout', required: false },
+      { kind: 'option', name: 'report-format', type: 'enum', description: 'Output format for audit report', required: false, choices: ['json', 'text', 'yaml'], default: 'json' },
+      { kind: 'option', name: 'show-prompt', type: 'boolean', description: 'Display constructed LLM prompt on stderr', required: false, default: false },
+    ],
+    subCommands: [],
+    relatedRequirements: ['FR-400', 'FR-401'],
+    examples: ['speckeeper audit-requirements', 'speckeeper audit-requirements --adapter openai --dry-run', 'speckeeper audit-requirements --report-format json --output audit.json'],
+    exitCodes: [{ code: 0, description: 'No blocking findings' }, { code: 1, description: 'Unexpected error' }, { code: 2, description: 'Configuration or input error' }, { code: 10, description: 'Completed with blocking findings' }, { code: 11, description: 'Runtime dependency missing' }, { code: 12, description: 'LLM provider or adapter error' }],
+  },
+
+  // speckeeper propose-trace-links - LLM-based traceability link proposal
+  {
+    id: 'CMD-PROPOSE-TRACE',
+    name: 'propose-trace-links',
+    description: 'Propose candidate traceability links between specs with confidence scores and rationale',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
+      { kind: 'option', name: 'adapter', alias: 'a', type: 'enum', description: 'SDK adapter for LLM execution', required: false, choices: ['cursor', 'claude', 'openai', 'gemini', 'mock'] },
+      { kind: 'option', name: 'model', type: 'string', description: 'LLM model override', required: false },
+      { kind: 'option', name: 'dry-run', alias: 'n', type: 'boolean', description: 'Output constructed prompt without calling LLM', required: false, default: false },
+      { kind: 'option', name: 'fail-on', type: 'enum', description: 'Minimum severity for non-zero exit', required: false, choices: ['warning', 'error', 'critical'], default: 'error' },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Write result to file instead of stdout', required: false },
+      { kind: 'option', name: 'report-format', type: 'enum', description: 'Output format for report', required: false, choices: ['json', 'text', 'yaml'], default: 'json' },
+      { kind: 'option', name: 'show-prompt', type: 'boolean', description: 'Display constructed LLM prompt on stderr', required: false, default: false },
+    ],
+    subCommands: [],
+    relatedRequirements: ['FR-700', 'FR-701'],
+    examples: ['speckeeper propose-trace-links', 'speckeeper propose-trace-links --adapter claude --report-format json', 'speckeeper propose-trace-links --dry-run'],
+    exitCodes: [{ code: 0, description: 'No blocking findings' }, { code: 1, description: 'Unexpected error' }, { code: 2, description: 'Configuration or input error' }, { code: 10, description: 'Completed with blocking findings' }, { code: 11, description: 'Runtime dependency missing' }, { code: 12, description: 'LLM provider or adapter error' }],
+  },
+
+  // speckeeper explain-impact - LLM-based explanation of impact analysis output
+  {
+    id: 'CMD-EXPLAIN-IMPACT',
+    name: 'explain-impact',
+    description: 'Translate impact analysis JSON (from stdin) into human-readable explanation for PM/executive audiences',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
+      { kind: 'option', name: 'adapter', alias: 'a', type: 'enum', description: 'SDK adapter for LLM execution', required: false, choices: ['cursor', 'claude', 'openai', 'gemini', 'mock'] },
+      { kind: 'option', name: 'model', type: 'string', description: 'LLM model override', required: false },
+      { kind: 'option', name: 'dry-run', alias: 'n', type: 'boolean', description: 'Output constructed prompt without calling LLM', required: false, default: false },
+      { kind: 'option', name: 'fail-on', type: 'enum', description: 'Minimum severity for non-zero exit', required: false, choices: ['warning', 'error', 'critical'], default: 'error' },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Write result to file instead of stdout', required: false },
+      { kind: 'option', name: 'report-format', type: 'enum', description: 'Output format for report', required: false, choices: ['json', 'text', 'yaml'], default: 'json' },
+      { kind: 'option', name: 'show-prompt', type: 'boolean', description: 'Display constructed LLM prompt on stderr', required: false, default: false },
+    ],
+    subCommands: [],
+    relatedRequirements: ['FR-700'],
+    examples: ['speckeeper impact FR-001 --format json | speckeeper explain-impact', 'speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude'],
+    exitCodes: [{ code: 0, description: 'Explanation completed' }, { code: 1, description: 'Unexpected error' }, { code: 2, description: 'Configuration or input error' }, { code: 3, description: 'No input on stdin' }, { code: 10, description: 'Completed with blocking findings' }, { code: 11, description: 'Runtime dependency missing' }, { code: 12, description: 'LLM provider or adapter error' }],
+  },
+
+  // speckeeper propose-acceptance-criteria - LLM-based acceptance criteria proposal
+  {
+    id: 'CMD-PROPOSE-AC',
+    name: 'propose-acceptance-criteria',
+    description: 'Propose testable acceptance criteria in Given/When/Then format for specified specs',
+    componentId: 'COMP-CLI',
+    globalParameters: [],
+    parameters: [
+      { kind: 'argument', name: 'specIds', type: 'string', description: 'Spec IDs to propose criteria for (defaults to all)', required: false },
+      { kind: 'option', name: 'config', alias: 'c', type: 'path', description: 'Path to config file', required: false },
+      { kind: 'option', name: 'adapter', alias: 'a', type: 'enum', description: 'SDK adapter for LLM execution', required: false, choices: ['cursor', 'claude', 'openai', 'gemini', 'mock'] },
+      { kind: 'option', name: 'model', type: 'string', description: 'LLM model override', required: false },
+      { kind: 'option', name: 'dry-run', alias: 'n', type: 'boolean', description: 'Output constructed prompt without calling LLM', required: false, default: false },
+      { kind: 'option', name: 'fail-on', type: 'enum', description: 'Minimum severity for non-zero exit', required: false, choices: ['warning', 'error', 'critical'], default: 'error' },
+      { kind: 'option', name: 'output', alias: 'o', type: 'path', description: 'Write result to file instead of stdout', required: false },
+      { kind: 'option', name: 'report-format', type: 'enum', description: 'Output format for report', required: false, choices: ['json', 'text', 'yaml'], default: 'json' },
+      { kind: 'option', name: 'show-prompt', type: 'boolean', description: 'Display constructed LLM prompt on stderr', required: false, default: false },
+    ],
+    subCommands: [],
+    relatedRequirements: ['FR-400'],
+    examples: ['speckeeper propose-acceptance-criteria', 'speckeeper propose-acceptance-criteria FR-001 FR-002', 'speckeeper propose-acceptance-criteria --adapter gemini --dry-run'],
+    exitCodes: [{ code: 0, description: 'No blocking findings' }, { code: 1, description: 'Unexpected error' }, { code: 2, description: 'Configuration or input error' }, { code: 10, description: 'Completed with blocking findings' }, { code: 11, description: 'Runtime dependency missing' }, { code: 12, description: 'LLM provider or adapter error' }],
+  },
+
   // speckeeper impact - Impact analysis command
   {
     id: 'CMD-IMPACT',
