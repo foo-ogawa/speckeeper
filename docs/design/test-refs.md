@@ -277,8 +277,8 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
-| FR-106-01 | `artifact class.*generates|class.*model file` | Artifact class recognition and generation test |
-| FR-106-03 | `same.*class.*aggregated|aggregat` | Same-class node aggregation test |
-| FR-106-05 | `PascalCase|kebab-case|model name` | Model/file name convention test |
+| FR-106-01 | `base template.*core factory|generated models.*base template` | Artifact class generates from base template |
+| FR-106-03 | `SR.*FR.*NFR.*map to requirement.*de-duplicated` | Same-class node aggregation into single model file |
+| FR-106-05 | `de-duplicated model files.*spec data` | Model file generation with naming conventions |
 
 ---

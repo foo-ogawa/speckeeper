@@ -148,9 +148,9 @@ const newTestPatterns: TestCasePattern[] = [
 
 // Scaffold integration test patterns (FR-106)
 const scaffoldIntegrationTestPatterns: TestCasePattern[] = [
-  { acceptanceCriteriaId: 'FR-106-01', pattern: 'artifact class.*generates|class.*model file', description: 'Artifact class recognition and generation test' },
-  { acceptanceCriteriaId: 'FR-106-03', pattern: 'same.*class.*aggregated|aggregat', description: 'Same-class node aggregation test' },
-  { acceptanceCriteriaId: 'FR-106-05', pattern: 'PascalCase|kebab-case|model name', description: 'Model/file name convention test' },
+  { acceptanceCriteriaId: 'FR-106-01', pattern: 'base template.*core factory|generated models.*base template', description: 'Artifact class generates from base template' },
+  { acceptanceCriteriaId: 'FR-106-03', pattern: 'SR.*FR.*NFR.*map to requirement.*de-duplicated', description: 'Same-class node aggregation into single model file' },
+  { acceptanceCriteriaId: 'FR-106-05', pattern: 'de-duplicated model files.*spec data', description: 'Model file generation with naming conventions' },
 ];
 
 export const testRefs: TestRef[] = [
