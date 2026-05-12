@@ -4,6 +4,9 @@
  * All model definitions inherit from this class
  */
 import { z, ZodType } from 'zod';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, extname } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import {
   type ModelLevel,
   type Relation,
@@ -790,4 +793,143 @@ export function findModelTypeFromConfig(
     }
   }
   return null;
+}
+
+// ============================================================================
+// YAML / JSON Spec Loader
+// ============================================================================
+
+/** Single-model shorthand: `{ model, specs }` */
+interface YamlSingleModelFormat {
+  model: string;
+  specs: unknown[];
+}
+
+/** Multi-model entries: `{ entries: [{ model, specs }, ...] }` */
+interface YamlMultiModelFormat {
+  entries: YamlSingleModelFormat[];
+}
+
+type YamlSpecFormat = YamlSingleModelFormat | YamlMultiModelFormat;
+
+function isMultiModelFormat(data: YamlSpecFormat): data is YamlMultiModelFormat {
+  return 'entries' in data && Array.isArray((data as YamlMultiModelFormat).entries);
+}
+
+function resolveModel(
+  modelId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  models: Model<any>[],
+  filePath: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Model<any> {
+  const found = models.find(m => m.id === modelId);
+  if (!found) {
+    const available = models.map(m => m.id).join(', ');
+    throw new Error(
+      `Unknown model "${modelId}" in ${filePath}. Available models: ${available}`,
+    );
+  }
+  return found;
+}
+
+function validateSpecs(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  model: Model<any>,
+  specs: unknown[],
+  filePath: string,
+): unknown[] {
+  const validated: unknown[] = [];
+  for (let i = 0; i < specs.length; i++) {
+    const raw = specs[i];
+    const result = model.safeParse(raw);
+    if (!result.success) {
+      const specId = (raw as { id?: string })?.id ?? `[index ${i}]`;
+      const issues = result.error.issues
+        .map(iss => `  - ${iss.path.join('.')}: ${iss.message}`)
+        .join('\n');
+      throw new Error(
+        `Validation failed for spec "${specId}" (model: ${model.id}) in ${filePath}:\n${issues}`,
+      );
+    }
+    validated.push(result.data);
+  }
+  return validated;
+}
+
+/**
+ * Load spec data from a YAML or JSON file.
+ * Supports two formats:
+ *  - Single-model shorthand: `{ model: "term", specs: [...] }`
+ *  - Multi-model entries: `{ entries: [{ model: "...", specs: [...] }, ...] }`
+ *
+ * Each spec is validated against the model's Zod schema.
+ *
+ * @param yamlPath - Path to the .yaml / .yml / .json file
+ * @param models - Array of Model instances to resolve `model` field against
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function loadYamlSpecs(yamlPath: string, models: Model<any>[]): SpecModule {
+  const ext = extname(yamlPath).toLowerCase();
+  const raw = readFileSync(yamlPath, 'utf-8');
+
+  let data: YamlSpecFormat;
+  try {
+    data = ext === '.json' ? JSON.parse(raw) : parseYaml(raw);
+  } catch (err) {
+    throw new Error(
+      `Failed to parse ${yamlPath}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  const groups: YamlSingleModelFormat[] = isMultiModelFormat(data)
+    ? data.entries
+    : [data as YamlSingleModelFormat];
+
+  const entries: SpecEntry[] = groups.map(group => {
+    const model = resolveModel(group.model, models, yamlPath);
+    const validatedData = validateSpecs(model, group.specs, yamlPath);
+    return { model, data: validatedData };
+  });
+
+  return { entries };
+}
+
+/**
+ * Load all YAML / JSON spec files from a directory.
+ * Scans for `*.yaml`, `*.yml`, `*.json` files, excluding `_models/` subdirectory.
+ *
+ * @param dirPath - Directory to scan (typically `design/`)
+ * @param models - Array of Model instances
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function loadYamlDir(dirPath: string, models: Model<any>[]): SpecModule[] {
+  const YAML_EXTENSIONS = new Set(['.yaml', '.yml', '.json']);
+  const results: SpecModule[] = [];
+
+  let entries: string[];
+  try {
+    entries = readdirSync(dirPath);
+  } catch {
+    return results;
+  }
+
+  for (const entry of entries) {
+    if (entry === '_models') continue;
+
+    const fullPath = join(dirPath, entry);
+    const ext = extname(entry).toLowerCase();
+
+    if (!YAML_EXTENSIONS.has(ext)) continue;
+
+    try {
+      if (!statSync(fullPath).isFile()) continue;
+    } catch {
+      continue;
+    }
+
+    results.push(loadYamlSpecs(fullPath, models));
+  }
+
+  return results;
 }

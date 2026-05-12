@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export interface InitOptions {
   force?: boolean;
+  format?: 'ts' | 'yaml';
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,7 +44,10 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     return;
   }
   
-  // Copy template files
+  const isYaml = options.format === 'yaml';
+
+  // Copy template files (skip TS data files when yaml format is requested)
+  const skipForYaml = new Set(['design/requirements.ts']);
   let packageJsonCreated = false;
   copyTemplateDir(templatesDir, cwd, projectName, options.force || false, (relativePath, created) => {
     if (created) {
@@ -54,21 +58,26 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     } else {
       console.log(chalk.yellow(`  Skipped: ${relativePath} (already exists)`));
     }
-  });
+  }, '', isYaml ? skipForYaml : undefined);
+
+  if (isYaml) {
+    writeYamlInitFiles(cwd, options.force || false);
+  }
   
   console.log('');
   console.log(chalk.cyan('  Project initialized successfully!'));
   console.log('');
+  const dataFormat = isYaml ? 'design/*.yaml' : 'design/*.ts using defineSpecs()';
   console.log('  Next steps:');
   if (packageJsonCreated) {
     console.log(chalk.gray('    1. Run `npm install` to install dependencies'));
-    console.log(chalk.gray('    2. Add spec data in design/*.ts using defineSpecs()'));
+    console.log(chalk.gray(`    2. Add spec data in ${dataFormat}`));
     console.log(chalk.gray('    3. Import new spec files in design/index.ts'));
     console.log(chalk.gray('    4. Run `npx speckeeper lint` to validate'));
   } else {
     console.log(chalk.gray('    1. Add speckeeper and zod to your package.json dependencies'));
     console.log(chalk.gray('    2. Ensure "type": "module" is set in package.json'));
-    console.log(chalk.gray('    3. Add spec data in design/*.ts using defineSpecs()'));
+    console.log(chalk.gray(`    3. Add spec data in ${dataFormat}`));
     console.log(chalk.gray('    4. Import new spec files in design/index.ts'));
     console.log(chalk.gray('    5. Run `npx speckeeper lint` to validate'));
   }
@@ -83,7 +92,8 @@ function copyTemplateDir(
   projectName: string,
   force: boolean,
   onFile: (relativePath: string, created: boolean) => void,
-  relativePath: string = ''
+  relativePath: string = '',
+  skipRelPaths?: Set<string>,
 ): void {
   const entries = readdirSync(srcDir);
   
@@ -103,8 +113,10 @@ function copyTemplateDir(
         onFile(relPath + '/', true);
       }
       // Recurse into directory
-      copyTemplateDir(srcPath, destPath, projectName, force, onFile, relPath);
+      copyTemplateDir(srcPath, destPath, projectName, force, onFile, relPath, skipRelPaths);
     } else {
+      if (skipRelPaths?.has(relPath)) continue;
+
       // Skip if file exists and not force
       if (!force && existsSync(destPath)) {
         onFile(relPath, false);
@@ -125,5 +137,50 @@ function copyTemplateDir(
       writeFileSync(destPath, content);
       onFile(relPath, true);
     }
+  }
+}
+
+function writeYamlInitFiles(cwd: string, force: boolean): void {
+  const designDir = join(cwd, 'design');
+  if (!existsSync(designDir)) {
+    mkdirSync(designDir, { recursive: true });
+  }
+
+  // YAML requirements data
+  const reqYaml = join(designDir, 'requirements.yaml');
+  if (force || !existsSync(reqYaml)) {
+    writeFileSync(reqYaml, `# Requirements
+model: requirement
+specs:
+  - id: REQ-001
+    name: User Authentication
+    type: functional
+    priority: must
+    description: Users can authenticate using email and password
+    acceptanceCriteria:
+      - id: REQ-001-01
+        description: Valid credentials grant access
+        verificationMethod: test
+      - id: REQ-001-02
+        description: Invalid credentials show error message
+        verificationMethod: test
+`);
+    console.log(chalk.green('  Created: design/requirements.yaml'));
+  }
+
+  // Overwrite design/index.ts to use loadYamlDir
+  const indexTs = join(designDir, 'index.ts');
+  if (force || !existsSync(indexTs)) {
+    writeFileSync(indexTs, `/**
+ * Design entry point
+ */
+import { mergeSpecs, loadYamlDir } from 'speckeeper';
+import { allModels } from './_models/index.ts';
+
+const yamlSpecs = loadYamlDir(import.meta.dirname, allModels);
+
+export default mergeSpecs(...yamlSpecs);
+`);
+    console.log(chalk.green('  Created: design/index.ts (yaml mode)'));
   }
 }

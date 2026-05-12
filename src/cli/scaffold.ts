@@ -20,6 +20,7 @@ export interface ScaffoldCommandOptions {
   output?: string;
   force?: boolean;
   dryRun?: boolean;
+  format?: 'ts' | 'yaml';
 }
 
 export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<void> {
@@ -69,7 +70,8 @@ export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<
     ? resolve(options.output)
     : join(process.cwd(), 'design');
 
-  const modelFiles = generateAllModelFiles(speckeeperNodes, resolved, flowchart.nodes);
+  const specFormat = options.format ?? 'ts';
+  const modelFiles = generateAllModelFiles(speckeeperNodes, resolved, flowchart.nodes, specFormat);
   const indexFile = generateModelsIndex(modelFiles);
 
   const allFiles: GeneratedFile[] = [...modelFiles, indexFile];

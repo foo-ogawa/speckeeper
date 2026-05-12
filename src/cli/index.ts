@@ -11,6 +11,7 @@ import { checkCommand } from './check.js';
 import { newCommand } from './new.js';
 import { impactCommand } from './impact.js';
 import { runInit } from './init.js';
+import { runConvert } from './convert.js';
 import { scaffoldCommand } from './scaffold.js';
 import { commandAuditRequirements } from './audit-requirements.js';
 import { commandProposeTraceLinks } from './propose-trace-links.js';
@@ -110,6 +111,7 @@ program
   .command('init')
   .description('Initialize a new speckeeper project with starter templates')
   .option('-f, --force', 'Overwrite existing files')
+  .option('--format <format>', 'Spec data format: ts (default) or yaml', 'ts')
   .action(runInit);
 
 // Scaffold command
@@ -120,7 +122,17 @@ program
   .option('-o, --output <path>', 'Output directory (default: design/)')
   .option('-f, --force', 'Overwrite existing files')
   .option('--dry-run', 'Preview generated files without writing')
+  .option('--format <format>', 'Spec data format: ts (default) or yaml', 'ts')
   .action(scaffoldCommand);
+
+// Convert command
+program
+  .command('convert')
+  .description('Convert a TS spec data file to YAML format')
+  .argument('<file>', 'Path to TS spec data file (e.g. design/glossary.ts)')
+  .option('-o, --output <path>', 'Output file path (default: same name with .yaml extension)')
+  .option('-n, --dry-run', 'Preview conversion without writing')
+  .action(runConvert);
 
 // ── LLM-powered commands ──────────────────────────────────────
 
