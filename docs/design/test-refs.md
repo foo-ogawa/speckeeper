@@ -12,6 +12,7 @@
 | TEST-023 | Impact command verification test | vitest | 1 |
 | TEST-024 | Drift command verification test | vitest | 1 |
 | TEST-025 | New command verification test | vitest | 1 |
+| TEST-026 | Scaffold integration verification test (mermaid parsing, class-based generation) | vitest | 1 |
 
 ---
 
@@ -254,5 +255,30 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-104-01 | `FR-104-01.*available model types header` | Outputs model types header when type omitted |
+
+---
+
+## TEST-026: Scaffold integration verification test (mermaid parsing, class-based generation)
+
+### Test Source
+
+- **Path**: `test/scaffold/integration.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-106
+
+### Implemented Command
+
+- CMD-SCAFFOLD
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-106-01 | `base template.*core factory|generated models.*base template` | Artifact class generates from base template |
+| FR-106-03 | `SR.*FR.*NFR.*map to requirement.*de-duplicated` | Same-class node aggregation into single model file |
+| FR-106-05 | `de-duplicated model files.*spec data` | Model file generation with naming conventions |
 
 ---

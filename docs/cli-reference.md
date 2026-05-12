@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.10.0
+**Version:** 0.10.1
 
 ## Table of Contents
 
@@ -15,6 +15,7 @@ TypeScript-first specification validation framework — validate design consiste
   - [new](#speckeeper-new)
   - [impact](#speckeeper-impact)
   - [scaffold](#speckeeper-scaffold)
+  - [convert](#speckeeper-convert)
   - [audit-requirements](#speckeeper-audit-requirements)
   - [propose-trace-links](#speckeeper-propose-trace-links)
   - [explain-impact](#speckeeper-explain-impact)
@@ -33,6 +34,15 @@ Requirements and design management framework with TypeScript DSL.
 | `--version` | -V | No |  | Print version and exit. |
 | `--help` | -h | No |  | Show help and exit. |
 
+### Environment Variables
+
+| Variable | Description |
+|---|---|
+| `CURSOR_API_KEY` | API key for Cursor SDK adapter. |
+| `GEMINI_API_KEY` | API key for Gemini adapter. |
+| `OPENAI_API_KEY` | API key for OpenAI adapter. |
+| `ANTHROPIC_API_KEY` | API key for Anthropic/Claude adapter. |
+
 ### init
 
 Initialize a new speckeeper project with starter templates.
@@ -47,12 +57,16 @@ speckeeper init
 ```
 speckeeper init --force
 ```
+```
+speckeeper init --format yaml
+```
 
 #### Options
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--force` | -F | No | `false` | Overwrite existing files. |
+| `--format` |  | No | `"ts"` | Spec data format: ts (default) or yaml. |
 
 #### Exit Codes
 
@@ -64,25 +78,13 @@ speckeeper init --force
 
 - **stderr:** format=`text`
 
-#### Extensions
-
-```yaml
-x-agent: 
-  riskLevel: medium
-  requiresConfirmation: true
-  idempotent: false
-  sideEffects: 
-    - file_write
-  sideEffectNote: Creates config file and design/ directory structure. With --force, overwrites existing files.
-```
-
 ---
 
 ### build
 
 Generate docs/ and specs/ from TypeScript models.
 
-Loads the design TypeScript models and generates machine-readable specs/ output and optionally human-readable docs/ output. Supports markdown, JSON, or both formats. Can watch for file changes and auto-regenerate.
+Loads the design TypeScript models and generates machine-readable specs/ output and optionally human-readable docs/ output. Supports markdown, JSON, or both formats.
 
 **Usage:**
 
@@ -93,7 +95,7 @@ speckeeper build
 speckeeper build --format json --output ./out
 ```
 ```
-speckeeper build --watch --verbose
+speckeeper build --verbose
 ```
 
 #### Options
@@ -116,25 +118,13 @@ speckeeper build --watch --verbose
 
 - **stderr:** format=`text`
 
-#### Extensions
-
-```yaml
-x-agent: 
-  riskLevel: low
-  requiresConfirmation: false
-  idempotent: true
-  sideEffects: 
-    - file_write
-  sideEffectNote: When --watch is used, the process runs indefinitely and is unsuitable for non-interactive agent invocation. Always writes generated files to docs/ and specs/.
-```
-
 ---
 
 ### lint
 
 Check design integrity (ID duplicates, references, layer violations, etc.).
 
-Validates design models for structural integrity. Checks include ID uniqueness, ID naming conventions, reference integrity, circular dependency detection, phase gate enforcement, and custom model-specific lint rules. Optionally auto-fixes issues.
+Validates design models for structural integrity. Checks include ID uniqueness, ID naming conventions, reference integrity, circular dependency detection, phase gate enforcement, and custom model-specific lint rules.
 
 **Usage:**
 
@@ -145,7 +135,7 @@ speckeeper lint
 speckeeper lint --strict --format github
 ```
 ```
-speckeeper lint --phase HLD --fix
+speckeeper lint --phase HLD
 ```
 
 #### Options
@@ -155,12 +145,12 @@ speckeeper lint --phase HLD --fix
 | `--config` | -c | No |  | Path to config file. |
 | `--phase` | -p | No |  | Phase gate to check against: REQ, HLD, LLD, OPS. |
 | `--strict` | -s | No | `false` | Treat warnings as errors. |
-| `--fix` |  | No | `false` | Attempt to fix auto-fixable issues. |
+| `--fix` |  | No | `false` | Attempt to fix auto-fixable issues (not yet implemented). |
 | `--format` | -f | No | `"text"` | Output format: text, json, github. |
 
 #### Exit Codes
 
-**Exit 0:** No lint issues found (or all issues auto-fixed).
+**Exit 0:** No lint issues found.
 
 - **stdout:** format=`{options.format}`
 
@@ -172,13 +162,7 @@ speckeeper lint --phase HLD --fix
 
 ```yaml
 x-agent: 
-  riskLevel: low
-  requiresConfirmation: false
   idempotent: true
-  sideEffects: 
-    - file_write
-  sideEffectNote: file_write applies only when --fix is provided. Without --fix the command is read-only.
-  safeDryRunOption: Omit --fix to run in read-only mode.
 ```
 
 ---
@@ -187,7 +171,7 @@ x-agent:
 
 Check if generated files have been manually edited.
 
-Compares generated files against their expected content to detect manual edits (drift). Useful for CI pipelines to ensure generated docs/ files stay in sync with model definitions. Can auto-update drifted files.
+Compares generated files against their expected content to detect manual edits (drift). Useful for CI pipelines to ensure generated docs/ files stay in sync with model definitions.
 
 **Usage:**
 
@@ -197,26 +181,23 @@ speckeeper drift
 ```
 speckeeper drift --fail-on-drift
 ```
-```
-speckeeper drift --update --format diff
-```
 
 #### Options
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
-| `--update` | -u | No | `false` | Auto-update if differences are found. |
+| `--update` | -u | No | `false` | Auto-update if differences are found (not yet implemented). |
 | `--format` | -f | No | `"text"` | Output format: text, json, diff. |
 | `--fail-on-drift` |  | No | `false` | Exit with code 1 if drift is detected (for CI). |
 
 #### Exit Codes
 
-**Exit 0:** No drift detected (or drift auto-updated with --update).
+**Exit 0:** No drift detected.
 
 - **stdout:** format=`{options.format}`
 
-**Exit 1:** Drift detected (with --fail-on-drift), or update failed.
+**Exit 1:** Drift detected (with --fail-on-drift).
 
 - **stdout:** format=`{options.format}`
 
@@ -224,13 +205,7 @@ speckeeper drift --update --format diff
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: true
   idempotent: true
-  sideEffects: 
-    - file_write
-  sideEffectNote: file_write applies only when --update is provided. Without --update the command is read-only.
-  safeDryRunOption: Omit --update to run in read-only mode.
 ```
 
 ---
@@ -239,7 +214,7 @@ x-agent:
 
 Check external SSOT conformance (including custom models).
 
-Validates specifications against actual implementation artifacts using a global source scan. Performs existence checks (is the spec ID found in configured sources?), optional structural checks (via deep validation), and optional type checks. Sources include OpenAPI, DDL, annotations, and custom scanners. Supports filtering by check type and test coverage reporting.
+Validates specifications against actual implementation artifacts using a global source scan. Performs existence checks, optional structural checks (via deep validation), and optional type checks. Sources include OpenAPI, DDL, annotations, and custom scanners.
 
 **Usage:**
 
@@ -252,15 +227,12 @@ speckeeper check external-ssot --verbose
 ```
 speckeeper check test --coverage
 ```
-```
-speckeeper check openapi --strict
-```
 
 #### Arguments
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | No | Type of check to run. Filters sources by type. When omitted, checks all configured sources. |
+| `type` | No | Type of check to run. Filters sources by type. |
 
 #### Options
 
@@ -268,29 +240,24 @@ speckeeper check openapi --strict
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
 | `--strict` |  | No | `false` | Treat warnings as errors. |
-| `--verbose` | -v | No | `false` | Show detailed output (e.g. list unmatched specs). |
+| `--verbose` | -v | No | `false` | Show detailed output. |
 | `--coverage` |  | No | `false` | Check if all testable acceptance criteria are covered by TestRefs. |
-| `--format` | -f | No | `"text"` | Output format: text, json, github. |
 
 #### Exit Codes
 
-**Exit 0:** All checks passed (all specs found in sources, deep validation passed).
+**Exit 0:** All checks passed.
 
-- **stdout:** format=`{options.format}`
+- **stdout:** format=`text`
 
-**Exit 1:** Check failures found (missing specs, structural mismatches, or coverage gaps).
+**Exit 1:** Check failures found.
 
-- **stdout:** format=`{options.format}`
+- **stdout:** format=`text`
 
 #### Extensions
 
 ```yaml
 x-agent: 
-  riskLevel: low
-  requiresConfirmation: false
   idempotent: true
-  sideEffects: 
-
 ```
 
 ---
@@ -299,7 +266,7 @@ x-agent:
 
 Create a new element with auto-generated ID.
 
-Generates a new design element file with a unique auto-generated ID based on the model's ID prefix and existing elements. Supports all built-in model types and uses templates for file generation.
+Generates a new design element file with a unique auto-generated ID based on the model's ID prefix and existing elements.
 
 **Usage:**
 
@@ -307,17 +274,14 @@ Generates a new design element file with a unique auto-generated ID based on the
 speckeeper new requirement --name "User Authentication"
 ```
 ```
-speckeeper new entity --kind functional
-```
-```
-speckeeper new usecase --template custom-template.ts
+speckeeper new entity
 ```
 
 #### Arguments
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | Yes | Element type to create: requirement, usecase, entity, component, screen, flow, error-case, term. |
+| `type` | Yes | Element type to create. |
 
 #### Options
 
@@ -327,30 +291,17 @@ speckeeper new usecase --template custom-template.ts
 | `--name` | -n | No |  | Name of the element. |
 | `--output` | -o | No |  | Output directory path. |
 | `--template` | -t | No |  | Path to template file. |
-| `--dry-run` |  | No | `false` | Preview generated file content and ID without writing to disk. |
+| `--dry-run` |  | No | `false` | Preview generated file content without writing. |
 
 #### Exit Codes
 
-**Exit 0:** Element file created (or previewed with --dry-run) with auto-generated ID.
+**Exit 0:** Element file created (or previewed with --dry-run).
 
 - **stdout:** format=`text`
 
-**Exit 1:** Creation failed (invalid type, template error, or write error).
+**Exit 1:** Creation failed.
 
 - **stderr:** format=`text`
-
-#### Extensions
-
-```yaml
-x-agent: 
-  riskLevel: low
-  requiresConfirmation: false
-  idempotent: false
-  sideEffects: 
-    - file_write
-  sideEffectNote: Creates a new TypeScript spec file with auto-generated ID. With --dry-run, only previews the generated content without writing.
-  safeDryRunOption: --dry-run
-```
 
 ---
 
@@ -358,7 +309,7 @@ x-agent:
 
 Analyze impact of changes to an ID.
 
-Performs change impact analysis by traversing the relation graph starting from the specified spec ID. Shows upstream (dependants) and/or downstream (dependencies) elements up to the configured depth. Supports text, JSON, and Mermaid diagram output.
+Performs change impact analysis by traversing the relation graph starting from the specified spec ID.
 
 **Usage:**
 
@@ -366,7 +317,7 @@ Performs change impact analysis by traversing the relation graph starting from t
 speckeeper impact FR-001
 ```
 ```
-speckeeper impact ENT-ORDER --direction upstream --depth 5
+speckeeper impact ENT-ORDER --depth 5
 ```
 ```
 speckeeper impact COMP-AUTH --format mermaid
@@ -376,7 +327,7 @@ speckeeper impact COMP-AUTH --format mermaid
 
 | Name | Required | Description |
 |---|---|---|
-| `id` | Yes | Spec ID to analyze (e.g. REQ-001, ENT-ORDER, COMP-AUTH). |
+| `id` | Yes | Spec ID to analyze (e.g. REQ-001, ENT-ORDER). |
 
 #### Options
 
@@ -389,7 +340,7 @@ speckeeper impact COMP-AUTH --format mermaid
 
 #### Exit Codes
 
-**Exit 0:** Impact analysis completed and displayed.
+**Exit 0:** Impact analysis completed.
 
 - **stdout:** format=`{options.format}`
 
@@ -401,11 +352,7 @@ speckeeper impact COMP-AUTH --format mermaid
 
 ```yaml
 x-agent: 
-  riskLevel: low
-  requiresConfirmation: false
   idempotent: true
-  sideEffects: 
-
 ```
 
 ---
@@ -414,7 +361,7 @@ x-agent:
 
 Generate _models/ from a Mermaid flowchart definition.
 
-Parses a Mermaid flowchart from a Markdown file and generates TypeScript model classes, spec data files, and an index file in the design directory. Uses class-based artifact resolution to determine model types from Mermaid node classes.
+Parses a Mermaid flowchart from a Markdown file and generates TypeScript model classes, spec data files, and an index file.
 
 **Usage:**
 
@@ -427,6 +374,9 @@ speckeeper scaffold --source flow.md --output design/ --force
 ```
 speckeeper scaffold --source arch.md --dry-run
 ```
+```
+speckeeper scaffold --source arch.md --format yaml
+```
 
 #### Options
 
@@ -436,14 +386,15 @@ speckeeper scaffold --source arch.md --dry-run
 | `--output` | -o | No | `"design/"` | Output directory. |
 | `--force` | -F | No | `false` | Overwrite existing files. |
 | `--dry-run` |  | No | `false` | Preview generated files without writing. |
+| `--format` |  | No | `"ts"` | Spec data format: ts (default) or yaml. |
 
 #### Exit Codes
 
-**Exit 0:** Model files generated (or previewed with --dry-run) successfully.
+**Exit 0:** Model files generated (or previewed with --dry-run).
 
 - **stdout:** format=`text`
 
-**Exit 1:** Scaffold failed (source file not found, invalid Mermaid syntax, or write error).
+**Exit 1:** Scaffold failed.
 
 - **stderr:** format=`text`
 
@@ -451,14 +402,52 @@ speckeeper scaffold --source arch.md --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: high
-  requiresConfirmation: true
-  idempotent: false
-  sideEffects: 
-    - file_write
-  sideEffectNote: --force overwrites existing TypeScript model source files.
-  safeDryRunOption: --dry-run
+  recommendedBeforeUse: 
+    - Run with --dry-run first to preview generated files
 ```
+
+---
+
+### convert
+
+Convert a TS spec data file to YAML format.
+
+Reads a TypeScript spec data file that exports a SpecModule via defineSpecs(), extracts model IDs and spec data, and writes the equivalent YAML file. Supports --dry-run for preview.
+
+**Usage:**
+
+```
+speckeeper convert design/glossary.ts
+```
+```
+speckeeper convert design/requirements.ts --output reqs.yaml
+```
+```
+speckeeper convert design/glossary.ts --dry-run
+```
+
+#### Arguments
+
+| Name | Required | Description |
+|---|---|---|
+| `file` | Yes | Path to TS spec data file. |
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--output` | -o | No |  | Output file path (default: same name with .yaml extension). |
+| `--dry-run` | -n | No | `false` | Preview conversion without writing. |
+
+#### Exit Codes
+
+**Exit 0:** Conversion completed (or previewed with --dry-run).
+
+- **stdout:** format=`text`
+
+**Exit 1:** Conversion failed (file not found, invalid module, or write error).
+
+- **stderr:** format=`text`
 
 ---
 
@@ -466,7 +455,7 @@ x-agent:
 
 Run LLM-based requirement quality audit.
 
-Performs semantic analysis of design specs using LLM to identify quality issues that static lint cannot detect. Evaluates verifiability, ambiguity, granularity, terminology consistency, and design-mixing. Requires agent-contracts-runtime as an optional peer dependency.
+Performs semantic analysis of design specs using LLM to identify quality issues that static lint cannot detect.
 
 **Usage:**
 
@@ -523,15 +512,8 @@ speckeeper audit-requirements --report-format json --output audit.json
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: false
-  idempotent: true
-  sideEffects: 
-    - network
-    - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
-  safeDryRunOption: --dry-run
-  expectedDurationMs: 120000
+  recommendedBeforeUse: 
+    - Run with --dry-run first to preview the prompt
   retryableExitCodes: 
     - 12
 ```
@@ -542,7 +524,7 @@ x-agent:
 
 LLM-based traceability link proposal.
 
-Analyzes spec definitions and external source scan results to propose candidate traceability links between specs and implementation artifacts. Each link includes a confidence score and rationale.
+Analyzes spec definitions and external source scan results to propose candidate traceability links.
 
 **Usage:**
 
@@ -551,9 +533,6 @@ speckeeper propose-trace-links
 ```
 ```
 speckeeper propose-trace-links --adapter claude --report-format json
-```
-```
-speckeeper propose-trace-links --dry-run
 ```
 
 #### Options
@@ -599,15 +578,8 @@ speckeeper propose-trace-links --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: false
-  idempotent: true
-  sideEffects: 
-    - network
-    - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
-  safeDryRunOption: --dry-run
-  expectedDurationMs: 120000
+  recommendedBeforeUse: 
+    - Run with --dry-run first to preview the prompt
   retryableExitCodes: 
     - 12
 ```
@@ -618,7 +590,7 @@ x-agent:
 
 LLM-based explanation of impact analysis output.
 
-Reads JSON output from speckeeper impact on stdin and generates a human-readable explanation suitable for PM/executive audiences. Includes affected artifact categorization, test considerations, and release risk assessment.
+Reads JSON output from speckeeper impact on stdin and generates a human-readable explanation.
 
 **Usage:**
 
@@ -633,7 +605,6 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
-| `--config` | -c | No |  | Path to config file. |
 | `--adapter` | -a | No |  | SDK adapter to use for LLM execution. |
 | `--model` |  | No |  | LLM model override. |
 | `--dry-run` | -n | No | `false` | Output the constructed prompt without calling LLM. |
@@ -652,11 +623,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 - **stderr:** format=`text`
 
-**Exit 2:** Configuration or input error.
-
-- **stderr:** format=`text`
-
-**Exit 3:** No input on stdin.
+**Exit 2:** No input on stdin.
 
 - **stderr:** format=`text`
 
@@ -676,15 +643,8 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: false
-  idempotent: true
-  sideEffects: 
-    - network
-    - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
-  safeDryRunOption: --dry-run
-  expectedDurationMs: 120000
+  recommendedBeforeUse: 
+    - Run with --dry-run first to preview the prompt
   retryableExitCodes: 
     - 12
 ```
@@ -695,7 +655,7 @@ x-agent:
 
 LLM-based acceptance criteria proposal.
 
-Analyzes design specs and proposes testable acceptance criteria for each target spec. Optionally takes spec IDs as arguments to scope the proposal. Criteria are proposed in Given/When/Then or verification format.
+Analyzes design specs and proposes testable acceptance criteria.
 
 **Usage:**
 
@@ -758,15 +718,8 @@ speckeeper propose-acceptance-criteria --adapter gemini --dry-run
 
 ```yaml
 x-agent: 
-  riskLevel: medium
-  requiresConfirmation: false
-  idempotent: true
-  sideEffects: 
-    - network
-    - file_write
-  sideEffectNote: Network calls to LLM provider when adapter is not mock. Filesystem write when --output is specified. Exit 10 = valid output with blocking findings (stdout contains result). Exit 11 = missing runtime dependency (non-retryable).
-  safeDryRunOption: --dry-run
-  expectedDurationMs: 120000
+  recommendedBeforeUse: 
+    - Run with --dry-run first to preview the prompt
   retryableExitCodes: 
     - 12
 ```

@@ -267,17 +267,17 @@ class CLICommandModel extends Model<typeof CLICommandSchema> {
 
   protected externalChecker: ExternalChecker<CLICommand> = {
     targetType: 'typescript',
-    sourcePath: () => 'src/cli/index.ts',
+    sourcePath: () => 'src/generated/program.ts',
     check: (spec): CheckResult => {
-      const cliIndexPath = join(process.cwd(), 'src/cli/index.ts');
-      return checkCLICommand(spec, cliIndexPath);
+      const programPath = join(process.cwd(), 'src/generated/program.ts');
+      return checkCLICommand(spec, programPath);
     },
   };
 
   override lintAll(specs: CLICommand[]): import('../../src/core/model.ts').LintResult[] {
     const results = super.lintAll(specs);
-    const cliIndexPath = join(process.cwd(), 'src/cli/index.ts');
-    const implementations = parseCommanderCLI(cliIndexPath);
+    const programPath = join(process.cwd(), 'src/generated/program.ts');
+    const implementations = parseCommanderCLI(programPath);
     for (const [cmdName] of implementations) {
       const hasSpec = specs.some(s => s.name === cmdName);
       if (!hasSpec) {

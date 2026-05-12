@@ -13,6 +13,7 @@
 | propose-trace-links | Propose candidate traceability links between specs with confidence scores and rationale |
 | explain-impact | Translate impact analysis JSON (from stdin) into human-readable explanation for PM/executive audiences |
 | propose-acceptance-criteria | Propose testable acceptance criteria in Given/When/Then format for specified specs |
+| convert | Convert a TS spec data file to YAML format |
 | impact | Analyze the change impact scope of a specified ID |
 
 ---
@@ -471,6 +472,41 @@ speckeeper propose-acceptance-criteria --adapter gemini --dry-run
 | 10 | Completed with blocking findings |
 | 11 | Runtime dependency missing |
 | 12 | LLM provider or adapter error |
+
+---
+
+## CMD-CONVERT: convert
+
+Convert a TS spec data file to YAML format
+
+### Usage
+
+```bash
+speckeeper convert [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| <file> | argument | path | ✓ | - | Path to TS spec data file |
+| -o, --output | option | path |  | - | Output file path (default: same name with .yaml extension) |
+| -n, --dry-run | option | boolean |  | false | Preview conversion without writing |
+
+### Examples
+
+```bash
+speckeeper convert design/glossary.ts
+speckeeper convert design/requirements.ts --output reqs.yaml
+speckeeper convert design/glossary.ts --dry-run
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Conversion successful |
+| 1 | Conversion error |
 
 ---
 

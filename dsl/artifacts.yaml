@@ -6,7 +6,8 @@ spec-definitions:
     input for all LLM review tasks.
   owner: spec-quality-reviewer
   producers: []
-  editors: []
+  editors:
+    - spec-quality-reviewer
   consumers:
     - spec-quality-reviewer
   states: [draft, reviewed]
@@ -23,7 +24,8 @@ agent-review-output:
   owner: spec-quality-reviewer
   producers:
     - spec-quality-reviewer
-  editors: []
+  editors:
+    - spec-quality-reviewer
   consumers: []
   states: [generated, validated]
   required_validations:

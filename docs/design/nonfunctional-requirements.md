@@ -214,15 +214,15 @@ To ensure all acceptance criteria are covered by test cases and maintain spec-te
 
 **Type**: non-functional | **Priority**: must | **Category**: testability
 
-CLI command definitions in design/cli-commands.ts match actual implementation in src/cli/index.ts
+CLI command definitions in design/cli-commands.ts match cli-contract.yaml and generated code in src/generated/
 
 ### Rationale
 
-To ensure specification and implementation stay synchronized (e.g., no missing --config parameters)
+To ensure specification, DSL contract, and generated implementation stay synchronized
 
 ### Acceptance Criteria
 
-- **NFR-014-01**: All command definitions in design/cli-commands.ts match implementation (parameters, subcommands, exit codes) [test]
+- **NFR-014-01**: All command definitions in design/cli-commands.ts match cli-contract.yaml and generated code (parameters, subcommands, exit codes) [test]
 
 ---
 

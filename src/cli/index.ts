@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createProgram, type CommandHandlers } from '../generated/program.js';
 import { buildCommand } from './build.js';
 import { lintCommand } from './lint.js';
 import { driftCommand } from './drift.js';
@@ -11,11 +11,19 @@ import { checkCommand } from './check.js';
 import { newCommand } from './new.js';
 import { impactCommand } from './impact.js';
 import { runInit } from './init.js';
+import { runConvert } from './convert.js';
 import { scaffoldCommand } from './scaffold.js';
 import { commandAuditRequirements } from './audit-requirements.js';
 import { commandProposeTraceLinks } from './propose-trace-links.js';
 import { commandExplainImpact } from './explain-impact-result.js';
 import { commandProposeAcceptanceCriteria } from './propose-acceptance-criteria.js';
+import type { InitOptions } from './init.js';
+import type { BuildCommandOptions } from './build.js';
+import type { LintCommandOptions } from './lint.js';
+import type { DriftCommandOptions } from './drift.js';
+import type { CheckCommandOptions } from './check.js';
+import type { ImpactCommandOptions } from './impact.js';
+import type { ScaffoldCommandOptions } from './scaffold.js';
 
 function getVersion(): string {
   try {
@@ -27,188 +35,77 @@ function getVersion(): string {
   }
 }
 
-const program = new Command();
+const handlers: CommandHandlers = {
+  init: async (opts) => {
+    await runInit(opts as InitOptions);
+  },
+  build: async (opts) => {
+    await buildCommand(opts as BuildCommandOptions);
+  },
+  lint: async (opts) => {
+    await lintCommand(opts as LintCommandOptions);
+  },
+  drift: async (opts) => {
+    await driftCommand(opts as DriftCommandOptions);
+  },
+  check: async (type, opts) => {
+    await checkCommand(type, opts as CheckCommandOptions);
+  },
+  new: async (type, opts) => {
+    await newCommand({ type, output: opts.output, dryRun: opts.dryRun });
+  },
+  impact: async (id, opts) => {
+    await impactCommand(id!, opts as ImpactCommandOptions);
+  },
+  scaffold: async (opts) => {
+    await scaffoldCommand(opts as ScaffoldCommandOptions);
+  },
+  convert: async (file, opts) => {
+    await runConvert(file!, opts);
+  },
+  auditRequirements: async (opts) => {
+    await commandAuditRequirements({
+      config: opts.config,
+      adapter: opts.adapter,
+      model: opts.model,
+      dryRun: opts.dryRun,
+      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+      output: opts.output,
+      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+    });
+  },
+  proposeTraceLinks: async (opts) => {
+    await commandProposeTraceLinks({
+      config: opts.config,
+      adapter: opts.adapter,
+      model: opts.model,
+      dryRun: opts.dryRun,
+      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+      output: opts.output,
+      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+    });
+  },
+  explainImpact: async (opts) => {
+    await commandExplainImpact({
+      adapter: opts.adapter,
+      model: opts.model,
+      dryRun: opts.dryRun,
+      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+      output: opts.output,
+      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+    });
+  },
+  proposeAcceptanceCriteria: async (specIds, opts) => {
+    await commandProposeAcceptanceCriteria(specIds, {
+      config: opts.config,
+      adapter: opts.adapter,
+      model: opts.model,
+      dryRun: opts.dryRun,
+      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
+      output: opts.output,
+      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+    });
+  },
+};
 
-program
-  .name('speckeeper')
-  .description('Requirements and design management framework with TypeScript DSL')
-  .version(getVersion());
-
-// Build command
-// Spec: design/cli-commands.ts CMD-BUILD
-program
-  .command('build')
-  .description('Generate docs/ and specs/ from TypeScript models')
-  .option('-c, --config <path>', 'Path to config file')
-  .option('-o, --output <path>', 'Base output directory path', '.')
-  .option('-f, --format <format>', 'Output format: markdown, json, both', 'both')
-  .option('-w, --watch', 'Watch for changes and auto-regenerate')
-  .option('-v, --verbose', 'Show detailed output')
-  .action(buildCommand);
-
-// Lint command
-// Spec: design/cli-commands.ts CMD-LINT
-program
-  .command('lint')
-  .description('Check design integrity (ID duplicates, references, layer violations, etc.)')
-  .option('-c, --config <path>', 'Path to config file')
-  .option('-p, --phase <phase>', 'Phase gate to check against (REQ, HLD, LLD, OPS)')
-  .option('-s, --strict', 'Treat warnings as errors')
-  .option('--fix', 'Attempt to fix auto-fixable issues')
-  .option('-f, --format <format>', 'Output format: text, json, github', 'text')
-  .action(lintCommand);
-
-// Drift command
-// Spec: design/cli-commands.ts CMD-DRIFT
-program
-  .command('drift')
-  .description('Check if generated files have been manually edited')
-  .option('-c, --config <path>', 'Path to config file')
-  .option('-u, --update', 'Auto-update if differences are found')
-  .option('-f, --format <format>', 'Output format: text, json, diff', 'text')
-  .option('--fail-on-drift', 'Exit with code 1 if drift is detected (for CI)')
-  .action(driftCommand);
-
-// Check command
-// Spec: design/cli-commands.ts CMD-CHECK
-program
-  .command('check')
-  .description('Check external SSOT conformance (including custom models)')
-  .argument('[type]', 'Type of check: external-ssot, openapi, ddl, iac, custom, all, test')
-  .option('-c, --config <path>', 'Path to config file')
-  .option('--strict', 'Treat warnings as errors')
-  .option('-v, --verbose', 'Show detailed output')
-  .option('--coverage', 'Check if all testable acceptance criteria are covered by TestRefs')
-  .action(checkCommand);
-
-// New command
-// Spec: design/cli-commands.ts CMD-NEW
-program
-  .command('new')
-  .description('Create a new element with auto-generated ID')
-  .argument('<type>', 'Type: requirement, usecase, entity, component, screen, flow, error-case, term')
-  .option('-k, --kind <kind>', 'Sub-kind (e.g., functional, non-functional for requirements)')
-  .option('-n, --name <name>', 'Name of the element')
-  .option('-o, --output <path>', 'Output directory path')
-  .option('-t, --template <path>', 'Path to template file')
-  .action(newCommand);
-
-// Impact command
-// Spec: design/cli-commands.ts CMD-IMPACT
-program
-  .command('impact')
-  .description('Analyze impact of changes to an ID')
-  .argument('<id>', 'ID to analyze (e.g., REQ-001, ENT-ORDER)')
-  .option('-c, --config <path>', 'Path to config file')
-  .option('-d, --depth <depth>', 'Analysis depth (reference tracking level)', '3')
-  .option('--direction <direction>', 'Analysis direction: upstream, downstream, both', 'both')
-  .option('-f, --format <format>', 'Output format: text, json, mermaid', 'text')
-  .action(impactCommand);
-
-// Init command
-program
-  .command('init')
-  .description('Initialize a new speckeeper project with starter templates')
-  .option('-f, --force', 'Overwrite existing files')
-  .action(runInit);
-
-// Scaffold command
-program
-  .command('scaffold')
-  .description('Generate _models/ from a mermaid flowchart definition')
-  .requiredOption('-s, --source <path>', 'Path to Markdown file containing mermaid flowchart')
-  .option('-o, --output <path>', 'Output directory (default: design/)')
-  .option('-f, --force', 'Overwrite existing files')
-  .option('--dry-run', 'Preview generated files without writing')
-  .action(scaffoldCommand);
-
-// ── LLM-powered commands ──────────────────────────────────────
-
-const llmOptions = (cmd: Command) => cmd
-  .option('-a, --adapter <name>', 'SDK adapter (cursor, claude, openai, gemini, mock)')
-  .option('--model <name>', 'LLM model override')
-  .option('-n, --dry-run', 'Output prompt without calling LLM')
-  .option('--fail-on <level>', 'Minimum severity for non-zero exit (warning, error, critical)', 'error')
-  .option('-o, --output <file>', 'Write result to a file instead of stdout')
-  .option('--report-format <fmt>', 'Output format (json, text, yaml)', 'text');
-
-llmOptions(
-  program
-    .command('audit-requirements')
-    .description('LLM-based requirement quality audit')
-    .option('-c, --config <path>', 'Path to config file'),
-).action((opts: {
-  config?: string; adapter?: string; model?: string; dryRun?: boolean;
-  failOn?: string; output?: string; reportFormat?: string;
-}) => {
-  commandAuditRequirements({
-    config: opts.config,
-    adapter: opts.adapter,
-    model: opts.model,
-    dryRun: opts.dryRun,
-    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-    output: opts.output,
-    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-  });
-});
-
-llmOptions(
-  program
-    .command('propose-trace-links')
-    .description('LLM-based traceability link proposal')
-    .option('-c, --config <path>', 'Path to config file'),
-).action((opts: {
-  config?: string; adapter?: string; model?: string; dryRun?: boolean;
-  failOn?: string; output?: string; reportFormat?: string;
-}) => {
-  commandProposeTraceLinks({
-    config: opts.config,
-    adapter: opts.adapter,
-    model: opts.model,
-    dryRun: opts.dryRun,
-    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-    output: opts.output,
-    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-  });
-});
-
-llmOptions(
-  program
-    .command('explain-impact')
-    .description('LLM-based explanation of impact analysis output'),
-).action((opts: {
-  adapter?: string; model?: string; dryRun?: boolean;
-  failOn?: string; output?: string; reportFormat?: string;
-}) => {
-  commandExplainImpact({
-    adapter: opts.adapter,
-    model: opts.model,
-    dryRun: opts.dryRun,
-    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-    output: opts.output,
-    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-  });
-});
-
-llmOptions(
-  program
-    .command('propose-acceptance-criteria [specIds...]')
-    .description('LLM-based acceptance criteria proposal')
-    .option('-c, --config <path>', 'Path to config file'),
-).action((specIds: string[], opts: {
-  config?: string; adapter?: string; model?: string; dryRun?: boolean;
-  failOn?: string; output?: string; reportFormat?: string;
-}) => {
-  commandProposeAcceptanceCriteria(specIds, {
-    config: opts.config,
-    adapter: opts.adapter,
-    model: opts.model,
-    dryRun: opts.dryRun,
-    failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-    output: opts.output,
-    reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-  });
-});
-
-// Parse arguments
-program.parse();
+createProgram(handlers, getVersion()).parse();

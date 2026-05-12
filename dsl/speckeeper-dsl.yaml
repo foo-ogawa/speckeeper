@@ -86,13 +86,15 @@ workflow:
       - type: delegate
         task: audit-requirement-quality
         from_agent: spec-quality-reviewer
-    x-exit-conditions:
-      success:
-        - RequirementAuditResult is produced and passes schema validation
-      failure:
-        - Output schema validation fails — stop_and_report
-        - No specs found in configuration — stop_and_report
-        - LLM adapter returns an error — stop_and_report
+        max_retries: 1
+        description: >-
+          Execute LLM-based requirement audit.
+          Retries once on adapter error (exit 12).
+      - type: gate
+        gate_kind: requirement-audit-result
+        description: >-
+          Block if RequirementAuditResult fails schema validation
+          or no specs were found in configuration (stop_and_report).
 
   trace-link-proposal:
     description: Propose candidate traceability links between specs and external artifacts
@@ -103,13 +105,15 @@ workflow:
       - type: delegate
         task: propose-trace-links
         from_agent: spec-quality-reviewer
-    x-exit-conditions:
-      success:
-        - TraceLinkResult is produced and passes schema validation
-      failure:
-        - Output schema validation fails — stop_and_report
-        - No specs found in configuration — stop_and_report
-        - LLM adapter returns an error — stop_and_report
+        max_retries: 1
+        description: >-
+          Execute LLM-based trace link analysis.
+          Retries once on adapter error (exit 12).
+      - type: gate
+        gate_kind: trace-link-result
+        description: >-
+          Block if TraceLinkResult fails schema validation
+          or no specs were found in configuration (stop_and_report).
 
   impact-explanation:
     description: Explain impact analysis results in human-readable form
@@ -120,13 +124,15 @@ workflow:
       - type: delegate
         task: explain-impact-result
         from_agent: spec-quality-reviewer
-    x-exit-conditions:
-      success:
-        - ImpactExplainResult is produced and passes schema validation
-      failure:
-        - Stdin is empty or contains invalid JSON — stop_and_report
-        - Output schema validation fails — stop_and_report
-        - LLM adapter returns an error — stop_and_report
+        max_retries: 1
+        description: >-
+          Execute LLM-based impact explanation.
+          Retries once on adapter error (exit 12).
+      - type: gate
+        gate_kind: impact-explain-result
+        description: >-
+          Block if ImpactExplainResult fails schema validation
+          or stdin was empty/invalid (stop_and_report).
 
   acceptance-proposal:
     description: Propose acceptance criteria drafts for specs
@@ -137,10 +143,12 @@ workflow:
       - type: delegate
         task: propose-acceptance-criteria
         from_agent: spec-quality-reviewer
-    x-exit-conditions:
-      success:
-        - AcceptanceCriteriaResult is produced and passes schema validation
-      failure:
-        - Output schema validation fails — stop_and_report
-        - No specs found in configuration — stop_and_report
-        - LLM adapter returns an error — stop_and_report
+        max_retries: 1
+        description: >-
+          Execute LLM-based acceptance criteria proposal.
+          Retries once on adapter error (exit 12).
+      - type: gate
+        gate_kind: acceptance-criteria-result
+        description: >-
+          Block if AcceptanceCriteriaResult fails schema validation
+          or no specs were found in configuration (stop_and_report).

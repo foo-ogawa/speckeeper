@@ -51,6 +51,11 @@
 | FR-1017 | Source Path Fallback | must | check |
 | FR-1018 | Minimal New Dependencies | must | check |
 | FR-1019 | Checker Documentation Accuracy | must | check |
+| FR-1100 | LLM-Powered Requirement Audit | should | llm |
+| FR-1101 | LLM-Powered Trace Link Proposal | should | llm |
+| FR-1102 | LLM-Powered Impact Explanation | should | llm |
+| FR-1103 | LLM-Powered Acceptance Criteria Proposal | should | llm |
+| FR-1104 | TypeScript to YAML Conversion | should | conversion |
 
 ---
 
@@ -395,8 +400,8 @@ Since consistency checks are implemented per model, filter by model name
 ### Acceptance Criteria
 
 - **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: speckeeper check --model <model-name> checks only specific model [test]
-- **FR-602-03**: Model name is the model ID defined in design/_models/ [review]
+- **FR-602-02**: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract) [test]
+- **FR-602-03**: Type argument corresponds to check categories, not model IDs [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
 ---
@@ -808,3 +813,96 @@ README and scaffold-mermaid-spec.md accurately describe all three built-in check
 
 - **FR-1019-01**: README checker table describes validation levels [review]
 - **FR-1019-02**: scaffold-mermaid-spec.md Section 7 describes validation levels [review]
+
+---
+
+## FR-1100: LLM-Powered Requirement Audit
+
+**Type**: functional | **Priority**: should | **Category**: llm
+
+Provide LLM-based semantic quality audit for requirement definitions, detecting verifiability issues, ambiguity, granularity problems, terminology inconsistency, and design-mixing
+
+### Rationale
+
+Static lint rules cannot detect semantic issues such as ambiguous wording or design details mixed into requirements; LLM review complements structural checks
+
+### Acceptance Criteria
+
+- **FR-1100-01**: audit-requirements command constructs a prompt from all registered specs and sends it to configured LLM adapter [test]
+- **FR-1100-02**: Audit report includes findings with severity (error/warning/info) and affected spec IDs [test]
+- **FR-1100-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+- **FR-1100-04**: --fail-on controls minimum severity that causes non-zero exit [test]
+- **FR-1100-05**: Report format is selectable via --report-format (json, text, yaml) [test]
+
+---
+
+## FR-1101: LLM-Powered Trace Link Proposal
+
+**Type**: functional | **Priority**: should | **Category**: llm
+
+Propose candidate traceability links between specs with confidence scores and rationale using LLM analysis
+
+### Rationale
+
+Manual traceability maintenance is error-prone; LLM can identify semantically related specs that humans may overlook
+
+### Acceptance Criteria
+
+- **FR-1101-01**: propose-trace-links command analyzes all specs and proposes missing trace links [test]
+- **FR-1101-02**: Each proposed link includes source ID, target ID, relation type, confidence score, and rationale [test]
+- **FR-1101-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+
+---
+
+## FR-1102: LLM-Powered Impact Explanation
+
+**Type**: functional | **Priority**: should | **Category**: llm
+
+Translate impact analysis JSON output into human-readable explanation for PM/executive audiences using LLM
+
+### Rationale
+
+Raw impact analysis JSON is not consumable by non-technical stakeholders; LLM can generate natural language summaries
+
+### Acceptance Criteria
+
+- **FR-1102-01**: explain-impact command reads impact analysis JSON from stdin [test]
+- **FR-1102-02**: Output is a human-readable explanation suitable for PM/executive audiences [review]
+- **FR-1102-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+
+---
+
+## FR-1103: LLM-Powered Acceptance Criteria Proposal
+
+**Type**: functional | **Priority**: should | **Category**: llm
+
+Propose testable acceptance criteria in Given/When/Then format for specified specs using LLM
+
+### Rationale
+
+Writing testable acceptance criteria is time-consuming; LLM can propose initial criteria that humans refine
+
+### Acceptance Criteria
+
+- **FR-1103-01**: propose-acceptance-criteria command generates criteria for specified spec IDs (or all) [test]
+- **FR-1103-02**: Proposed criteria follow Given/When/Then format [review]
+- **FR-1103-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+
+---
+
+## FR-1104: TypeScript to YAML Conversion
+
+**Type**: functional | **Priority**: should | **Category**: conversion
+
+Convert TypeScript spec data files to equivalent YAML format, enabling non-TypeScript workflows and interoperability
+
+### Rationale
+
+YAML input lowers participation barriers for non-developers (NFR-005) and enables interoperability with external tools
+
+### Acceptance Criteria
+
+- **FR-1104-01**: convert command reads a TS file exporting a SpecModule via defineSpecs() and writes equivalent YAML [test]
+- **FR-1104-02**: Output defaults to same filename with .yaml extension [test]
+- **FR-1104-03**: --output allows specifying a custom output path [test]
+- **FR-1104-04**: --dry-run previews conversion without writing files [test]

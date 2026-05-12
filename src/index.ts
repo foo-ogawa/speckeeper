@@ -6,6 +6,8 @@ export {
   Model,
   defineSpecs,
   mergeSpecs,
+  loadYamlSpecs,
+  loadYamlDir,
   buildRegistryFromConfig,
   getSpecsFromConfig,
   findModelTypeFromConfig,

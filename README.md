@@ -171,6 +171,7 @@ npx speckeeper audit-requirements --adapter openai
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 | `speckeeper new <type>` | Create a new element with auto-generated ID |
 | `speckeeper scaffold` | Generate `_models/` from a Mermaid flowchart |
+| `speckeeper convert <file>` | Convert a TS spec data file to YAML format |
 
 ### LLM-Powered Commands
 

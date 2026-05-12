@@ -18,6 +18,20 @@ commandSets:
     summary: Requirements and design management framework with TypeScript DSL.
     executable: speckeeper
 
+    env:
+      CURSOR_API_KEY:
+        description: API key for Cursor SDK adapter.
+        sensitive: true
+      GEMINI_API_KEY:
+        description: API key for Gemini adapter.
+        sensitive: true
+      OPENAI_API_KEY:
+        description: API key for OpenAI adapter.
+        sensitive: true
+      ANTHROPIC_API_KEY:
+        description: API key for Anthropic/Claude adapter.
+        sensitive: true
+
     globalOptions:
       - name: version
         aliases: [V]
@@ -42,6 +56,14 @@ commandSets:
         usage:
           - speckeeper init
           - speckeeper init --force
+          - speckeeper init --format yaml
+
+        effects:
+          riskLevel: medium
+          writes:
+            - target: "speckeeper.config.ts, design/ directory"
+              description: "generates config and starter template files"
+              idempotent: false
 
         options:
           - name: force
@@ -50,6 +72,21 @@ commandSets:
             schema:
               type: boolean
               default: false
+            effects:
+              riskLevel: high
+              writes:
+                - target: "existing project files"
+                  description: "overwrites existing config and design files"
+                  overwrite: true
+                  destructive: true
+
+          - name: format
+            description: "Spec data format: ts (default) or yaml."
+            valueName: format
+            schema:
+              type: string
+              default: ts
+              enum: [ts, yaml]
 
         exits:
           '0':
@@ -62,28 +99,25 @@ commandSets:
             stderr:
               format: text
 
-        x-agent:
-          riskLevel: medium
-          requiresConfirmation: true
-          idempotent: false
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            Creates config file and design/ directory structure.
-            With --force, overwrites existing files.
-
       # ── build ─────────────────────────────────────────
       build:
         summary: Generate docs/ and specs/ from TypeScript models.
         description: >-
           Loads the design TypeScript models and generates machine-readable
           specs/ output and optionally human-readable docs/ output. Supports
-          markdown, JSON, or both formats. Can watch for file changes and
-          auto-regenerate.
+          markdown, JSON, or both formats.
         usage:
           - speckeeper build
           - speckeeper build --format json --output ./out
-          - speckeeper build --watch --verbose
+          - speckeeper build --verbose
+
+        effects:
+          riskLevel: low
+          writes:
+            - target: "docs/ directory"
+              description: "generated Markdown documentation files"
+              overwrite: true
+              idempotent: true
 
         options:
           - name: config
@@ -120,6 +154,8 @@ commandSets:
             schema:
               type: boolean
               default: false
+            effects:
+              executionMode: watch
 
           - name: verbose
             aliases: [v]
@@ -139,17 +175,6 @@ commandSets:
             stderr:
               format: text
 
-        x-agent:
-          riskLevel: low
-          requiresConfirmation: false
-          idempotent: true
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            When --watch is used, the process runs indefinitely and is
-            unsuitable for non-interactive agent invocation.
-            Always writes generated files to docs/ and specs/.
-
       # ── lint ──────────────────────────────────────────
       lint:
         summary: Check design integrity (ID duplicates, references, layer violations, etc.).
@@ -157,11 +182,11 @@ commandSets:
           Validates design models for structural integrity. Checks include
           ID uniqueness, ID naming conventions, reference integrity, circular
           dependency detection, phase gate enforcement, and custom model-specific
-          lint rules. Optionally auto-fixes issues.
+          lint rules.
         usage:
           - speckeeper lint
           - speckeeper lint --strict --format github
-          - speckeeper lint --phase HLD --fix
+          - speckeeper lint --phase HLD
 
         options:
           - name: config
@@ -191,7 +216,7 @@ commandSets:
               default: false
 
           - name: fix
-            description: Attempt to fix auto-fixable issues.
+            description: Attempt to fix auto-fixable issues (not yet implemented).
             schema:
               type: boolean
               default: false
@@ -207,7 +232,7 @@ commandSets:
 
         exits:
           '0':
-            description: No lint issues found (or all issues auto-fixed).
+            description: No lint issues found.
             stdout:
               format: '{options.format}'
 
@@ -217,15 +242,7 @@ commandSets:
               format: '{options.format}'
 
         x-agent:
-          riskLevel: low
-          requiresConfirmation: false
           idempotent: true
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            file_write applies only when --fix is provided.
-            Without --fix the command is read-only.
-          safeDryRunOption: Omit --fix to run in read-only mode.
 
       # ── drift ─────────────────────────────────────────
       drift:
@@ -233,12 +250,10 @@ commandSets:
         description: >-
           Compares generated files against their expected content to detect
           manual edits (drift). Useful for CI pipelines to ensure generated
-          docs/ files stay in sync with model definitions. Can auto-update
-          drifted files.
+          docs/ files stay in sync with model definitions.
         usage:
           - speckeeper drift
           - speckeeper drift --fail-on-drift
-          - speckeeper drift --update --format diff
 
         options:
           - name: config
@@ -254,7 +269,7 @@ commandSets:
 
           - name: update
             aliases: [u]
-            description: Auto-update if differences are found.
+            description: Auto-update if differences are found (not yet implemented).
             schema:
               type: boolean
               default: false
@@ -276,49 +291,37 @@ commandSets:
 
         exits:
           '0':
-            description: No drift detected (or drift auto-updated with --update).
+            description: No drift detected.
             stdout:
               format: '{options.format}'
 
           '1':
-            description: Drift detected (with --fail-on-drift), or update failed.
+            description: Drift detected (with --fail-on-drift).
             stdout:
               format: '{options.format}'
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: true
           idempotent: true
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            file_write applies only when --update is provided.
-            Without --update the command is read-only.
-          safeDryRunOption: Omit --update to run in read-only mode.
 
       # ── check ─────────────────────────────────────────
       check:
         summary: Check external SSOT conformance (including custom models).
         description: >-
           Validates specifications against actual implementation artifacts
-          using a global source scan. Performs existence checks (is the spec
-          ID found in configured sources?), optional structural checks (via
-          deep validation), and optional type checks. Sources include OpenAPI,
-          DDL, annotations, and custom scanners. Supports filtering by check
-          type and test coverage reporting.
+          using a global source scan. Performs existence checks, optional
+          structural checks (via deep validation), and optional type checks.
+          Sources include OpenAPI, DDL, annotations, and custom scanners.
         usage:
           - speckeeper check
           - speckeeper check external-ssot --verbose
           - speckeeper check test --coverage
-          - speckeeper check openapi --strict
 
         arguments:
           - name: type
             index: 0
             required: false
             description: >-
-              Type of check to run. Filters sources by type. When omitted,
-              checks all configured sources.
+              Type of check to run. Filters sources by type.
             schema:
               type: string
               enum: [external-ssot, openapi, ddl, iac, custom, all, test]
@@ -343,7 +346,7 @@ commandSets:
 
           - name: verbose
             aliases: [v]
-            description: Show detailed output (e.g. list unmatched specs).
+            description: Show detailed output.
             schema:
               type: boolean
               default: false
@@ -354,51 +357,43 @@ commandSets:
               type: boolean
               default: false
 
-          - name: format
-            aliases: [f]
-            description: "Output format: text, json, github."
-            valueName: format
-            schema:
-              type: string
-              default: text
-              enum: [text, json, github]
-
         exits:
           '0':
-            description: All checks passed (all specs found in sources, deep validation passed).
+            description: All checks passed.
             stdout:
-              format: '{options.format}'
+              format: text
 
           '1':
-            description: Check failures found (missing specs, structural mismatches, or coverage gaps).
+            description: Check failures found.
             stdout:
-              format: '{options.format}'
+              format: text
 
         x-agent:
-          riskLevel: low
-          requiresConfirmation: false
           idempotent: true
-          sideEffects: []
 
       # ── new ───────────────────────────────────────────
       new:
         summary: Create a new element with auto-generated ID.
         description: >-
           Generates a new design element file with a unique auto-generated ID
-          based on the model's ID prefix and existing elements. Supports all
-          built-in model types and uses templates for file generation.
+          based on the model's ID prefix and existing elements.
         usage:
           - speckeeper new requirement --name "User Authentication"
-          - speckeeper new entity --kind functional
-          - speckeeper new usecase --template custom-template.ts
+          - speckeeper new entity
+
+        effects:
+          riskLevel: low
+          writes:
+            - target: "design/ directory"
+              description: "new TypeScript spec file with auto-generated ID"
+              idempotent: false
 
         arguments:
           - name: type
             index: 0
             required: true
             description: >-
-              Element type to create: requirement, usecase, entity, component,
-              screen, flow, error-case, term.
+              Element type to create.
             schema:
               type: string
               enum: [requirement, usecase, entity, component, screen, flow, error-case, term]
@@ -437,51 +432,38 @@ commandSets:
               encoding: utf-8
 
           - name: dry-run
-            description: Preview generated file content and ID without writing to disk.
+            description: Preview generated file content without writing.
             schema:
               type: boolean
               default: false
 
         exits:
           '0':
-            description: Element file created (or previewed with --dry-run) with auto-generated ID.
+            description: Element file created (or previewed with --dry-run).
             stdout:
               format: text
 
           '1':
-            description: Creation failed (invalid type, template error, or write error).
+            description: Creation failed.
             stderr:
               format: text
-
-        x-agent:
-          riskLevel: low
-          requiresConfirmation: false
-          idempotent: false
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            Creates a new TypeScript spec file with auto-generated ID.
-            With --dry-run, only previews the generated content without writing.
-          safeDryRunOption: --dry-run
 
       # ── impact ────────────────────────────────────────
       impact:
         summary: Analyze impact of changes to an ID.
         description: >-
           Performs change impact analysis by traversing the relation graph
-          starting from the specified spec ID. Shows upstream (dependants)
-          and/or downstream (dependencies) elements up to the configured
-          depth. Supports text, JSON, and Mermaid diagram output.
+          starting from the specified spec ID.
         usage:
           - speckeeper impact FR-001
-          - speckeeper impact ENT-ORDER --direction upstream --depth 5
+          - speckeeper impact ENT-ORDER --depth 5
           - speckeeper impact COMP-AUTH --format mermaid
 
         arguments:
           - name: id
             index: 0
             required: true
-            description: "Spec ID to analyze (e.g. REQ-001, ENT-ORDER, COMP-AUTH)."
+            description: "Spec ID to analyze (e.g. REQ-001, ENT-ORDER)."
             schema:
               type: string
 
@@ -525,7 +507,7 @@ commandSets:
 
         exits:
           '0':
-            description: Impact analysis completed and displayed.
+            description: Impact analysis completed.
             stdout:
               format: '{options.format}'
 
@@ -535,23 +517,26 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: low
-          requiresConfirmation: false
           idempotent: true
-          sideEffects: []
 
       # ── scaffold ──────────────────────────────────────
       scaffold:
         summary: Generate _models/ from a Mermaid flowchart definition.
         description: >-
           Parses a Mermaid flowchart from a Markdown file and generates
-          TypeScript model classes, spec data files, and an index file in
-          the design directory. Uses class-based artifact resolution to
-          determine model types from Mermaid node classes.
+          TypeScript model classes, spec data files, and an index file.
         usage:
           - speckeeper scaffold --source requirements.md
           - speckeeper scaffold --source flow.md --output design/ --force
           - speckeeper scaffold --source arch.md --dry-run
+          - speckeeper scaffold --source arch.md --format yaml
+
+        effects:
+          riskLevel: low
+          writes:
+            - target: "design/ directory"
+              description: "generated _models/ and spec data files"
+              idempotent: false
 
         options:
           - name: source
@@ -580,6 +565,12 @@ commandSets:
             schema:
               type: boolean
               default: false
+            effects:
+              riskLevel: medium
+              writes:
+                - target: "existing model and spec files"
+                  description: "overwrites existing TypeScript model source files"
+                  overwrite: true
 
           - name: dry-run
             description: Preview generated files without writing.
@@ -587,38 +578,97 @@ commandSets:
               type: boolean
               default: false
 
+          - name: format
+            description: "Spec data format: ts (default) or yaml."
+            valueName: format
+            schema:
+              type: string
+              default: ts
+              enum: [ts, yaml]
+
         exits:
           '0':
-            description: >-
-              Model files generated (or previewed with --dry-run) successfully.
+            description: Model files generated (or previewed with --dry-run).
             stdout:
               format: text
 
           '1':
-            description: >-
-              Scaffold failed (source file not found, invalid Mermaid syntax,
-              or write error).
+            description: Scaffold failed.
             stderr:
               format: text
 
         x-agent:
-          riskLevel: high
-          requiresConfirmation: true
-          idempotent: false
-          sideEffects:
-            - file_write
-          sideEffectNote: >-
-            --force overwrites existing TypeScript model source files.
-          safeDryRunOption: --dry-run
+          recommendedBeforeUse:
+            - "Run with --dry-run first to preview generated files"
+
+      # ── convert ───────────────────────────────────────
+      convert:
+        summary: Convert a TS spec data file to YAML format.
+        description: >-
+          Reads a TypeScript spec data file that exports a SpecModule via
+          defineSpecs(), extracts model IDs and spec data, and writes the
+          equivalent YAML file. Supports --dry-run for preview.
+        usage:
+          - speckeeper convert design/glossary.ts
+          - speckeeper convert design/requirements.ts --output reqs.yaml
+          - speckeeper convert design/glossary.ts --dry-run
+
+        effects:
+          riskLevel: low
+          writes:
+            - target: ".yaml output file"
+              description: "YAML conversion of the TS spec data"
+              idempotent: true
+
+        arguments:
+          - name: file
+            index: 0
+            required: true
+            description: Path to TS spec data file.
+            schema:
+              type: string
+
+        options:
+          - name: output
+            aliases: [o]
+            description: "Output file path (default: same name with .yaml extension)."
+            valueName: path
+            schema:
+              type: string
+            file:
+              mode: write
+              encoding: utf-8
+
+          - name: dry-run
+            aliases: [n]
+            description: Preview conversion without writing.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: Conversion completed (or previewed with --dry-run).
+            stdout:
+              format: text
+
+          '1':
+            description: Conversion failed (file not found, invalid module, or write error).
+            stderr:
+              format: text
 
       # ── audit-requirements ──────────────────────────────
       audit-requirements:
         summary: Run LLM-based requirement quality audit.
         description: >-
           Performs semantic analysis of design specs using LLM to identify
-          quality issues that static lint cannot detect. Evaluates verifiability,
-          ambiguity, granularity, terminology consistency, and design-mixing.
-          Requires agent-contracts-runtime as an optional peer dependency.
+          quality issues that static lint cannot detect.
+
+        effects:
+          network:
+            description: LLM API calls to configured provider
+            idempotent: true
+
         usage:
           - speckeeper audit-requirements
           - speckeeper audit-requirements --adapter gemini --dry-run
@@ -725,17 +775,8 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: false
-          idempotent: true
-          sideEffects: [network, file_write]
-          sideEffectNote: >-
-            Network calls to LLM provider when adapter is not mock.
-            Filesystem write when --output is specified.
-            Exit 10 = valid output with blocking findings (stdout contains result).
-            Exit 11 = missing runtime dependency (non-retryable).
-          safeDryRunOption: --dry-run
-          expectedDurationMs: 120000
+          recommendedBeforeUse:
+            - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
       # ── propose-trace-links ─────────────────────────────
@@ -743,13 +784,16 @@ commandSets:
         summary: LLM-based traceability link proposal.
         description: >-
           Analyzes spec definitions and external source scan results to
-          propose candidate traceability links between specs and
-          implementation artifacts. Each link includes a confidence score
-          and rationale.
+          propose candidate traceability links.
+
+        effects:
+          network:
+            description: LLM API calls to configured provider
+            idempotent: true
+
         usage:
           - speckeeper propose-trace-links
           - speckeeper propose-trace-links --adapter claude --report-format json
-          - speckeeper propose-trace-links --dry-run
 
         options:
           - name: config
@@ -852,17 +896,8 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: false
-          idempotent: true
-          sideEffects: [network, file_write]
-          sideEffectNote: >-
-            Network calls to LLM provider when adapter is not mock.
-            Filesystem write when --output is specified.
-            Exit 10 = valid output with blocking findings (stdout contains result).
-            Exit 11 = missing runtime dependency (non-retryable).
-          safeDryRunOption: --dry-run
-          expectedDurationMs: 120000
+          recommendedBeforeUse:
+            - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
       # ── explain-impact ──────────────────────────────────
@@ -870,34 +905,26 @@ commandSets:
         summary: LLM-based explanation of impact analysis output.
         description: >-
           Reads JSON output from speckeeper impact on stdin and generates
-          a human-readable explanation suitable for PM/executive audiences.
-          Includes affected artifact categorization, test considerations,
-          and release risk assessment.
-        usage:
-          - speckeeper impact FR-001 --format json | speckeeper explain-impact
-          - speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude
+          a human-readable explanation.
+
+        effects:
+          network:
+            description: LLM API calls to configured provider
+            idempotent: true
 
         stdin:
           required: true
           format: json
           description: >-
             JSON output from speckeeper impact --format json.
-            Must contain target, targetType, and impactedNodes fields.
           schema:
             $ref: '#/components/schemas/ImpactAnalysisOutput'
 
-        options:
-          - name: config
-            aliases: [c]
-            description: Path to config file.
-            valueName: path
-            schema:
-              type: string
-            file:
-              mode: read
-              exists: true
-              encoding: utf-8
+        usage:
+          - speckeeper impact FR-001 --format json | speckeeper explain-impact
+          - speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter claude
 
+        options:
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
@@ -965,11 +992,6 @@ commandSets:
               format: text
 
           '2':
-            description: Configuration or input error.
-            stderr:
-              format: text
-
-          '3':
             description: No input on stdin.
             stderr:
               format: text
@@ -992,27 +1014,21 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: false
-          idempotent: true
-          sideEffects: [network, file_write]
-          sideEffectNote: >-
-            Network calls to LLM provider when adapter is not mock.
-            Filesystem write when --output is specified.
-            Exit 10 = valid output with blocking findings (stdout contains result).
-            Exit 11 = missing runtime dependency (non-retryable).
-          safeDryRunOption: --dry-run
-          expectedDurationMs: 120000
+          recommendedBeforeUse:
+            - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
       # ── propose-acceptance-criteria ─────────────────────
       propose-acceptance-criteria:
         summary: LLM-based acceptance criteria proposal.
         description: >-
-          Analyzes design specs and proposes testable acceptance criteria
-          for each target spec. Optionally takes spec IDs as arguments to
-          scope the proposal. Criteria are proposed in Given/When/Then or
-          verification format.
+          Analyzes design specs and proposes testable acceptance criteria.
+
+        effects:
+          network:
+            description: LLM API calls to configured provider
+            idempotent: true
+
         usage:
           - speckeeper propose-acceptance-criteria
           - speckeeper propose-acceptance-criteria FR-001 FR-002
@@ -1024,8 +1040,7 @@ commandSets:
             required: false
             variadic: true
             description: >-
-              Spec IDs to propose criteria for.
-              Defaults to all specs if omitted.
+              Spec IDs to propose criteria for. Defaults to all specs if omitted.
             schema:
               type: string
 
@@ -1130,22 +1145,12 @@ commandSets:
               format: text
 
         x-agent:
-          riskLevel: medium
-          requiresConfirmation: false
-          idempotent: true
-          sideEffects: [network, file_write]
-          sideEffectNote: >-
-            Network calls to LLM provider when adapter is not mock.
-            Filesystem write when --output is specified.
-            Exit 10 = valid output with blocking findings (stdout contains result).
-            Exit 11 = missing runtime dependency (non-retryable).
-          safeDryRunOption: --dry-run
-          expectedDurationMs: 120000
+          recommendedBeforeUse:
+            - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
 components:
   schemas:
-    # ── AI Agent Interoperability Schemas ──────────────────
     AgentEvidence:
       $ref: 'components.yaml#/schemas/agent-evidence'
     AgentFinding:
@@ -1171,13 +1176,10 @@ components:
                 properties:
                   from:
                     type: string
-                    description: Source spec ID.
                   relation:
                     type: string
-                    description: Relation type (implements, verifiedBy, satisfies, etc.).
                   to:
                     type: string
-                    description: Target ID.
                   confidence:
                     type: number
                     minimum: 0
@@ -1195,7 +1197,6 @@ components:
           properties:
             explanation:
               type: string
-              description: Multi-paragraph human-readable explanation in Markdown format.
             affectedArtifacts:
               type: array
               items:
@@ -1246,15 +1247,12 @@ components:
       type: object
       description: >-
         JSON output from speckeeper impact --format json.
-        Used as stdin input for explain-impact command.
       required: [target, targetType, impactedNodes]
       properties:
         target:
           type: string
-          description: The spec ID that was analyzed.
         targetType:
           type: string
-          description: Type of the target spec (requirement, usecase, entity, etc.).
         direction:
           type: string
           enum: [upstream, downstream, both]
