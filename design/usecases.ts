@@ -71,7 +71,7 @@ export const useCases: UseCase[] = [
       'Requirements list Markdown has been generated',
       'Lint has verified requirement consistency, required fields, and reference integrity',
     ],
-    relatedRequirements: ['FR-001', 'FR-002', 'FR-003'],
+    relatedRequirements: ['FR-100', 'FR-101', 'FR-104'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Requirements engineer creates or edits design/requirements.ts' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion and validation errors' },
@@ -98,7 +98,7 @@ export const useCases: UseCase[] = [
     phase: 'HLD',
     preconditions: ['speckeeper is installed', 'REQ phase is complete'],
     postconditions: ['C4 diagram has been generated', 'Lint has verified architecture consistency'],
-    relatedRequirements: ['FR-004'],
+    relatedRequirements: ['FR-104', 'FR-300', 'FR-500'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Create or edit design/architecture.ts' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
@@ -124,7 +124,7 @@ export const useCases: UseCase[] = [
     phase: 'LLD',
     preconditions: ['speckeeper is installed', 'HLD phase is complete'],
     postconditions: ['ER diagram has been generated', 'Common vocabulary JSON has been generated'],
-    relatedRequirements: ['FR-004', 'FR-005'],
+    relatedRequirements: ['FR-104', 'FR-302'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Create or edit design/concept-model.ts' },
       { stepNumber: 2, type: 'system_response', description: 'IDE displays type completion' },
@@ -147,7 +147,7 @@ export const useCases: UseCase[] = [
       'Corresponding external SSOT files exist',
     ],
     postconditions: ['Consistency errors are reported if any'],
-    relatedRequirements: ['FR-020', 'FR-033'],
+    relatedRequirements: ['FR-200', 'FR-600'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Run speckeeper check external-ssot' },
       { stepNumber: 2, type: 'system_response', description: 'Load OpenAPI/DDL files' },
@@ -172,7 +172,7 @@ export const useCases: UseCase[] = [
       'Model files exist under design/',
     ],
     postconditions: ['Validation results are reported'],
-    relatedRequirements: ['FR-010', 'FR-011', 'FR-012', 'FR-031'],
+    relatedRequirements: ['FR-400', 'FR-401', 'FR-500', 'FR-701'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Run speckeeper lint' },
       { stepNumber: 2, type: 'system_response', description: 'Verify ID uniqueness' },
@@ -196,7 +196,7 @@ export const useCases: UseCase[] = [
       'Generated artifacts exist under docs/ or specs/',
     ],
     postconditions: ['Exit with code 1 if drift exists'],
-    relatedRequirements: ['FR-032'],
+    relatedRequirements: ['FR-500'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Run speckeeper drift' },
       { stepNumber: 2, type: 'system_response', description: 'Regenerate artifacts from TS models' },
@@ -204,7 +204,7 @@ export const useCases: UseCase[] = [
       { stepNumber: 4, type: 'system_response', description: 'Report if differences exist' },
     ],
     relations: [
-      { type: 'traces', target: 'FR-400', description: 'Related to drift command requirement' },
+      { type: 'traces', target: 'FR-500', description: 'Related to drift check requirement' },
     ],
   },
   {
@@ -218,7 +218,7 @@ export const useCases: UseCase[] = [
       'Implementation code and contract definition exist',
     ],
     postconditions: ['Contract violations are reported if any'],
-    relatedRequirements: ['FR-033'],
+    relatedRequirements: ['FR-600'],
     mainFlow: [
       { stepNumber: 1, type: 'user_action', description: 'Run speckeeper check contract' },
       { stepNumber: 2, type: 'system_response', description: 'Compare implementation and contract definition' },

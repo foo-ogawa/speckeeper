@@ -680,8 +680,8 @@ const externalCheckRequirements: Requirement[] = [
     rationale: 'Since consistency checks are implemented per model, filter by model name',
     acceptanceCriteria: [
       { id: 'FR-602-01', description: 'speckeeper check runs external SSOT consistency check for all models', verificationMethod: 'test' },
-      { id: 'FR-602-02', description: 'speckeeper check --model <model-name> checks only specific model', verificationMethod: 'test' },
-      { id: 'FR-602-03', description: 'Model name is the model ID defined in design/_models/', verificationMethod: 'review' },
+      { id: 'FR-602-02', description: 'speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract)', verificationMethod: 'test' },
+      { id: 'FR-602-03', description: 'Type argument corresponds to check categories, not model IDs', verificationMethod: 'review' },
       { id: 'FR-602-04', description: 'Only models with externalChecker are targeted', verificationMethod: 'test' },
     ],
     examples: [
@@ -690,14 +690,12 @@ const externalCheckRequirements: Requirement[] = [
         code: `# External SSOT consistency check for all models
 speckeeper check
 
-# Check specific model only
-speckeeper check --model api-ref      # APIRef consistency only
-speckeeper check --model table-ref    # TableRef consistency only
-speckeeper check --model iac-ref      # IaCRef consistency only
-speckeeper check --model batch-ref    # BatchRef consistency only
-
-# Specify multiple models
-speckeeper check --model api-ref --model table-ref`,
+# Check specific type only
+speckeeper check external-ssot   # All external SSOT checks
+speckeeper check openapi         # OpenAPI consistency only
+speckeeper check ddl             # DDL consistency only
+speckeeper check test            # Test reference consistency
+speckeeper check contract        # Contract consistency`,
         description: 'Check command examples',
       },
     ],
@@ -1396,6 +1394,108 @@ const externalCheckerImplRequirements: Requirement[] = [
 ];
 
 // ============================================================================
+// Functional Requirements - 8.12 LLM-Powered Commands
+// ============================================================================
+
+const llmCommandRequirements: Requirement[] = [
+  {
+    id: 'FR-1100',
+    name: 'LLM-Powered Requirement Audit',
+    description: 'Provide LLM-based semantic quality audit for requirement definitions, detecting verifiability issues, ambiguity, granularity problems, terminology inconsistency, and design-mixing',
+    type: 'functional',
+    priority: 'should',
+    category: 'llm',
+    rationale: 'Static lint rules cannot detect semantic issues such as ambiguous wording or design details mixed into requirements; LLM review complements structural checks',
+    acceptanceCriteria: [
+      { id: 'FR-1100-01', description: 'audit-requirements command constructs a prompt from all registered specs and sends it to configured LLM adapter', verificationMethod: 'test' },
+      { id: 'FR-1100-02', description: 'Audit report includes findings with severity (error/warning/info) and affected spec IDs', verificationMethod: 'test' },
+      { id: 'FR-1100-03', description: '--dry-run outputs the constructed prompt without calling LLM', verificationMethod: 'test' },
+      { id: 'FR-1100-04', description: '--fail-on controls minimum severity that causes non-zero exit', verificationMethod: 'test' },
+      { id: 'FR-1100-05', description: 'Report format is selectable via --report-format (json, text, yaml)', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case via LLM' },
+    ],
+  },
+  {
+    id: 'FR-1101',
+    name: 'LLM-Powered Trace Link Proposal',
+    description: 'Propose candidate traceability links between specs with confidence scores and rationale using LLM analysis',
+    type: 'functional',
+    priority: 'should',
+    category: 'llm',
+    rationale: 'Manual traceability maintenance is error-prone; LLM can identify semantically related specs that humans may overlook',
+    acceptanceCriteria: [
+      { id: 'FR-1101-01', description: 'propose-trace-links command analyzes all specs and proposes missing trace links', verificationMethod: 'test' },
+      { id: 'FR-1101-02', description: 'Each proposed link includes source ID, target ID, relation type, confidence score, and rationale', verificationMethod: 'test' },
+      { id: 'FR-1101-03', description: '--dry-run outputs the constructed prompt without calling LLM', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-010', description: 'Supports design consistency via automated traceability' },
+    ],
+  },
+  {
+    id: 'FR-1102',
+    name: 'LLM-Powered Impact Explanation',
+    description: 'Translate impact analysis JSON output into human-readable explanation for PM/executive audiences using LLM',
+    type: 'functional',
+    priority: 'should',
+    category: 'llm',
+    rationale: 'Raw impact analysis JSON is not consumable by non-technical stakeholders; LLM can generate natural language summaries',
+    acceptanceCriteria: [
+      { id: 'FR-1102-01', description: 'explain-impact command reads impact analysis JSON from stdin', verificationMethod: 'test' },
+      { id: 'FR-1102-02', description: 'Output is a human-readable explanation suitable for PM/executive audiences', verificationMethod: 'review' },
+      { id: 'FR-1102-03', description: '--dry-run outputs the constructed prompt without calling LLM', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-700', description: 'Refines change impact analysis with human-readable output' },
+    ],
+  },
+  {
+    id: 'FR-1103',
+    name: 'LLM-Powered Acceptance Criteria Proposal',
+    description: 'Propose testable acceptance criteria in Given/When/Then format for specified specs using LLM',
+    type: 'functional',
+    priority: 'should',
+    category: 'llm',
+    rationale: 'Writing testable acceptance criteria is time-consuming; LLM can propose initial criteria that humans refine',
+    acceptanceCriteria: [
+      { id: 'FR-1103-01', description: 'propose-acceptance-criteria command generates criteria for specified spec IDs (or all)', verificationMethod: 'test' },
+      { id: 'FR-1103-02', description: 'Proposed criteria follow Given/When/Then format', verificationMethod: 'review' },
+      { id: 'FR-1103-03', description: '--dry-run outputs the constructed prompt without calling LLM', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'satisfies', target: 'UC-001', description: 'Assists requirement definition with automated criteria proposals' },
+    ],
+  },
+];
+
+// ============================================================================
+// Functional Requirements - 8.13 Format Conversion
+// ============================================================================
+
+const conversionRequirements: Requirement[] = [
+  {
+    id: 'FR-1104',
+    name: 'TypeScript to YAML Conversion',
+    description: 'Convert TypeScript spec data files to equivalent YAML format, enabling non-TypeScript workflows and interoperability',
+    type: 'functional',
+    priority: 'should',
+    category: 'conversion',
+    rationale: 'YAML input lowers participation barriers for non-developers (NFR-005) and enables interoperability with external tools',
+    acceptanceCriteria: [
+      { id: 'FR-1104-01', description: 'convert command reads a TS file exporting a SpecModule via defineSpecs() and writes equivalent YAML', verificationMethod: 'test' },
+      { id: 'FR-1104-02', description: 'Output defaults to same filename with .yaml extension', verificationMethod: 'test' },
+      { id: 'FR-1104-03', description: '--output allows specifying a custom output path', verificationMethod: 'test' },
+      { id: 'FR-1104-04', description: '--dry-run previews conversion without writing files', verificationMethod: 'test' },
+    ],
+    relations: [
+      { type: 'refines', target: 'FR-104', description: 'Extends model definition with format conversion' },
+    ],
+  },
+];
+
+// ============================================================================
 // Functional Requirements - All
 // ============================================================================
 
@@ -1409,6 +1509,8 @@ export const functionalRequirements: Requirement[] = [
   ...impactRequirements,
   ...exportRequirements,
   ...externalCheckerImplRequirements,
+  ...llmCommandRequirements,
+  ...conversionRequirements,
 ];
 
 // ============================================================================
@@ -1626,14 +1728,14 @@ export const nonFunctionalRequirements: Requirement[] = [
   {
     id: 'NFR-014',
     name: 'CLI Definition-Implementation Consistency',
-    description: 'CLI command definitions in design/cli-commands.ts match actual implementation in src/cli/index.ts',
+    description: 'CLI command definitions in design/cli-commands.ts match cli-contract.yaml and generated code in src/generated/',
     type: 'non-functional',
     priority: 'must',
     category: 'testability',
     parentId: 'NFR-011',
-    rationale: 'To ensure specification and implementation stay synchronized (e.g., no missing --config parameters)',
+    rationale: 'To ensure specification, DSL contract, and generated implementation stay synchronized',
     acceptanceCriteria: [
-      { id: 'NFR-014-01', description: 'All command definitions in design/cli-commands.ts match implementation (parameters, subcommands, exit codes)', verificationMethod: 'test' },
+      { id: 'NFR-014-01', description: 'All command definitions in design/cli-commands.ts match cli-contract.yaml and generated code (parameters, subcommands, exit codes)', verificationMethod: 'test' },
     ],
     relations: [
       { type: 'satisfies', target: 'UC-010', description: 'Satisfies design consistency check use case' },

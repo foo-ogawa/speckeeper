@@ -146,6 +146,13 @@ const newTestPatterns: TestCasePattern[] = [
 // Test Reference List
 // ============================================================================
 
+// Scaffold integration test patterns (FR-106)
+const scaffoldIntegrationTestPatterns: TestCasePattern[] = [
+  { acceptanceCriteriaId: 'FR-106-01', pattern: 'artifact class.*generates|class.*model file', description: 'Artifact class recognition and generation test' },
+  { acceptanceCriteriaId: 'FR-106-03', pattern: 'same.*class.*aggregated|aggregat', description: 'Same-class node aggregation test' },
+  { acceptanceCriteriaId: 'FR-106-05', pattern: 'PascalCase|kebab-case|model name', description: 'Model/file name convention test' },
+];
+
 export const testRefs: TestRef[] = [
   // ---------------------------------------------------------------------------
   // TEST-003: Config Loader utility test
@@ -306,6 +313,21 @@ export const testRefs: TestRef[] = [
     implementsCommand: 'CMD-NEW',
     testCasePatterns: newTestPatterns,
     relations: deriveRelations(newTestPatterns, 'CMD-NEW'),
+  },
+  // ---------------------------------------------------------------------------
+  // TEST-026: Scaffold integration test
+  // ---------------------------------------------------------------------------
+  {
+    id: 'TEST-026',
+    description: 'Scaffold integration verification test (mermaid parsing, class-based generation)',
+    source: {
+      path: 'test/scaffold/integration.test.ts',
+      framework: 'vitest',
+    },
+    verifiesRequirements: deriveVerifiesRequirements(scaffoldIntegrationTestPatterns),
+    implementsCommand: 'CMD-SCAFFOLD',
+    testCasePatterns: scaffoldIntegrationTestPatterns,
+    relations: deriveRelations(scaffoldIntegrationTestPatterns, 'CMD-SCAFFOLD'),
   },
 ];
 
