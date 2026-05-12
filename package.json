@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -87,7 +87,7 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^1.6.1",
-    "agent-contracts": "^0.21.0",
+    "agent-contracts": "^0.22.3",
     "agent-contracts-runtime": "^0.13.0",
     "eslint": "^9.39.2",
     "tsup": "^8.0.1",

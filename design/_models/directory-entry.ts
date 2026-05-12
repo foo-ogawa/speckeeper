@@ -14,7 +14,7 @@ import { requireField } from '../../src/core/dsl/index.ts';
 
 // Non-recursive part of the schema
 const BaseDirectoryEntrySchema = z.object({
-  id: z.string().regex(/^DIR-\d+$/, 'Directory ID must match pattern DIR-XXX'),
+  id: z.string().regex(/^DIR-\d+(-\d+)*$/, 'Directory ID must match pattern DIR-NNN or DIR-NNN-NN'),
   path: z.string().min(1, 'Path is required'),
   description: z.string().min(1, 'Description is required'),
   artifactId: z.string().optional(),

@@ -1,23 +1,10 @@
 /**
- * Design entry point — aggregates all spec data via mergeSpecs()
+ * Design entry point — loads YAML spec data files via loadYamlDir()
  */
-import { mergeSpecs } from '../src/core/model';
-import glossary from './glossary';
-import requirements from './requirements';
-import conceptModel from './concept-model';
-import architecture from './architecture';
-import usecases from './usecases';
-import cliCommands from './cli-commands';
-import artifacts from './artifacts';
-import testRefs from './test-refs';
+import { join } from 'node:path';
+import { mergeSpecs, loadYamlDir } from '../src/core/model';
+import { allModels } from './_models/index';
 
-export default mergeSpecs(
-  glossary,
-  requirements,
-  conceptModel,
-  architecture,
-  usecases,
-  cliCommands,
-  artifacts,
-  testRefs,
-);
+const yamlModules = loadYamlDir(join(import.meta.dirname, '.'), allModels);
+
+export default mergeSpecs(...yamlModules);
