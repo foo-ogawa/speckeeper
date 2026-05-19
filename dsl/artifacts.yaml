@@ -1,9 +1,10 @@
+# Physical artifacts: imported from artifact-contracts.yaml (shared registry)
+# Ephemeral artifacts: defined inline (dynamic inputs with no fixed path)
+
+$refs:
+  - "./physical-artifacts.yaml"
+
 spec-definitions:
-  type: doc
-  description: >-
-    Design spec definition files (TypeScript DSL) loaded from the
-    design/ directory via speckeeper.config.ts. These are the primary
-    input for all LLM review tasks.
   owner: spec-quality-reviewer
   producers: []
   editors:

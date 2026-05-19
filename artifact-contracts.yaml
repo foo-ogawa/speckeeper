@@ -1,0 +1,130 @@
+artifactContracts: "2026A"
+
+system:
+  id: speckeeper
+  name: Speckeeper
+
+artifacts:
+  spec-definitions:
+    type: source
+    description: >-
+      Design spec definition files (TypeScript DSL and YAML) under design/
+      and project configuration that loads them.
+    authority: canonical
+    change_control: approval-required
+    path_patterns:
+      - "design/**/*.ts"
+      - "design/**/*.yaml"
+      - "speckeeper.config.ts"
+
+  speckeeper-source-code:
+    type: source
+    description: Core library, CLI handlers, agents, and scaffold implementation
+    authority: canonical
+    path_patterns:
+      - "src/**/*.ts"
+    exclude_patterns:
+      - "src/generated/**"
+
+  generated-typescript:
+    type: generated-code
+    description: Auto-generated TypeScript from agent-contracts-runtime and cli-contracts
+    authority: generated
+    path_patterns:
+      - "src/generated/**/*.ts"
+
+  agent-dsl:
+    type: config
+    description: Agent-contracts DSL definitions for LLM review workflows
+    authority: canonical
+    change_control: approval-required
+    path_patterns:
+      - "dsl/**/*.yaml"
+
+  cli-contract-definition:
+    type: config
+    description: CLI contract definition document
+    authority: canonical
+    change_control: approval-required
+    path_patterns:
+      - "cli-contract.yaml"
+
+  tooling-config:
+    type: config
+    description: Build, lint, test, and contract tooling configuration
+    authority: control
+    path_patterns:
+      - "tsconfig.json"
+      - "vitest.config.ts"
+      - "eslint.config.js"
+      - "embedoc.config.yaml"
+      - "components.yaml"
+      - "agent-contracts.config.yaml"
+      - "cli-contracts.config.yaml"
+      - "tsup.config.ts"
+
+  package-manifest:
+    type: config
+    description: npm package manifest and lockfile
+    authority: control
+    path_patterns:
+      - "package.json"
+      - "package-lock.json"
+
+  test-suite:
+    type: source
+    description: Unit and integration tests
+    authority: canonical
+    path_patterns:
+      - "test/**/*.ts"
+
+  documentation:
+    type: document
+    description: Project documentation and README
+    authority: canonical
+    path_patterns:
+      - "docs/**/*.md"
+      - "README.md"
+
+  scaffold-templates:
+    type: source
+    description: Init scaffold templates for consumer projects
+    authority: canonical
+    path_patterns:
+      - "templates/**/*"
+
+  cli-entry:
+    type: source
+    description: CLI executable entry point
+    authority: canonical
+    path_patterns:
+      - "bin/**/*"
+
+  embed-sources:
+    type: source
+    description: Embedoc embed source modules
+    authority: canonical
+    path_patterns:
+      - "embeds/**/*.ts"
+
+  eslint-rules:
+    type: source
+    description: Custom ESLint rules for design model linting
+    authority: canonical
+    path_patterns:
+      - "eslint-rules/**/*"
+
+  ci-workflows:
+    type: config
+    description: GitHub Actions CI and publish workflows
+    authority: control
+    path_patterns:
+      - ".github/workflows/**/*"
+
+  artifact-contracts-registry:
+    type: config
+    description: Physical artifact registry for this project
+    authority: canonical
+    change_control: approval-required
+    path_patterns:
+      - "artifact-contracts.yaml"
