@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=./node_modules/cli-contracts/schemas/cli-contract.schema.json
-cliContracts: 0.1.0
+cli_contracts: 0.1.0
 
 info:
   title: speckeeper CLI
-  version: 0.10.1
+  version: 0.13.0
   description: >-
     TypeScript-first specification validation framework — validate design
     consistency, external SSOT integrity, and traceability with type-safe
@@ -13,7 +13,27 @@ info:
   license:
     name: MIT
 
-commandSets:
+artifact_slots:
+  design-specs:
+    direction: read
+    description: Design specification files (requirements, architecture)
+  config:
+    direction: read
+    description: speckeeper configuration
+  codebase:
+    direction: read
+    description: Source code for traceability and coverage checks
+  external-sources:
+    direction: read
+    description: External SSOT sources (OpenAPI, DDL, annotations)
+  audit-report:
+    direction: write
+    description: LLM audit and analysis output
+  scaffold-output:
+    direction: write
+    description: Scaffolded specification files
+
+command_sets:
   speckeeper:
     summary: Requirements and design management framework with TypeScript DSL.
     executable: speckeeper
@@ -32,7 +52,7 @@ commandSets:
         description: API key for Anthropic/Claude adapter.
         sensitive: true
 
-    globalOptions:
+    global_options:
       - name: version
         aliases: [V]
         description: Print version and exit.
@@ -59,7 +79,7 @@ commandSets:
           - speckeeper init --format yaml
 
         effects:
-          riskLevel: medium
+          risk_level: medium
           writes:
             - target: "speckeeper.config.ts, design/ directory"
               description: "generates config and starter template files"
@@ -73,7 +93,7 @@ commandSets:
               type: boolean
               default: false
             effects:
-              riskLevel: high
+              risk_level: high
               writes:
                 - target: "existing project files"
                   description: "overwrites existing config and design files"
@@ -82,7 +102,7 @@ commandSets:
 
           - name: format
             description: "Spec data format: ts (default) or yaml."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: ts
@@ -112,7 +132,7 @@ commandSets:
           - speckeeper build --verbose
 
         effects:
-          riskLevel: low
+          risk_level: low
           writes:
             - target: "docs/ directory"
               description: "generated Markdown documentation files"
@@ -123,7 +143,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -134,7 +154,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Base output directory path.
-            valueName: path
+            value_name: path
             schema:
               type: string
               default: "."
@@ -142,7 +162,7 @@ commandSets:
           - name: format
             aliases: [f]
             description: "Output format: markdown, json, both."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: both
@@ -192,7 +212,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -203,7 +223,7 @@ commandSets:
           - name: phase
             aliases: [p]
             description: "Phase gate to check against: REQ, HLD, LLD, OPS."
-            valueName: phase
+            value_name: phase
             schema:
               type: string
               enum: [REQ, HLD, LLD, OPS]
@@ -224,7 +244,7 @@ commandSets:
           - name: format
             aliases: [f]
             description: "Output format: text, json, github."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: text
@@ -259,7 +279,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -277,7 +297,7 @@ commandSets:
           - name: format
             aliases: [f]
             description: "Output format: text, json, diff."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: text
@@ -330,7 +350,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -382,7 +402,7 @@ commandSets:
           - speckeeper new entity
 
         effects:
-          riskLevel: low
+          risk_level: low
           writes:
             - target: "design/ directory"
               description: "new TypeScript spec file with auto-generated ID"
@@ -402,28 +422,28 @@ commandSets:
           - name: kind
             aliases: [k]
             description: Sub-kind (e.g. functional, non-functional for requirements).
-            valueName: kind
+            value_name: kind
             schema:
               type: string
 
           - name: name
             aliases: [n]
             description: Name of the element.
-            valueName: name
+            value_name: name
             schema:
               type: string
 
           - name: output
             aliases: [o]
             description: Output directory path.
-            valueName: path
+            value_name: path
             schema:
               type: string
 
           - name: template
             aliases: [t]
             description: Path to template file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -471,7 +491,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -482,7 +502,7 @@ commandSets:
           - name: depth
             aliases: [d]
             description: Analysis depth (reference tracking level).
-            valueName: n
+            value_name: n
             schema:
               type: integer
               minimum: 1
@@ -490,7 +510,7 @@ commandSets:
 
           - name: direction
             description: "Analysis direction: upstream, downstream, both."
-            valueName: direction
+            value_name: direction
             schema:
               type: string
               default: both
@@ -499,7 +519,7 @@ commandSets:
           - name: format
             aliases: [f]
             description: "Output format: text, json, mermaid."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: text
@@ -532,7 +552,7 @@ commandSets:
           - speckeeper scaffold --source arch.md --format yaml
 
         effects:
-          riskLevel: low
+          risk_level: low
           writes:
             - target: "design/ directory"
               description: "generated _models/ and spec data files"
@@ -542,7 +562,7 @@ commandSets:
           - name: source
             aliases: [s]
             description: Path to Markdown file containing Mermaid flowchart.
-            valueName: path
+            value_name: path
             required: true
             schema:
               type: string
@@ -554,7 +574,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Output directory.
-            valueName: path
+            value_name: path
             schema:
               type: string
               default: design/
@@ -566,7 +586,7 @@ commandSets:
               type: boolean
               default: false
             effects:
-              riskLevel: medium
+              risk_level: medium
               writes:
                 - target: "existing model and spec files"
                   description: "overwrites existing TypeScript model source files"
@@ -580,7 +600,7 @@ commandSets:
 
           - name: format
             description: "Spec data format: ts (default) or yaml."
-            valueName: format
+            value_name: format
             schema:
               type: string
               default: ts
@@ -598,7 +618,7 @@ commandSets:
               format: text
 
         x-agent:
-          recommendedBeforeUse:
+          recommended_before_use:
             - "Run with --dry-run first to preview generated files"
 
       # ── convert ───────────────────────────────────────
@@ -614,7 +634,7 @@ commandSets:
           - speckeeper convert design/glossary.ts --dry-run
 
         effects:
-          riskLevel: low
+          risk_level: low
           writes:
             - target: ".yaml output file"
               description: "YAML conversion of the TS spec data"
@@ -632,7 +652,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: "Output file path (default: same name with .yaml extension)."
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -678,7 +698,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -689,14 +709,14 @@ commandSets:
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
-            valueName: name
+            value_name: name
             schema:
               type: string
               enum: [cursor, claude, openai, gemini, mock]
 
           - name: model
             description: LLM model override.
-            valueName: name
+            value_name: name
             schema:
               type: string
 
@@ -715,7 +735,7 @@ commandSets:
 
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
-            valueName: level
+            value_name: level
             schema:
               type: string
               enum: [warning, error, critical]
@@ -724,7 +744,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Write result to a file instead of stdout.
-            valueName: file
+            value_name: file
             schema:
               type: string
             file:
@@ -733,7 +753,7 @@ commandSets:
 
           - name: report-format
             description: Output format for the audit report.
-            valueName: fmt
+            value_name: fmt
             schema:
               type: string
               enum: [json, text, yaml]
@@ -775,7 +795,7 @@ commandSets:
               format: text
 
         x-agent:
-          recommendedBeforeUse:
+          recommended_before_use:
             - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
@@ -799,7 +819,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -810,14 +830,14 @@ commandSets:
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
-            valueName: name
+            value_name: name
             schema:
               type: string
               enum: [cursor, claude, openai, gemini, mock]
 
           - name: model
             description: LLM model override.
-            valueName: name
+            value_name: name
             schema:
               type: string
 
@@ -836,7 +856,7 @@ commandSets:
 
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
-            valueName: level
+            value_name: level
             schema:
               type: string
               enum: [warning, error, critical]
@@ -845,7 +865,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Write result to a file instead of stdout.
-            valueName: file
+            value_name: file
             schema:
               type: string
             file:
@@ -854,7 +874,7 @@ commandSets:
 
           - name: report-format
             description: Output format for the report.
-            valueName: fmt
+            value_name: fmt
             schema:
               type: string
               enum: [json, text, yaml]
@@ -896,7 +916,7 @@ commandSets:
               format: text
 
         x-agent:
-          recommendedBeforeUse:
+          recommended_before_use:
             - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
@@ -928,14 +948,14 @@ commandSets:
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
-            valueName: name
+            value_name: name
             schema:
               type: string
               enum: [cursor, claude, openai, gemini, mock]
 
           - name: model
             description: LLM model override.
-            valueName: name
+            value_name: name
             schema:
               type: string
 
@@ -954,7 +974,7 @@ commandSets:
 
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
-            valueName: level
+            value_name: level
             schema:
               type: string
               enum: [warning, error, critical]
@@ -963,7 +983,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Write result to a file instead of stdout.
-            valueName: file
+            value_name: file
             schema:
               type: string
             file:
@@ -972,7 +992,7 @@ commandSets:
 
           - name: report-format
             description: Output format for the report.
-            valueName: fmt
+            value_name: fmt
             schema:
               type: string
               enum: [json, text, yaml]
@@ -1014,7 +1034,7 @@ commandSets:
               format: text
 
         x-agent:
-          recommendedBeforeUse:
+          recommended_before_use:
             - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 
@@ -1048,7 +1068,7 @@ commandSets:
           - name: config
             aliases: [c]
             description: Path to config file.
-            valueName: path
+            value_name: path
             schema:
               type: string
             file:
@@ -1059,14 +1079,14 @@ commandSets:
           - name: adapter
             aliases: [a]
             description: SDK adapter to use for LLM execution.
-            valueName: name
+            value_name: name
             schema:
               type: string
               enum: [cursor, claude, openai, gemini, mock]
 
           - name: model
             description: LLM model override.
-            valueName: name
+            value_name: name
             schema:
               type: string
 
@@ -1085,7 +1105,7 @@ commandSets:
 
           - name: fail-on
             description: Minimum severity that causes a non-zero exit.
-            valueName: level
+            value_name: level
             schema:
               type: string
               enum: [warning, error, critical]
@@ -1094,7 +1114,7 @@ commandSets:
           - name: output
             aliases: [o]
             description: Write result to a file instead of stdout.
-            valueName: file
+            value_name: file
             schema:
               type: string
             file:
@@ -1103,7 +1123,7 @@ commandSets:
 
           - name: report-format
             description: Output format for the report.
-            valueName: fmt
+            value_name: fmt
             schema:
               type: string
               enum: [json, text, yaml]
@@ -1145,7 +1165,7 @@ commandSets:
               format: text
 
         x-agent:
-          recommendedBeforeUse:
+          recommended_before_use:
             - "Run with --dry-run first to preview the prompt"
           retryableExitCodes: [12]
 

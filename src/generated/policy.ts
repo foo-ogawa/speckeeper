@@ -7,7 +7,7 @@ export type { DerivedPolicy, IntrospectionResult };
 export const commandDefinitions = {
   "init": {
     "effects": {
-      "riskLevel": "medium",
+      "risk_level": "medium",
       "writes": [
         {
           "target": "speckeeper.config.ts, design/ directory",
@@ -24,7 +24,7 @@ export const commandDefinitions = {
           "default": false
         },
         "effects": {
-          "riskLevel": "high",
+          "risk_level": "high",
           "writes": [
             {
               "target": "existing project files",
@@ -64,7 +64,7 @@ export const commandDefinitions = {
   },
   "build": {
     "effects": {
-      "riskLevel": "low",
+      "risk_level": "low",
       "writes": [
         {
           "target": "docs/ directory",
@@ -111,9 +111,7 @@ export const commandDefinitions = {
           "type": "boolean",
           "default": false
         },
-        "effects": {
-          "executionMode": "watch"
-        }
+        "effects": {}
       },
       {
         "name": "verbose",
@@ -312,7 +310,7 @@ export const commandDefinitions = {
   },
   "new": {
     "effects": {
-      "riskLevel": "low",
+      "risk_level": "low",
       "writes": [
         {
           "target": "design/ directory",
@@ -437,7 +435,7 @@ export const commandDefinitions = {
   },
   "scaffold": {
     "effects": {
-      "riskLevel": "low",
+      "risk_level": "low",
       "writes": [
         {
           "target": "design/ directory",
@@ -472,7 +470,7 @@ export const commandDefinitions = {
           "default": false
         },
         "effects": {
-          "riskLevel": "medium",
+          "risk_level": "medium",
           "writes": [
             {
               "target": "existing model and spec files",
@@ -518,7 +516,7 @@ export const commandDefinitions = {
   },
   "convert": {
     "effects": {
-      "riskLevel": "low",
+      "risk_level": "low",
       "writes": [
         {
           "target": ".yaml output file",
@@ -961,32 +959,32 @@ export const commandDefinitions = {
 } as const;
 
 export function deriveCommandPolicy(
-  commandId: string,
+  command_id: string,
   optionValues: Record<string, unknown>,
 ): IntrospectionResult {
-  const def = commandDefinitions[commandId as keyof typeof commandDefinitions];
-  if (!def) throw new Error(`Unknown command: ${commandId}`);
+  const def = commandDefinitions[command_id as keyof typeof commandDefinitions];
+  if (!def) throw new Error(`Unknown command: ${command_id}`);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cmdDef = def as any;
   const options: Record<string, { value: unknown; specified: boolean; definition: any }> = {};
-  const activeOptions: string[] = [];
+  const active_options: string[] = [];
 
   for (const optDef of cmdDef.options ?? []) {
     const value = optionValues[optDef.name];
     const specified = optDef.name in optionValues && value !== undefined;
     options[optDef.name] = { value, specified, definition: optDef };
     if (isOptionActive(optDef, value, specified)) {
-      activeOptions.push(optDef.name);
+      active_options.push(optDef.name);
     }
   }
 
   const policy = derivePolicy({
-    commandId,
-    commandEffects: cmdDef.effects,
+    command_id,
+    command_effects: cmdDef.effects,
     options,
     env: cmdDef.env,
   });
 
-  return { command: commandId, activeOptions, policy };
+  return { command: command_id, active_options, policy };
 }

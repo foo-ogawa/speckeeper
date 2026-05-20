@@ -46,7 +46,9 @@ export const specQualityReviewer: AgentContract = {
   can_execute_tools: [
   "speckeeper-cli"
 ],
-  can_invoke_agents: [],
+  can_invoke_agents: [
+  "spec-quality-reviewer"
+],
   can_return_handoffs: [
   "requirement-audit-result",
   "trace-link-result",
