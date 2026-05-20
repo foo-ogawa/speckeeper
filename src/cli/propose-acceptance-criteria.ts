@@ -14,7 +14,7 @@ export interface CommandProposeAcceptanceCriteriaOptions {
   config?: string;
   adapter?: string;
   model?: string;
-  dryRun?: boolean;
+  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
@@ -23,9 +23,13 @@ export interface CommandProposeAcceptanceCriteriaOptions {
 export async function commandProposeAcceptanceCriteria(
   specIds: string[],
   opts: CommandProposeAcceptanceCriteriaOptions,
-): Promise<void> {
+): Promise<void | string> {
   const targetSpecIds = specIds.length > 0 ? specIds : undefined;
   const context = await buildProposeAcceptanceCriteriaContext(opts.config, targetSpecIds);
+
+  if (opts.showPrompt) {
+    return context;
+  }
 
   const auditConfig: AuditConfig = {
     adapter: opts.adapter,
@@ -33,7 +37,6 @@ export async function commandProposeAcceptanceCriteria(
   };
 
   const auditOpts: AuditOptions = {
-    dryRun: opts.dryRun,
     failOn: opts.failOn,
   };
 

@@ -137,8 +137,6 @@ export interface AuditRequirementsOptions {
   config?: string;
   adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
   model?: string;
-  dryRun?: boolean;
-  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
@@ -158,8 +156,6 @@ export interface ProposeTraceLinksOptions {
   config?: string;
   adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
   model?: string;
-  dryRun?: boolean;
-  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
@@ -178,8 +174,6 @@ export type ProposeTraceLinksExitResult =
 export interface ExplainImpactOptions {
   adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
   model?: string;
-  dryRun?: boolean;
-  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
@@ -203,8 +197,6 @@ export interface ProposeAcceptanceCriteriaOptions {
   config?: string;
   adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
   model?: string;
-  dryRun?: boolean;
-  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";

@@ -63,49 +63,45 @@ const handlers: CommandHandlers = {
   convert: async (file, opts) => {
     await runConvert(file!, opts);
   },
-  auditRequirements: async (opts) => {
-    await commandAuditRequirements({
+  auditRequirements: (opts) =>
+    commandAuditRequirements({
       config: opts.config,
       adapter: opts.adapter,
       model: opts.model,
-      dryRun: opts.dryRun,
+      showPrompt: opts.showPrompt,
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-    });
-  },
-  proposeTraceLinks: async (opts) => {
-    await commandProposeTraceLinks({
+    }),
+  proposeTraceLinks: (opts) =>
+    commandProposeTraceLinks({
       config: opts.config,
       adapter: opts.adapter,
       model: opts.model,
-      dryRun: opts.dryRun,
+      showPrompt: opts.showPrompt,
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-    });
-  },
-  explainImpact: async (opts) => {
-    await commandExplainImpact({
+    }),
+  explainImpact: (opts) =>
+    commandExplainImpact({
       adapter: opts.adapter,
       model: opts.model,
-      dryRun: opts.dryRun,
+      showPrompt: opts.showPrompt,
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-    });
-  },
-  proposeAcceptanceCriteria: async (specIds, opts) => {
-    await commandProposeAcceptanceCriteria(specIds, {
+    }),
+  proposeAcceptanceCriteria: (specIds, opts) =>
+    commandProposeAcceptanceCriteria(specIds, {
       config: opts.config,
       adapter: opts.adapter,
       model: opts.model,
-      dryRun: opts.dryRun,
+      showPrompt: opts.showPrompt,
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-    });
-  },
+    }),
 };
 
 createProgram(handlers, getVersion()).parse();

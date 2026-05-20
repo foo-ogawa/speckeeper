@@ -12,10 +12,10 @@ export interface CommandHandlers {
   impact: (id: string | undefined, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   convert: (file: string | undefined, options: { output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
-  auditRequirements: (options: { config?: string; adapter?: string; model?: string; dryRun?: boolean; showPrompt?: boolean; failOn?: string; output?: string; reportFormat?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; dryRun?: boolean; showPrompt?: boolean; failOn?: string; output?: string; reportFormat?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  explainImpact: (options: { adapter?: string; model?: string; dryRun?: boolean; showPrompt?: boolean; failOn?: string; output?: string; reportFormat?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; dryRun?: boolean; showPrompt?: boolean; failOn?: string; output?: string; reportFormat?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
 }
 
 export function createProgram(
@@ -193,16 +193,20 @@ export function createProgram(
     .option("-c, --config <path>", "Path to config file.")
     .option("-a, --adapter <name>", "SDK adapter to use for LLM execution.")
     .option("--model <name>", "LLM model override.")
-    .option("-n, --dry-run", "Output the constructed prompt without calling LLM.", false)
-    .option("--show-prompt", "Display the constructed LLM prompt on stderr.", false)
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the audit report.", "json")
+    .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
       if (globalOpts.introspect) {
         const policy = deriveCommandPolicy("audit-requirements", opts);
         console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.showPrompt) {
+        const prompt = await handlers.auditRequirements(opts, globalOpts);
+        if (typeof prompt === "string") process.stdout.write(prompt + "\n");
         return;
       }
       await handlers.auditRequirements(opts, globalOpts);
@@ -214,16 +218,20 @@ export function createProgram(
     .option("-c, --config <path>", "Path to config file.")
     .option("-a, --adapter <name>", "SDK adapter to use for LLM execution.")
     .option("--model <name>", "LLM model override.")
-    .option("-n, --dry-run", "Output the constructed prompt without calling LLM.", false)
-    .option("--show-prompt", "Display the constructed LLM prompt on stderr.", false)
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
       if (globalOpts.introspect) {
         const policy = deriveCommandPolicy("propose-trace-links", opts);
         console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.showPrompt) {
+        const prompt = await handlers.proposeTraceLinks(opts, globalOpts);
+        if (typeof prompt === "string") process.stdout.write(prompt + "\n");
         return;
       }
       await handlers.proposeTraceLinks(opts, globalOpts);
@@ -234,16 +242,20 @@ export function createProgram(
     .description("LLM-based explanation of impact analysis output.")
     .option("-a, --adapter <name>", "SDK adapter to use for LLM execution.")
     .option("--model <name>", "LLM model override.")
-    .option("-n, --dry-run", "Output the constructed prompt without calling LLM.", false)
-    .option("--show-prompt", "Display the constructed LLM prompt on stderr.", false)
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
       if (globalOpts.introspect) {
         const policy = deriveCommandPolicy("explain-impact", opts);
         console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.showPrompt) {
+        const prompt = await handlers.explainImpact(opts, globalOpts);
+        if (typeof prompt === "string") process.stdout.write(prompt + "\n");
         return;
       }
       await handlers.explainImpact(opts, globalOpts);
@@ -256,16 +268,20 @@ export function createProgram(
     .option("-c, --config <path>", "Path to config file.")
     .option("-a, --adapter <name>", "SDK adapter to use for LLM execution.")
     .option("--model <name>", "LLM model override.")
-    .option("-n, --dry-run", "Output the constructed prompt without calling LLM.", false)
-    .option("--show-prompt", "Display the constructed LLM prompt on stderr.", false)
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (specIds, opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
       if (globalOpts.introspect) {
         const policy = deriveCommandPolicy("propose-acceptance-criteria", opts);
         console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.showPrompt) {
+        const prompt = await handlers.proposeAcceptanceCriteria(specIds, opts, globalOpts);
+        if (typeof prompt === "string") process.stdout.write(prompt + "\n");
         return;
       }
       await handlers.proposeAcceptanceCriteria(specIds, opts, globalOpts);
