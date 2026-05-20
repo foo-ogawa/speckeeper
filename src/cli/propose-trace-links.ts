@@ -14,7 +14,7 @@ export interface CommandProposeTraceLinksOptions {
   config?: string;
   adapter?: string;
   model?: string;
-  dryRun?: boolean;
+  showPrompt?: boolean;
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
@@ -22,8 +22,12 @@ export interface CommandProposeTraceLinksOptions {
 
 export async function commandProposeTraceLinks(
   opts: CommandProposeTraceLinksOptions,
-): Promise<void> {
+): Promise<void | string> {
   const context = await buildProposeTraceLinksContext(opts.config);
+
+  if (opts.showPrompt) {
+    return context;
+  }
 
   const auditConfig: AuditConfig = {
     adapter: opts.adapter,
@@ -31,7 +35,6 @@ export async function commandProposeTraceLinks(
   };
 
   const auditOpts: AuditOptions = {
-    dryRun: opts.dryRun,
     failOn: opts.failOn,
   };
 
