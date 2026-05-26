@@ -52,6 +52,7 @@ describe('buildCommand', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
