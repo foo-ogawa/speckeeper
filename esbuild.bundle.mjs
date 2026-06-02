@@ -5,6 +5,8 @@ import { readFileSync, statSync } from "node:fs";
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 const minify = process.argv.includes("--minify");
 
+// tsx resolves loader paths via import.meta.url relative to its package
+// directory and cannot be inlined into a single-file bundle.
 const externalSdks = [
   "@anthropic-ai/claude-agent-sdk",
   "@anthropic-ai/sdk",
@@ -12,6 +14,7 @@ const externalSdks = [
   "@openai/agents",
   "@google/genai",
   "better-sqlite3",
+  "tsx",
 ];
 
 const resolveRuntimeDynamicImports = {

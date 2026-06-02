@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { register } from 'tsx/esm/api';
+register();
+
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
