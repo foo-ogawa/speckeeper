@@ -179,7 +179,7 @@ describe('FR-105: Project Initialization', () => {
   });
 
   describe('FR-105-07: Generated project passes speckeeper lint', () => {
-    it('speckeeper lint succeeds on generated project', () => {
+    it('speckeeper lint succeeds on generated project', { timeout: 120_000 }, () => {
       execSync(`node ${speckeeperCmd} init`, { cwd: testDir });
       
       // Install dependencies (using local speckeeper package)
@@ -196,7 +196,7 @@ describe('FR-105: Project Initialization', () => {
   });
 
   describe('FR-105-08: Generated project passes typecheck', () => {
-    it('tsc --noEmit succeeds on generated project', () => {
+    it('tsc --noEmit succeeds on generated project', { timeout: 120_000 }, () => {
       execSync(`node ${speckeeperCmd} init`, { cwd: testDir });
       
       // Install dependencies

@@ -164,10 +164,10 @@ export interface ProposeTraceLinksOptions {
 export type ProposeTraceLinksExitCode = 0 | 1 | 2 | 10 | 11 | 12;
 
 export type ProposeTraceLinksExitResult =
-  { exitCode: 0; stdout: Record<string, unknown> }
+  { exitCode: 0; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { candidateLinks: { from: string; relation: string; to: string; confidence: number; reason: string }[] } }
   | { exitCode: 1; stderr: unknown }
   | { exitCode: 2; stderr: unknown }
-  | { exitCode: 10; stdout: Record<string, unknown> }
+  | { exitCode: 10; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { candidateLinks: { from: string; relation: string; to: string; confidence: number; reason: string }[] } }
   | { exitCode: 11; stderr: unknown }
   | { exitCode: 12; stderr: unknown };
 
@@ -182,10 +182,10 @@ export interface ExplainImpactOptions {
 export type ExplainImpactExitCode = 0 | 1 | 2 | 10 | 11 | 12;
 
 export type ExplainImpactExitResult =
-  { exitCode: 0; stdout: Record<string, unknown> }
+  { exitCode: 0; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { explanation: string; affectedArtifacts?: { type: "spec" | "api" | "ddl" | "test" | "annotation"; id: string; summary: string }[]; testConsiderations?: string[]; releaseRisk?: "low" | "medium" | "high"; sourceCommand?: string } }
   | { exitCode: 1; stderr: unknown }
   | { exitCode: 2; stderr: unknown }
-  | { exitCode: 10; stdout: Record<string, unknown> }
+  | { exitCode: 10; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { explanation: string; affectedArtifacts?: { type: "spec" | "api" | "ddl" | "test" | "annotation"; id: string; summary: string }[]; testConsiderations?: string[]; releaseRisk?: "low" | "medium" | "high"; sourceCommand?: string } }
   | { exitCode: 11; stderr: unknown }
   | { exitCode: 12; stderr: unknown };
 
@@ -205,10 +205,10 @@ export interface ProposeAcceptanceCriteriaOptions {
 export type ProposeAcceptanceCriteriaExitCode = 0 | 1 | 2 | 10 | 11 | 12;
 
 export type ProposeAcceptanceCriteriaExitResult =
-  { exitCode: 0; stdout: Record<string, unknown> }
+  { exitCode: 0; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { criteriaProposals: { specId: string; criteria: string[]; rationale: string }[] } }
   | { exitCode: 1; stderr: unknown }
   | { exitCode: 2; stderr: unknown }
-  | { exitCode: 10; stdout: Record<string, unknown> }
+  | { exitCode: 10; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { criteriaProposals: { specId: string; criteria: string[]; rationale: string }[] } }
   | { exitCode: 11; stderr: unknown }
   | { exitCode: 12; stderr: unknown };
 
@@ -248,11 +248,36 @@ export interface RequirementAuditResult {
   metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string };
 }
 
-export type TraceLinkResult = Record<string, unknown>;
+export interface TraceLinkResult {
+  summary: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[];
+  recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[];
+  metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string };
+  candidateLinks: { from: string; relation: string; to: string; confidence: number; reason: string }[];
+}
 
-export type ImpactExplainResult = Record<string, unknown>;
+export interface ImpactExplainResult {
+  summary: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[];
+  recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[];
+  metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string };
+  explanation: string;
+  affectedArtifacts?: { type: "spec" | "api" | "ddl" | "test" | "annotation"; id: string; summary: string }[];
+  testConsiderations?: string[];
+  releaseRisk?: "low" | "medium" | "high";
+  sourceCommand?: string;
+}
 
-export type AcceptanceCriteriaResult = Record<string, unknown>;
+export interface AcceptanceCriteriaResult {
+  summary: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[];
+  recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[];
+  metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string };
+  criteriaProposals: { specId: string; criteria: string[]; rationale: string }[];
+}
 
 export interface ImpactAnalysisOutput {
   target: string;
