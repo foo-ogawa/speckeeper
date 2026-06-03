@@ -1095,3 +1095,4 @@ export const auditRequirementsExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const proposeTraceLinksExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const explainImpactExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const proposeAcceptanceCriteriaExitCodes = [0, 1, 2, 10, 11, 12] as const;
+export const agentsExitCodes = [0, 1] as const;

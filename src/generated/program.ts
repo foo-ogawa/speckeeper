@@ -17,6 +17,7 @@ export interface CommandHandlers {
   proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  agents: (options: { format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
 }
 
 export function createProgram(
@@ -288,6 +289,20 @@ export function createProgram(
       await handlers.proposeAcceptanceCriteria(specIds, opts, globalOpts);
     });
 
+  program
+    .command("agents")
+    .description("Output the full resolved agent DSL as structured data.")
+    .option("-F, --format <value>", "Output format.", "yaml")
+    .action(async (opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals();
+      if (globalOpts.introspect) {
+        const policy = deriveCommandPolicy("agents", opts);
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      await handlers.agents(opts, globalOpts);
+    });
+
 
   // Built-in extract command (auto-injected by cli-contracts)
   program
@@ -317,7 +332,7 @@ export function createProgram(
               type: "cli-contracts/extract",
               extractedAt: new Date().toISOString(),
               specVersion: doc.cli_contracts ?? "0.1.0",
-              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria"],
+              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"],
             };
           }
           Object.assign(out, doc);
@@ -335,7 +350,7 @@ export function createProgram(
             yamlLines.push("extractedAt: " + new Date().toISOString());
             yamlLines.push("spec_version: " + (doc.cli_contracts ?? "0.1.0"));
             yamlLines.push("commands:");
-            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria"]) {
+            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"]) {
               yamlLines.push("  - " + id);
             }
           }
