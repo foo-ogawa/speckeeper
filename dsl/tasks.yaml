@@ -1,6 +1,7 @@
 audit-requirement-quality:
   description: Audit design specs for quality, verifiability, and consistency
   target_agent: spec-quality-reviewer
+  model_class: standard
   allowed_from_agents:
     - spec-quality-reviewer
   workflow: requirement-audit
@@ -27,6 +28,7 @@ audit-requirement-quality:
 propose-trace-links:
   description: Propose candidate traceability links between specs and external artifacts
   target_agent: spec-quality-reviewer
+  model_class: standard
   allowed_from_agents:
     - spec-quality-reviewer
   workflow: trace-link-proposal
@@ -52,6 +54,7 @@ propose-trace-links:
 explain-impact-result:
   description: Explain speckeeper impact command output in human-readable form
   target_agent: spec-quality-reviewer
+  model_class: fast
   allowed_from_agents:
     - spec-quality-reviewer
   workflow: impact-explanation
@@ -75,6 +78,7 @@ explain-impact-result:
 propose-acceptance-criteria:
   description: Propose acceptance criteria drafts for design specs
   target_agent: spec-quality-reviewer
+  model_class: standard
   allowed_from_agents:
     - spec-quality-reviewer
   workflow: acceptance-proposal

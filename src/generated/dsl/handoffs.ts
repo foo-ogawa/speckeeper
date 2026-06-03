@@ -32,7 +32,7 @@ export const RequirementAuditResultSchema = z.object({
   location: z.string().optional(),
   message: z.string(),
   recommendation: z.string().optional(),
-  confidence: z.number().optional(),
+  confidence: z.number().min(0).max(1).optional(),
   evidence: z.array(z.object({
   kind: z.enum(["file", "command", "schema", "diff", "stdout", "stderr", "text"]).optional(),
   target: z.string().optional(),
@@ -77,7 +77,7 @@ export const TraceLinkResultSchema = z.object({
   from: z.string(),
   relation: z.string(),
   to: z.string(),
-  confidence: z.number(),
+  confidence: z.number().min(0).max(1),
   reason: z.string(),
 })),
   recommendedActions: z.array(z.object({

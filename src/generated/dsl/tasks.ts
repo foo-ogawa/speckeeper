@@ -7,6 +7,8 @@
 import type { AgentId } from "./agents";
 import type { HandoffTypeId } from "./handoffs";
 
+export type ModelClass = "fast" | "standard" | "thinking";
+
 export interface TaskContract {
   readonly id: string;
   readonly description: string;
@@ -19,6 +21,7 @@ export interface TaskContract {
   readonly responsibilities: readonly string[];
   readonly completion_criteria: readonly string[];
   readonly optional: boolean;
+  readonly model_class?: ModelClass;
 }
 
 export const auditRequirementQuality: TaskContract = {
@@ -48,6 +51,7 @@ export const auditRequirementQuality: TaskContract = {
   "Output conforms to RequirementAuditResult schema"
 ],
   optional: false,
+  model_class: "standard",
 };
 
 export const proposeTraceLinks: TaskContract = {
@@ -76,6 +80,7 @@ export const proposeTraceLinks: TaskContract = {
   "Output conforms to TraceLinkResult schema"
 ],
   optional: false,
+  model_class: "standard",
 };
 
 export const explainImpactResult: TaskContract = {
@@ -103,6 +108,7 @@ export const explainImpactResult: TaskContract = {
   "Severity reflects urgency of the underlying change"
 ],
   optional: false,
+  model_class: "fast",
 };
 
 export const proposeAcceptanceCriteria: TaskContract = {
@@ -130,6 +136,7 @@ export const proposeAcceptanceCriteria: TaskContract = {
   "Output conforms to AcceptanceCriteriaResult handoff schema"
 ],
   optional: false,
+  model_class: "standard",
 };
 
 export const taskRegistry: Record<string, TaskContract> = {
