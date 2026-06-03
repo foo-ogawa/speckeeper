@@ -18,6 +18,7 @@ export interface CommandProposeAcceptanceCriteriaOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
+  logFile?: string;
 }
 
 export async function commandProposeAcceptanceCriteria(
@@ -38,6 +39,7 @@ export async function commandProposeAcceptanceCriteria(
 
   const auditOpts: AuditOptions = {
     failOn: opts.failOn,
+    logFile: opts.logFile,
   };
 
   try {

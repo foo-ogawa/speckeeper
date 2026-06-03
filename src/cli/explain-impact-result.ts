@@ -17,6 +17,7 @@ export interface CommandExplainImpactOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
+  logFile?: string;
 }
 
 export async function commandExplainImpact(
@@ -42,6 +43,7 @@ export async function commandExplainImpact(
 
   const auditOpts: AuditOptions = {
     failOn: opts.failOn,
+    logFile: opts.logFile,
   };
 
   try {

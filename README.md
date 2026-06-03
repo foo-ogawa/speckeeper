@@ -182,6 +182,18 @@ npx speckeeper audit-requirements --adapter openai
 | `speckeeper explain-impact` | Explain impact analysis output in human-readable form (accepts JSON from `impact` via stdin) |
 | `speckeeper propose-acceptance-criteria` | Propose testable acceptance criteria in Given/When/Then format |
 
+### Utility Commands
+
+| Command | Description |
+|---------|-------------|
+| `speckeeper extract [--all] [commands...]` | Extract embedded CLI contract specification (YAML/JSON) |
+| `speckeeper agents [--format json\|yaml]` | Output resolved agent-contracts DSL |
+
+**Common LLM Options:**
+
+All LLM commands support these additional options:
+- `--log-file <path>` / `-l`: Write structured progress log to a file for debugging and monitoring
+
 LLM-powered commands are read-only by default. `audit-requirements` and `explain-impact` do not modify files or state. `propose-*` commands produce proposals; generated output should be reviewed before use. LLM commands do not replace deterministic gates — they are an additional semantic review layer on top of `lint`, `check`, and `impact`.
 
 All LLM commands require `agent-contracts-runtime` (optional peer dependency) and an adapter key, and support `--dry-run` to inspect the prompt without calling the LLM.

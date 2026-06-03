@@ -746,6 +746,12 @@ command_sets:
               enum: [json, text, yaml]
               default: json
 
+          - name: log-file
+            aliases: [l]
+            description: Write agent progress log to this file path.
+            schema:
+              type: string
+
         exits:
           '0':
             description: Audit completed, no blocking findings.
@@ -782,6 +788,7 @@ command_sets:
               format: text
 
         x-agent:
+          dsl_task: audit-requirement-quality
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
           retryableExitCodes: [12]
@@ -854,6 +861,12 @@ command_sets:
               enum: [json, text, yaml]
               default: json
 
+          - name: log-file
+            aliases: [l]
+            description: Write agent progress log to this file path.
+            schema:
+              type: string
+
         exits:
           '0':
             description: Proposal completed, no blocking findings.
@@ -890,6 +903,7 @@ command_sets:
               format: text
 
         x-agent:
+          dsl_task: propose-trace-links
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
           retryableExitCodes: [12]
@@ -959,6 +973,12 @@ command_sets:
               enum: [json, text, yaml]
               default: json
 
+          - name: log-file
+            aliases: [l]
+            description: Write agent progress log to this file path.
+            schema:
+              type: string
+
         exits:
           '0':
             description: Explanation completed successfully.
@@ -995,6 +1015,7 @@ command_sets:
               format: text
 
         x-agent:
+          dsl_task: explain-impact-result
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
           retryableExitCodes: [12]
@@ -1077,6 +1098,12 @@ command_sets:
               enum: [json, text, yaml]
               default: json
 
+          - name: log-file
+            aliases: [l]
+            description: Write agent progress log to this file path.
+            schema:
+              type: string
+
         exits:
           '0':
             description: Proposal completed, no blocking findings.
@@ -1113,6 +1140,7 @@ command_sets:
               format: text
 
         x-agent:
+          dsl_task: propose-acceptance-criteria
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
           retryableExitCodes: [12]
