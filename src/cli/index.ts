@@ -20,6 +20,7 @@ import { commandAuditRequirements } from './audit-requirements.js';
 import { commandProposeTraceLinks } from './propose-trace-links.js';
 import { commandExplainImpact } from './explain-impact-result.js';
 import { commandProposeAcceptanceCriteria } from './propose-acceptance-criteria.js';
+import { resolvedDsl } from '../generated/dsl/index.js';
 import type { InitOptions } from './init.js';
 import type { BuildCommandOptions } from './build.js';
 import type { LintCommandOptions } from './lint.js';
@@ -105,6 +106,20 @@ const handlers: CommandHandlers = {
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
     }),
+  agents: async (opts) => {
+    const YAML = await import('yaml');
+    const format = opts.format ?? 'yaml';
+    try {
+      if (format === 'json') {
+        console.log(JSON.stringify(resolvedDsl, null, 2));
+      } else {
+        console.log(YAML.stringify(resolvedDsl, { lineWidth: 120 }));
+      }
+    } catch (err) {
+      console.error(`Failed to output DSL: ${(err as Error).message}`);
+      process.exit(1);
+    }
+  },
 };
 
 createProgram(handlers, getVersion()).parse();
