@@ -480,6 +480,7 @@ speckeeper audit-requirements --report-format json --output audit.json
 | `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the audit report. |
+| `--log-file` | -l | No |  | Write agent progress log to this file path. |
 
 #### Exit Codes
 
@@ -511,6 +512,7 @@ speckeeper audit-requirements --report-format json --output audit.json
 
 ```yaml
 x-agent: 
+  dsl_task: audit-requirement-quality
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
@@ -544,6 +546,7 @@ speckeeper propose-trace-links --adapter claude --report-format json
 | `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
+| `--log-file` | -l | No |  | Write agent progress log to this file path. |
 
 #### Exit Codes
 
@@ -575,6 +578,7 @@ speckeeper propose-trace-links --adapter claude --report-format json
 
 ```yaml
 x-agent: 
+  dsl_task: propose-trace-links
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
@@ -607,6 +611,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 | `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
+| `--log-file` | -l | No |  | Write agent progress log to this file path. |
 
 #### Exit Codes
 
@@ -638,6 +643,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 ```yaml
 x-agent: 
+  dsl_task: explain-impact-result
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
@@ -680,6 +686,7 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 | `--fail-on` |  | No | `"error"` | Minimum severity that causes a non-zero exit. |
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
+| `--log-file` | -l | No |  | Write agent progress log to this file path. |
 
 #### Exit Codes
 
@@ -711,6 +718,7 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 
 ```yaml
 x-agent: 
+  dsl_task: propose-acceptance-criteria
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 

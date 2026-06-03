@@ -13,10 +13,10 @@ export interface CommandHandlers {
   impact: (id: string | undefined, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   convert: (file: string | undefined, options: { output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
-  auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
-  proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
-  explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
-  proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   agents: (options: { format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
 }
 
@@ -198,6 +198,7 @@ export function createProgram(
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the audit report.", "json")
+    .option("-l, --log-file <value>", "Write agent progress log to this file path.")
     .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
@@ -223,6 +224,7 @@ export function createProgram(
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("-l, --log-file <value>", "Write agent progress log to this file path.")
     .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
@@ -247,6 +249,7 @@ export function createProgram(
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("-l, --log-file <value>", "Write agent progress log to this file path.")
     .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
@@ -273,6 +276,7 @@ export function createProgram(
     .option("--fail-on <level>", "Minimum severity that causes a non-zero exit.", "error")
     .option("-o, --output <file>", "Write result to a file instead of stdout.")
     .option("--report-format <fmt>", "Output format for the report.", "json")
+    .option("-l, --log-file <value>", "Write agent progress log to this file path.")
     .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
     .action(async (specIds, opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();

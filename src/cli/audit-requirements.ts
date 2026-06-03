@@ -18,6 +18,7 @@ export interface CommandAuditRequirementsOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
+  logFile?: string;
 }
 
 export async function commandAuditRequirements(
@@ -36,6 +37,7 @@ export async function commandAuditRequirements(
 
   const auditOpts: AuditOptions = {
     failOn: opts.failOn,
+    logFile: opts.logFile,
   };
 
   try {

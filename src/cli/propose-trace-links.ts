@@ -18,6 +18,7 @@ export interface CommandProposeTraceLinksOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: ReportFormat;
+  logFile?: string;
 }
 
 export async function commandProposeTraceLinks(
@@ -36,6 +37,7 @@ export async function commandProposeTraceLinks(
 
   const auditOpts: AuditOptions = {
     failOn: opts.failOn,
+    logFile: opts.logFile,
   };
 
   try {

@@ -140,6 +140,7 @@ export interface AuditRequirementsOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
+  logFile?: string;
 }
 
 export type AuditRequirementsExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -159,6 +160,7 @@ export interface ProposeTraceLinksOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
+  logFile?: string;
 }
 
 export type ProposeTraceLinksExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -177,6 +179,7 @@ export interface ExplainImpactOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
+  logFile?: string;
 }
 
 export type ExplainImpactExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -200,6 +203,7 @@ export interface ProposeAcceptanceCriteriaOptions {
   failOn?: "warning" | "error" | "critical";
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
+  logFile?: string;
 }
 
 export type ProposeAcceptanceCriteriaExitCode = 0 | 1 | 2 | 10 | 11 | 12;
