@@ -852,7 +852,7 @@ function validateSpecs(
         `Validation failed for spec "${specId}" (model: ${model.id}) in ${filePath}:\n${issues}`,
       );
     }
-    validated.push(result.data);
+    validated.push({ ...result.data, _sourceFile: filePath });
   }
   return validated;
 }

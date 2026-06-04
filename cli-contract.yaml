@@ -539,6 +539,58 @@ command_sets:
         x-agent:
           idempotent: true
 
+      # ── insights ──────────────────────────────────────
+      insights:
+        summary: Export spec relation edges as ExternalInsight JSON.
+        description: >-
+          Walks all design spec relations and outputs structured edges
+          for agent-contracts-analyzer External Insight Provider integration.
+        usage:
+          - speckeeper insights --format json
+          - speckeeper insights --format json --project-root .
+
+        options:
+          - name: format
+            aliases: [f]
+            description: "Output format (json only)."
+            value_name: format
+            schema:
+              type: string
+              default: json
+              enum: [json]
+
+          - name: project-root
+            description: Project root directory containing speckeeper.config.
+            value_name: path
+            schema:
+              type: string
+              default: .
+
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            value_name: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+        exits:
+          '0':
+            description: ExternalInsight JSON emitted to stdout.
+            stdout:
+              format: json
+
+          '1':
+            description: Export failed (config error or internal error).
+            stderr:
+              format: text
+
+        x-agent:
+          idempotent: true
+
       # ── scaffold ──────────────────────────────────────
       scaffold:
         summary: Generate _models/ from a Mermaid flowchart definition.

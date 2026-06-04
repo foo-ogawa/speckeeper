@@ -11,6 +11,7 @@ export interface CommandHandlers {
   check: (type: string | undefined, options: { config?: string; strict?: boolean; verbose?: boolean; coverage?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   new: (type: string | undefined, options: { kind?: string; name?: string; output?: string; template?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   impact: (id: string | undefined, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  insights: (options: { format?: string; projectRoot?: string; config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   convert: (file: string | undefined, options: { output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
@@ -153,6 +154,22 @@ export function createProgram(
         return;
       }
       await handlers.impact(id, opts, globalOpts);
+    });
+
+  program
+    .command("insights")
+    .description("Export spec relation edges as ExternalInsight JSON.")
+    .option("-f, --format <format>", "Output format (json only).", "json")
+    .option("--project-root <path>", "Project root directory containing speckeeper.config.", ".")
+    .option("-c, --config <path>", "Path to config file.")
+    .action(async (opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals();
+      if (globalOpts.introspect) {
+        const policy = deriveCommandPolicy("insights", opts);
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      await handlers.insights(opts, globalOpts);
     });
 
   program
@@ -336,7 +353,7 @@ export function createProgram(
               type: "cli-contracts/extract",
               extractedAt: new Date().toISOString(),
               specVersion: doc.cli_contracts ?? "0.1.0",
-              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"],
+              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"],
             };
           }
           Object.assign(out, doc);
@@ -354,7 +371,7 @@ export function createProgram(
             yamlLines.push("extractedAt: " + new Date().toISOString());
             yamlLines.push("spec_version: " + (doc.cli_contracts ?? "0.1.0"));
             yamlLines.push("commands:");
-            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"]) {
+            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"]) {
               yamlLines.push("  - " + id);
             }
           }

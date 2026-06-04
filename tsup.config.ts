@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     'dsl/index': 'src/core/dsl/index.ts',
+    'external/insight-provider': 'src/external/insight-provider.ts',
     cli: 'src/cli/index.ts',
   },
   format: ['esm'],
