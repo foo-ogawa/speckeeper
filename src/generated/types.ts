@@ -104,6 +104,18 @@ export type ImpactExitResult =
   { exitCode: 0; stdout: unknown }
   | { exitCode: 1; stderr: unknown };
 
+export interface InsightsOptions {
+  format?: "json";
+  projectRoot?: string;
+  config?: string;
+}
+
+export type InsightsExitCode = 0 | 1;
+
+export type InsightsExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown };
+
 export interface ScaffoldOptions {
   source: string;
   output?: string;

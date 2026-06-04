@@ -1089,6 +1089,7 @@ export const driftExitCodes = [0, 1] as const;
 export const checkExitCodes = [0, 1] as const;
 export const newExitCodes = [0, 1] as const;
 export const impactExitCodes = [0, 1] as const;
+export const insightsExitCodes = [0, 1] as const;
 export const scaffoldExitCodes = [0, 1] as const;
 export const convertExitCodes = [0, 1] as const;
 export const auditRequirementsExitCodes = [0, 1, 2, 10, 11, 12] as const;

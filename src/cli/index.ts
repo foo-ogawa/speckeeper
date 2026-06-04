@@ -13,6 +13,7 @@ import { driftCommand } from './drift.js';
 import { checkCommand } from './check.js';
 import { newCommand } from './new.js';
 import { impactCommand } from './impact.js';
+import { insightsCommand } from './insights.js';
 import { runInit } from './init.js';
 import { runConvert } from './convert.js';
 import { scaffoldCommand } from './scaffold.js';
@@ -27,6 +28,7 @@ import type { LintCommandOptions } from './lint.js';
 import type { DriftCommandOptions } from './drift.js';
 import type { CheckCommandOptions } from './check.js';
 import type { ImpactCommandOptions } from './impact.js';
+import type { InsightsCommandOptions } from './insights.js';
 import type { ScaffoldCommandOptions } from './scaffold.js';
 
 function getVersion(): string {
@@ -60,6 +62,9 @@ const handlers: CommandHandlers = {
   },
   impact: async (id, opts) => {
     await impactCommand(id!, opts as ImpactCommandOptions);
+  },
+  insights: async (opts) => {
+    await insightsCommand(opts as InsightsCommandOptions);
   },
   scaffold: async (opts) => {
     await scaffoldCommand(opts as ScaffoldCommandOptions);

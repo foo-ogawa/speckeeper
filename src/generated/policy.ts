@@ -433,6 +433,52 @@ export const commandDefinitions = {
       }
     }
   },
+  "insights": {
+    "options": [
+      {
+        "name": "format",
+        "schema": {
+          "type": "string",
+          "default": "json",
+          "enum": [
+            "json"
+          ]
+        }
+      },
+      {
+        "name": "project-root",
+        "schema": {
+          "type": "string",
+          "default": "."
+        }
+      },
+      {
+        "name": "config",
+        "schema": {
+          "type": "string"
+        },
+        "file": {
+          "mode": "read",
+          "exists": true,
+          "encoding": "utf-8"
+        }
+      }
+    ],
+    "env": {
+      "CURSOR_API_KEY": {
+        "sensitive": true
+      },
+      "GEMINI_API_KEY": {
+        "sensitive": true
+      },
+      "OPENAI_API_KEY": {
+        "sensitive": true
+      },
+      "ANTHROPIC_API_KEY": {
+        "sensitive": true
+      }
+    }
+  },
   "scaffold": {
     "effects": {
       "risk_level": "low",

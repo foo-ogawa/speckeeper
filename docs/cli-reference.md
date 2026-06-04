@@ -14,6 +14,7 @@ TypeScript-first specification validation framework — validate design consiste
   - [check](#speckeeper-check)
   - [new](#speckeeper-new)
   - [impact](#speckeeper-impact)
+  - [insights](#speckeeper-insights)
   - [scaffold](#speckeeper-scaffold)
   - [convert](#speckeeper-convert)
   - [audit-requirements](#speckeeper-audit-requirements)
@@ -346,6 +347,48 @@ speckeeper impact COMP-AUTH --format mermaid
 - **stdout:** format=`{options.format}`
 
 **Exit 1:** Analysis failed (ID not found or config error).
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent: 
+  idempotent: true
+```
+
+---
+
+### insights
+
+Export spec relation edges as ExternalInsight JSON.
+
+Walks all design spec relations and outputs structured edges for agent-contracts-analyzer External Insight Provider integration.
+
+**Usage:**
+
+```
+speckeeper insights --format json
+```
+```
+speckeeper insights --format json --project-root .
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--format` | -f | No | `"json"` | Output format (json only). |
+| `--project-root` |  | No | `"."` | Project root directory containing speckeeper.config. |
+| `--config` | -c | No |  | Path to config file. |
+
+#### Exit Codes
+
+**Exit 0:** ExternalInsight JSON emitted to stdout.
+
+- **stdout:** format=`json`
+
+**Exit 1:** Export failed (config error or internal error).
 
 - **stderr:** format=`text`
 
