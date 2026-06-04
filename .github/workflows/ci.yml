@@ -21,6 +21,13 @@ jobs:
         node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout agent-contracts-analyzer (private devDependency)
+        uses: actions/checkout@v4
+        with:
+          repository: foo-log-inc/agent-contracts-analyzer
+          ref: v0.1.1
+          path: .vendor/agent-contracts-analyzer
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
       - name: Build test container
         run: docker compose -f docker-compose.test.yml build --build-arg NODE_VERSION=${{ matrix.node-version }}
       - name: Run tests

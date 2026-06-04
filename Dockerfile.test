@@ -1,11 +1,17 @@
 ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine
 RUN apk add --no-cache git
-RUN git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" \
- && git config --global url."https://github.com/".insteadOf "git@github.com:"
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci --legacy-peer-deps --allow-git=all
+COPY .vendor/agent-contracts-analyzer /vendor/agent-contracts-analyzer
+RUN if [ -f /vendor/agent-contracts-analyzer/package.json ]; then \
+      npm install --legacy-peer-deps --allow-git=all && \
+      npm install file:/vendor/agent-contracts-analyzer --save-dev --legacy-peer-deps; \
+    else \
+      git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" && \
+      git config --global url."https://github.com/".insteadOf "git@github.com:" && \
+      npm ci --legacy-peer-deps --allow-git=all; \
+    fi
 COPY . .
 RUN npm run build
 CMD ["npm", "run", "test"]
