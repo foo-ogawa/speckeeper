@@ -196,7 +196,7 @@ All LLM commands support these additional options:
 
 LLM-powered commands are read-only by default. `audit-requirements` and `explain-impact` do not modify files or state. `propose-*` commands produce proposals; generated output should be reviewed before use. LLM commands do not replace deterministic gates — they are an additional semantic review layer on top of `lint`, `check`, and `impact`.
 
-All LLM commands require `agent-contracts-runtime` (optional peer dependency) and an adapter key, and support `--dry-run` to inspect the prompt without calling the LLM.
+All LLM commands require `agent-contracts-runtime` (optional peer dependency) and an adapter key, and support `--show-prompt` to inspect the prompt without calling the LLM.
 
 ```bash
 # Audit requirement quality
@@ -209,7 +209,7 @@ npx speckeeper propose-trace-links --adapter cursor
 npx speckeeper impact FR-001 --format json | npx speckeeper explain-impact --adapter openai
 
 # Inspect the prompt without calling the LLM
-npx speckeeper audit-requirements --dry-run
+npx speckeeper audit-requirements --show-prompt
 ```
 
 ## Validation Features

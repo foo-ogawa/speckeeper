@@ -141,6 +141,7 @@ export interface AuditRequirementsOptions {
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
   logFile?: string;
+  showPrompt?: boolean;
 }
 
 export type AuditRequirementsExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -161,6 +162,7 @@ export interface ProposeTraceLinksOptions {
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
   logFile?: string;
+  showPrompt?: boolean;
 }
 
 export type ProposeTraceLinksExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -180,6 +182,7 @@ export interface ExplainImpactOptions {
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
   logFile?: string;
+  showPrompt?: boolean;
 }
 
 export type ExplainImpactExitCode = 0 | 1 | 2 | 10 | 11 | 12;
@@ -204,6 +207,7 @@ export interface ProposeAcceptanceCriteriaOptions {
   output?: string;
   reportFormat?: "json" | "text" | "yaml";
   logFile?: string;
+  showPrompt?: boolean;
 }
 
 export type ProposeAcceptanceCriteriaExitCode = 0 | 1 | 2 | 10 | 11 | 12;

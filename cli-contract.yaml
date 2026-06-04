@@ -752,6 +752,12 @@ command_sets:
             schema:
               type: string
 
+          - name: show-prompt
+            description: Output the constructed prompt without calling the LLM API.
+            schema:
+              type: boolean
+              default: false
+
         exits:
           '0':
             description: Audit completed, no blocking findings.
@@ -789,9 +795,14 @@ command_sets:
 
         x-agent:
           dsl_task: audit-requirement-quality
+          safeDryRunOption: show-prompt
+          sideEffectNote: >-
+            Makes network calls to the configured LLM provider when adapter is
+            not mock. Filesystem write only when --output is specified.
+          expectedDurationMs: 120000
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
-          retryableExitCodes: [12]
+          retryableExitCodes: [1, 12]
 
       # ── propose-trace-links ─────────────────────────────
       propose-trace-links:
@@ -867,6 +878,12 @@ command_sets:
             schema:
               type: string
 
+          - name: show-prompt
+            description: Output the constructed prompt without calling the LLM API.
+            schema:
+              type: boolean
+              default: false
+
         exits:
           '0':
             description: Proposal completed, no blocking findings.
@@ -904,9 +921,14 @@ command_sets:
 
         x-agent:
           dsl_task: propose-trace-links
+          safeDryRunOption: show-prompt
+          sideEffectNote: >-
+            Makes network calls to the configured LLM provider when adapter is
+            not mock. Filesystem write only when --output is specified.
+          expectedDurationMs: 120000
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
-          retryableExitCodes: [12]
+          retryableExitCodes: [1, 12]
 
       # ── explain-impact ──────────────────────────────────
       explain-impact:
@@ -979,6 +1001,12 @@ command_sets:
             schema:
               type: string
 
+          - name: show-prompt
+            description: Output the constructed prompt without calling the LLM API.
+            schema:
+              type: boolean
+              default: false
+
         exits:
           '0':
             description: Explanation completed successfully.
@@ -1016,9 +1044,14 @@ command_sets:
 
         x-agent:
           dsl_task: explain-impact-result
+          safeDryRunOption: show-prompt
+          sideEffectNote: >-
+            Makes network calls to the configured LLM provider when adapter is
+            not mock. Filesystem write only when --output is specified.
+          expectedDurationMs: 120000
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
-          retryableExitCodes: [12]
+          retryableExitCodes: [1, 12]
 
       # ── propose-acceptance-criteria ─────────────────────
       propose-acceptance-criteria:
@@ -1104,6 +1137,12 @@ command_sets:
             schema:
               type: string
 
+          - name: show-prompt
+            description: Output the constructed prompt without calling the LLM API.
+            schema:
+              type: boolean
+              default: false
+
         exits:
           '0':
             description: Proposal completed, no blocking findings.
@@ -1141,9 +1180,14 @@ command_sets:
 
         x-agent:
           dsl_task: propose-acceptance-criteria
+          safeDryRunOption: show-prompt
+          sideEffectNote: >-
+            Makes network calls to the configured LLM provider when adapter is
+            not mock. Filesystem write only when --output is specified.
+          expectedDurationMs: 120000
           recommended_before_use:
             - "Run with --show-prompt first to preview the prompt"
-          retryableExitCodes: [12]
+          retryableExitCodes: [1, 12]
 
       # ── agents ──────────────────────────────────────────
       agents:

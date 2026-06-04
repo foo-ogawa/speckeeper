@@ -481,6 +481,7 @@ speckeeper audit-requirements --report-format json --output audit.json
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the audit report. |
 | `--log-file` | -l | No |  | Write agent progress log to this file path. |
+| `--show-prompt` |  | No | `false` | Output the constructed prompt without calling the LLM API. |
 
 #### Exit Codes
 
@@ -513,9 +514,13 @@ speckeeper audit-requirements --report-format json --output audit.json
 ```yaml
 x-agent: 
   dsl_task: audit-requirement-quality
+  safeDryRunOption: show-prompt
+  sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
+  expectedDurationMs: 120000
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
+    - 1
     - 12
 ```
 
@@ -547,6 +552,7 @@ speckeeper propose-trace-links --adapter claude --report-format json
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
 | `--log-file` | -l | No |  | Write agent progress log to this file path. |
+| `--show-prompt` |  | No | `false` | Output the constructed prompt without calling the LLM API. |
 
 #### Exit Codes
 
@@ -579,9 +585,13 @@ speckeeper propose-trace-links --adapter claude --report-format json
 ```yaml
 x-agent: 
   dsl_task: propose-trace-links
+  safeDryRunOption: show-prompt
+  sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
+  expectedDurationMs: 120000
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
+    - 1
     - 12
 ```
 
@@ -612,6 +622,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
 | `--log-file` | -l | No |  | Write agent progress log to this file path. |
+| `--show-prompt` |  | No | `false` | Output the constructed prompt without calling the LLM API. |
 
 #### Exit Codes
 
@@ -644,9 +655,13 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 ```yaml
 x-agent: 
   dsl_task: explain-impact-result
+  safeDryRunOption: show-prompt
+  sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
+  expectedDurationMs: 120000
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
+    - 1
     - 12
 ```
 
@@ -687,6 +702,7 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 | `--output` | -o | No |  | Write result to a file instead of stdout. |
 | `--report-format` |  | No | `"json"` | Output format for the report. |
 | `--log-file` | -l | No |  | Write agent progress log to this file path. |
+| `--show-prompt` |  | No | `false` | Output the constructed prompt without calling the LLM API. |
 
 #### Exit Codes
 
@@ -719,9 +735,13 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 ```yaml
 x-agent: 
   dsl_task: propose-acceptance-criteria
+  safeDryRunOption: show-prompt
+  sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
+  expectedDurationMs: 120000
   recommended_before_use: 
     - Run with --show-prompt first to preview the prompt
   retryableExitCodes: 
+    - 1
     - 12
 ```
 
