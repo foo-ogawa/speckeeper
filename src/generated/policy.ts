@@ -636,6 +636,13 @@ export const commandDefinitions = {
         "schema": {
           "type": "string"
         }
+      },
+      {
+        "name": "show-prompt",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
       }
     ],
     "env": {
@@ -730,6 +737,13 @@ export const commandDefinitions = {
         "schema": {
           "type": "string"
         }
+      },
+      {
+        "name": "show-prompt",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
       }
     ],
     "env": {
@@ -812,6 +826,13 @@ export const commandDefinitions = {
         "name": "log-file",
         "schema": {
           "type": "string"
+        }
+      },
+      {
+        "name": "show-prompt",
+        "schema": {
+          "type": "boolean",
+          "default": false
         }
       }
     ],
@@ -906,6 +927,13 @@ export const commandDefinitions = {
         "name": "log-file",
         "schema": {
           "type": "string"
+        }
+      },
+      {
+        "name": "show-prompt",
+        "schema": {
+          "type": "boolean",
+          "default": false
         }
       }
     ],
