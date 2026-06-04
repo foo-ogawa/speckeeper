@@ -15,7 +15,7 @@ export default defineConfig({
   treeshake: true,
   target: 'node18',
   outDir: 'dist',
-  external: ['chalk', 'cli-contracts', 'commander', 'glob', 'yaml', 'zod', 'agent-contracts-runtime', 'agent-contracts-analyzer'],
+  external: ['chalk', 'cli-contracts', 'commander', 'glob', 'yaml', 'zod', 'agent-contracts-runtime'],
   // Copy templates directory after build
   onSuccess: 'cp -r templates dist/',
 });

@@ -13,7 +13,7 @@ import type {
   InsightProvider,
   InsightQuery,
   SymbolAnchor,
-} from 'agent-contracts-analyzer';
+} from './analyzer-types.js';
 import {
   buildRegistryFromConfig,
   type Relation,
