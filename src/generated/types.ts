@@ -147,7 +147,7 @@ export type ConvertExitResult =
 
 export interface AuditRequirementsOptions {
   config?: string;
-  adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
+  adapter?: "claude" | "openai" | "gemini" | "mock";
   model?: string;
   failOn?: "warning" | "error" | "critical";
   output?: string;
@@ -168,7 +168,7 @@ export type AuditRequirementsExitResult =
 
 export interface ProposeTraceLinksOptions {
   config?: string;
-  adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
+  adapter?: "claude" | "openai" | "gemini" | "mock";
   model?: string;
   failOn?: "warning" | "error" | "critical";
   output?: string;
@@ -188,7 +188,7 @@ export type ProposeTraceLinksExitResult =
   | { exitCode: 12; stderr: unknown };
 
 export interface ExplainImpactOptions {
-  adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
+  adapter?: "claude" | "openai" | "gemini" | "mock";
   model?: string;
   failOn?: "warning" | "error" | "critical";
   output?: string;
@@ -213,7 +213,7 @@ export interface ProposeAcceptanceCriteriaArgs {
 
 export interface ProposeAcceptanceCriteriaOptions {
   config?: string;
-  adapter?: "cursor" | "claude" | "openai" | "gemini" | "mock";
+  adapter?: "claude" | "openai" | "gemini" | "mock";
   model?: string;
   failOn?: "warning" | "error" | "critical";
   output?: string;

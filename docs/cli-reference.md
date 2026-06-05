@@ -40,7 +40,6 @@ Requirements and design management framework with TypeScript DSL.
 
 | Variable | Description |
 |---|---|
-| `CURSOR_API_KEY` | API key for Cursor SDK adapter. |
 | `GEMINI_API_KEY` | API key for Gemini adapter. |
 | `OPENAI_API_KEY` | API key for OpenAI adapter. |
 | `ANTHROPIC_API_KEY` | API key for Anthropic/Claude adapter. |

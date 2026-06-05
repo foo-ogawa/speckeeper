@@ -203,7 +203,7 @@ All LLM commands require `agent-contracts-runtime` (optional peer dependency) an
 npx speckeeper audit-requirements --adapter openai
 
 # Propose traceability links
-npx speckeeper propose-trace-links --adapter cursor
+npx speckeeper propose-trace-links --adapter claude
 
 # Explain impact analysis for a PR comment
 npx speckeeper impact FR-001 --format json | npx speckeeper explain-impact --adapter openai
@@ -572,7 +572,6 @@ Tool capabilities are described in machine-readable form via [cli-contract.yaml]
 
 | Adapter | Default Model | Environment Variable |
 |---------|---------------|---------------------|
-| `cursor` | runtime default | `CURSOR_API_KEY` |
 | `openai` | runtime default | `OPENAI_API_KEY` |
 | `gemini` | runtime default | `GEMINI_API_KEY` |
 | `claude` | runtime default | `ANTHROPIC_API_KEY` |
