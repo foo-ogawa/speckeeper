@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.16.5",
+  "version": "0.16.6",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -74,6 +74,7 @@
     "tsx": "^4.21.0"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.165",
     "@eslint/js": "^9.39.2",
     "@types/node": "^20.11.0",
     "@types/node-sql-parser": "^1.0.0",
