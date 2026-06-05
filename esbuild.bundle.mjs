@@ -10,7 +10,7 @@ const minify = process.argv.includes("--minify");
 const externalSdks = [
   "@anthropic-ai/claude-agent-sdk",
   "@anthropic-ai/sdk",
-  "@cursor/sdk",
+  "@google/adk",
   "@openai/agents",
   "@google/genai",
   "better-sqlite3",

@@ -48,9 +48,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -122,9 +119,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -189,9 +183,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -244,9 +235,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -294,9 +282,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -358,9 +343,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -419,9 +401,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -465,9 +444,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -546,9 +522,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -591,9 +564,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -629,7 +599,6 @@ export const commandDefinitions = {
         "schema": {
           "type": "string",
           "enum": [
-            "cursor",
             "claude",
             "openai",
             "gemini",
@@ -692,9 +661,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -730,7 +696,6 @@ export const commandDefinitions = {
         "schema": {
           "type": "string",
           "enum": [
-            "cursor",
             "claude",
             "openai",
             "gemini",
@@ -793,9 +758,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -820,7 +782,6 @@ export const commandDefinitions = {
         "schema": {
           "type": "string",
           "enum": [
-            "cursor",
             "claude",
             "openai",
             "gemini",
@@ -883,9 +844,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -921,7 +879,6 @@ export const commandDefinitions = {
         "schema": {
           "type": "string",
           "enum": [
-            "cursor",
             "claude",
             "openai",
             "gemini",
@@ -984,9 +941,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },
@@ -1013,9 +967,6 @@ export const commandDefinitions = {
       }
     ],
     "env": {
-      "CURSOR_API_KEY": {
-        "sensitive": true
-      },
       "GEMINI_API_KEY": {
         "sensitive": true
       },

@@ -472,7 +472,6 @@ specs:
         description: SDK adapter for LLM execution
         required: false
         choices:
-          - cursor
           - claude
           - openai
           - gemini
@@ -560,7 +559,6 @@ specs:
         description: SDK adapter for LLM execution
         required: false
         choices:
-          - cursor
           - claude
           - openai
           - gemini
@@ -648,7 +646,6 @@ specs:
         description: SDK adapter for LLM execution
         required: false
         choices:
-          - cursor
           - claude
           - openai
           - gemini
@@ -742,7 +739,6 @@ specs:
         description: SDK adapter for LLM execution
         required: false
         choices:
-          - cursor
           - claude
           - openai
           - gemini
