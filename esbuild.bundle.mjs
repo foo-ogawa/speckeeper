@@ -13,30 +13,14 @@ const externalSdks = [
   "@google/adk",
   "@openai/agents",
   "@google/genai",
+  "agent-contracts-runtime",
   "better-sqlite3",
   "tsx",
 ];
 
 const resolveRuntimeDynamicImports = {
   name: "resolve-runtime-dynamic-imports",
-  setup(build) {
-    build.onLoad({ filter: /agents[\\/]orchestrator\.ts$/ }, async (args) => {
-      let contents = readFileSync(args.path, "utf8");
-      contents = contents.replace(
-        /const RUNTIME_PKG = \["agent-contracts",\s*"runtime"\]\.join\("-"\);/,
-        'const RUNTIME_PKG = "agent-contracts-runtime";',
-      );
-      contents = contents.replace(
-        /await import\(RUNTIME_PKG\)/g,
-        'await import("agent-contracts-runtime")',
-      );
-      contents = contents.replace(
-        /await import\(`\$\{runtimePkg\}\/adapters\/([^`]+)`\)/g,
-        'await import("agent-contracts-runtime/adapters/$1")',
-      );
-      return { contents, loader: "ts" };
-    });
-  },
+  setup(_build) {},
 };
 
 const inlineBuildTimeConstants = {
