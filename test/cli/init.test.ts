@@ -200,6 +200,7 @@ describe('FR-105: Project Initialization', () => {
       execSync(`node ${speckeeperCmd} init`, { cwd: testDir });
       
       // Install dependencies
+      execSync(`npm install`, { cwd: testDir, stdio: 'pipe' });
       execSync(`npm install ${process.cwd()} --save`, { cwd: testDir });
       
       // Run typecheck
