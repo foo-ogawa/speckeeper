@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   SpeckeeperInsightProvider,
+  filterInsight,
   findRelationLocation,
 } from '../../src/external/insight-provider.js';
 
@@ -122,6 +123,88 @@ describe('SpeckeeperInsightProvider', () => {
     const insight = await provider.provide({ projectRoot: '/project' });
 
     expect(insight.edges).toEqual([]);
+  });
+
+  it('filters edges by changedFiles', async () => {
+    mockedLoadConfig.mockResolvedValue({
+      specs: [{
+        model: createMockModel(),
+        data: [
+          { id: 'FR-001', _sourceFile: 'design/requirements.yaml', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+          { id: 'FR-002', _sourceFile: 'design/other.yaml', relations: [{ type: 'traces', target: 'UC-002' }] },
+          { id: 'UC-001', _sourceFile: 'design/usecases.yaml' },
+          { id: 'UC-002', _sourceFile: 'design/usecases2.yaml' },
+        ],
+      }],
+    } as never);
+
+    const provider = new SpeckeeperInsightProvider();
+    const insight = await provider.provide({
+      projectRoot: '/project',
+      changedFiles: ['design/requirements.yaml'],
+    });
+
+    expect(insight.edges).toHaveLength(1);
+    expect(insight.edges[0].from).toBe('FR-001');
+    expect(insight.edges[0].to).toBe('UC-001');
+    expect(insight.anchorMapping?.map(a => a.domainId).sort()).toEqual(['FR-001', 'UC-001']);
+  });
+
+  it('filters edges by artifactIds', async () => {
+    mockedLoadConfig.mockResolvedValue({
+      specs: [{
+        model: createMockModel(),
+        data: [
+          { id: 'FR-001', _sourceFile: 'design/requirements.yaml', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+          { id: 'FR-002', _sourceFile: 'design/other.yaml', relations: [{ type: 'traces', target: 'UC-002' }] },
+          { id: 'UC-001', _sourceFile: 'design/usecases.yaml' },
+          { id: 'UC-002', _sourceFile: 'design/usecases2.yaml' },
+        ],
+      }],
+    } as never);
+
+    const provider = new SpeckeeperInsightProvider();
+    const insight = await provider.provide({
+      projectRoot: '/project',
+      artifactIds: ['FR-002'],
+    });
+
+    expect(insight.edges).toHaveLength(1);
+    expect(insight.edges[0].from).toBe('FR-002');
+    expect(insight.edges[0].to).toBe('UC-002');
+    expect(insight.anchorMapping?.map(a => a.domainId).sort()).toEqual(['FR-002', 'UC-002']);
+  });
+
+  it('returns all edges when neither changedFiles nor artifactIds are set', async () => {
+    mockedLoadConfig.mockResolvedValue({
+      specs: [{
+        model: createMockModel(),
+        data: [
+          { id: 'FR-001', _sourceFile: 'design/requirements.yaml', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+          { id: 'FR-002', _sourceFile: 'design/other.yaml', relations: [{ type: 'traces', target: 'UC-002' }] },
+          { id: 'UC-001', _sourceFile: 'design/usecases.yaml' },
+          { id: 'UC-002', _sourceFile: 'design/usecases2.yaml' },
+        ],
+      }],
+    } as never);
+
+    const provider = new SpeckeeperInsightProvider();
+    const insight = await provider.provide({ projectRoot: '/project' });
+
+    expect(insight.edges).toHaveLength(2);
+  });
+});
+
+describe('filterInsight', () => {
+  it('returns insight unchanged when no filters are provided', () => {
+    const insight = {
+      source: 'speckeeper' as const,
+      edges: [{ from: 'FR-001', to: 'UC-001', kind: 'satisfies', propagation: 'backward' as const }],
+      anchorMapping: [{ domainId: 'FR-001', filePaths: ['design/requirements.yaml'] }],
+    };
+
+    const result = filterInsight(insight, { projectRoot: '/project' });
+    expect(result).toBe(insight);
   });
 });
 

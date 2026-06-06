@@ -63,7 +63,8 @@ export class SpeckeeperInsightProvider implements InsightProvider {
     const registry = buildRegistryFromConfig(config.specs);
     collectEdgesAndAnchors(config.specs, registry, projectRoot, edges, anchorBySpecId);
 
-    return this.buildInsight(edges, Array.from(anchorBySpecId.values()));
+    const insight = this.buildInsight(edges, Array.from(anchorBySpecId.values()));
+    return filterInsight(insight, query);
   }
 
   private buildInsight(
@@ -84,6 +85,45 @@ export function createSpeckeeperInsightProvider(
   configPath?: string,
 ): SpeckeeperInsightProvider {
   return new SpeckeeperInsightProvider(configPath);
+}
+
+export function filterInsight(insight: ExternalInsight, query: InsightQuery): ExternalInsight {
+  const { changedFiles, artifactIds } = query;
+  if (!changedFiles?.length && !artifactIds?.length) return insight;
+
+  const relevantIds = new Set<string>();
+
+  if (changedFiles?.length) {
+    const changedSet = new Set(changedFiles);
+    for (const anchor of insight.anchorMapping ?? []) {
+      if (anchor.filePaths.some(fp => changedSet.has(fp))) {
+        relevantIds.add(anchor.domainId);
+      }
+    }
+  }
+
+  if (artifactIds?.length) {
+    for (const id of artifactIds) relevantIds.add(id);
+  }
+
+  const filteredEdges = insight.edges.filter(
+    e => relevantIds.has(e.from) || relevantIds.has(e.to),
+  );
+
+  const referencedIds = new Set<string>();
+  for (const edge of filteredEdges) {
+    referencedIds.add(edge.from);
+    referencedIds.add(edge.to);
+  }
+  const filteredAnchors = (insight.anchorMapping ?? []).filter(
+    a => referencedIds.has(a.domainId),
+  );
+
+  return {
+    ...insight,
+    edges: filteredEdges,
+    anchorMapping: filteredAnchors.length > 0 ? filteredAnchors : undefined,
+  };
 }
 
 // ============================================================================
