@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.16.10",
+  "version": "0.16.11",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -95,21 +95,5 @@
     "vitest": "^4.1.7",
     "yaml": "^2.3.4",
     "zod": "^3.22.4"
-  },
-  "peerDependencies": {
-    "@anthropic-ai/claude-agent-sdk": ">=0.3.0",
-    "@google/adk": ">=1.2.0",
-    "@openai/agents": ">=0.11.0"
-  },
-  "peerDependenciesMeta": {
-    "@google/adk": {
-      "optional": true
-    },
-    "@anthropic-ai/claude-agent-sdk": {
-      "optional": true
-    },
-    "@openai/agents": {
-      "optional": true
-    }
   }
 }
