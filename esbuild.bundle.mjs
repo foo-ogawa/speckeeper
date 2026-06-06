@@ -13,7 +13,6 @@ const externalSdks = [
   "@google/adk",
   "@openai/agents",
   "@google/genai",
-  "agent-contracts-runtime",
   "better-sqlite3",
   "tsx",
 ];
@@ -55,8 +54,8 @@ const result = await build({
   banner: {
     js: [
       "#!/usr/bin/env node",
-      "import { createRequire } from 'module';",
-      "const require = createRequire(import.meta.url);",
+      "import { createRequire as __banner_createRequire } from 'module';",
+      "const require = __banner_createRequire(import.meta.url);",
     ].join("\n"),
   },
   plugins: [resolveRuntimeDynamicImports, inlineBuildTimeConstants],

@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    exclude: ['test/bundle/**', '**/node_modules/**'],
     pool: 'forks',
     coverage: {
       provider: 'v8',
