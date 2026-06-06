@@ -1,0 +1,21 @@
+software: speckeeper
+version: 1
+
+# output-schema-conformance and confidence-threshold are semantic guardrails
+# enforced at runtime (Zod validation and output content checks).
+# No standard binding matcher applies.
+guardrail_impl:
+  no-spec-modification:
+    checks:
+      - matcher:
+          type: file_glob
+          pattern: "design/**/*.yaml"
+        message: >-
+          Modifying spec definition files is forbidden.
+          spec-quality-reviewer operates in read-only analysis mode.
+      - matcher:
+          type: file_glob
+          pattern: "specs/**/*.yaml"
+        message: >-
+          Modifying spec definition files is forbidden.
+          spec-quality-reviewer operates in read-only analysis mode.
