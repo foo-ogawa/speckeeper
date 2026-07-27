@@ -879,6 +879,7 @@ export function loadYamlSpecs(yamlPath: string, models: Model<any>[]): SpecModul
   } catch (err) {
     throw new Error(
       `Failed to parse ${yamlPath}: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
 

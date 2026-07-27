@@ -49,7 +49,6 @@ class ReqModel extends Model<typeof RequirementSchema> {
   protected exporters: Exporter<z.infer<typeof RequirementSchema>>[] = [];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const models: Model<any>[] = [TermModel.instance, ReqModel.instance];
 
 // ---------------------------------------------------------------------------
