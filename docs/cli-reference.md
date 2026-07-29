@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.15.1
+**Version:** 0.16.18
 
 ## Table of Contents
 
@@ -162,7 +162,7 @@ speckeeper lint --phase HLD
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   idempotent: true
 ```
 
@@ -205,7 +205,7 @@ speckeeper drift --fail-on-drift
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   idempotent: true
 ```
 
@@ -257,7 +257,7 @@ speckeeper check test --coverage
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   idempotent: true
 ```
 
@@ -352,7 +352,7 @@ speckeeper impact COMP-AUTH --format mermaid
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   idempotent: true
 ```
 
@@ -394,7 +394,7 @@ speckeeper insights --format json --project-root .
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   idempotent: true
 ```
 
@@ -444,8 +444,8 @@ speckeeper scaffold --source arch.md --format yaml
 #### Extensions
 
 ```yaml
-x-agent: 
-  recommended_before_use: 
+x-agent:
+  recommended_before_use:
     - Run with --dry-run first to preview generated files
 ```
 
@@ -986,14 +986,14 @@ speckeeper audit-requirements --report-format json --output audit.json
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   dsl_task: audit-requirement-quality
   safeDryRunOption: show-prompt
   sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
   expectedDurationMs: 120000
-  recommended_before_use: 
+  recommended_before_use:
     - Run with --show-prompt first to preview the prompt
-  retryableExitCodes: 
+  retryableExitCodes:
     - 1
     - 12
 ```
@@ -1517,14 +1517,14 @@ speckeeper propose-trace-links --adapter claude --report-format json
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   dsl_task: propose-trace-links
   safeDryRunOption: show-prompt
   sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
   expectedDurationMs: 120000
-  recommended_before_use: 
+  recommended_before_use:
     - Run with --show-prompt first to preview the prompt
-  retryableExitCodes: 
+  retryableExitCodes:
     - 1
     - 12
 ```
@@ -2081,14 +2081,14 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   dsl_task: explain-impact-result
   safeDryRunOption: show-prompt
   sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
   expectedDurationMs: 120000
-  recommended_before_use: 
+  recommended_before_use:
     - Run with --show-prompt first to preview the prompt
-  retryableExitCodes: 
+  retryableExitCodes:
     - 1
     - 12
 ```
@@ -2607,14 +2607,14 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   dsl_task: propose-acceptance-criteria
   safeDryRunOption: show-prompt
   sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock. Filesystem write only when --output is specified.
   expectedDurationMs: 120000
-  recommended_before_use: 
+  recommended_before_use:
     - Run with --show-prompt first to preview the prompt
-  retryableExitCodes: 
+  retryableExitCodes:
     - 1
     - 12
 ```
@@ -2652,11 +2652,11 @@ speckeeper agents [--format]
 #### Extensions
 
 ```yaml
-x-agent: 
+x-agent:
   riskLevel: low
   requiresConfirmation: false
   idempotent: true
-  sideEffects: 
+  sideEffects:
 
 ```
 

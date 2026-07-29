@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.16.17",
+  "version": "0.16.18",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -83,7 +83,7 @@
     "agent-contracts": "^0.34.11",
     "agent-contracts-runtime": "^0.36.4",
     "chalk": "^5.6.2",
-    "cli-contracts": "^0.32.0",
+    "cli-contracts": "^0.34.6",
     "commander": "^14.0.3",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
