@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.16.18",
+  "version": "0.16.19",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,16 +8,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./dsl": {
+      "types": "./dist/dsl/index.d.ts",
       "import": "./dist/dsl/index.js",
-      "types": "./dist/dsl/index.d.ts"
+      "default": "./dist/dsl/index.js"
     },
     "./insight-provider": {
+      "types": "./dist/external/insight-provider.d.ts",
       "import": "./dist/external/insight-provider.js",
-      "types": "./dist/external/insight-provider.d.ts"
+      "default": "./dist/external/insight-provider.js"
     }
   },
   "bin": {
@@ -71,7 +74,10 @@
   "license": "MIT",
   "dependencies": {
     "embedoc": "^0.10.1",
-    "tsx": "^4.21.0"
+    "glob": "^11.0.0",
+    "tsx": "^4.21.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -83,21 +89,18 @@
     "agent-contracts": "^0.34.11",
     "agent-contracts-runtime": "^0.36.4",
     "chalk": "^5.6.2",
-    "cli-contracts": "^0.34.6",
+    "cli-contracts": "^0.34.7",
     "commander": "^14.0.3",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
-    "glob": "^11.0.0",
     "node-sql-parser": "^5.4.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.8",
-    "yaml": "^2.9.0",
-    "zod": "^4.4.3"
+    "vitest": "^4.1.8"
   },
   "overrides": {
-    "js-yaml": "^4.1.2",
+    "js-yaml": "^4.3.0",
     "tsup": {
       "esbuild": "^0.28.1"
     }

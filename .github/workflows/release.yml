@@ -48,6 +48,9 @@ jobs:
       - name: Lint
         if: steps.tag.outcome == 'failure'
         run: npm run lint --if-present
+      - name: Typecheck
+        if: steps.tag.outcome == 'failure'
+        run: npm run typecheck
       - name: Build
         if: steps.tag.outcome == 'failure'
         run: npm run build

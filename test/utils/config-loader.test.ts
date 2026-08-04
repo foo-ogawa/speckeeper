@@ -9,7 +9,6 @@ import { join } from 'node:path';
 import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import {
   loadConfig,
-  validateConfig,
   getOutputPaths,
   getExpectedOutputDirs,
   validateOutputPaths,
@@ -79,37 +78,50 @@ docsDir: custom-docs
 `);
       
       const config = await loadConfig(configPath);
-      
+
       expect(config.srcDir).toBe('src'); // default
       expect(config.docsDir).toBe('custom-docs'); // custom
       expect(config.specsDir).toBe('specs'); // default
     });
   });
-  
-  describe('validateConfig', () => {
-    it('should return no errors for valid config', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const errors = validateConfig(config);
-      
-      expect(errors).toHaveLength(0);
+
+  describe('loadConfig rejects a config that exists but cannot be loaded', () => {
+    it('rejects malformed YAML', async () => {
+      const configPath = join(testDir, 'speckeeper.config.yaml');
+      writeFileSync(configPath, 'srcDir: [unterminated\n');
+
+      await expect(loadConfig(configPath)).rejects.toThrow(/Failed to load config/);
     });
-    
-    it('should return errors for missing required fields', () => {
-      const config = {} as SpeckeeperConfig;
-      
-      const errors = validateConfig(config);
-      
-      expect(errors).toContain('srcDir is required');
-      expect(errors).toContain('docsDir is required');
-      expect(errors).toContain('specsDir is required');
+
+    it('rejects malformed JSON', async () => {
+      const configPath = join(testDir, 'speckeeper.config.json');
+      writeFileSync(configPath, '{ "srcDir": ');
+
+      await expect(loadConfig(configPath)).rejects.toThrow(/Failed to load config/);
+    });
+
+    it('rejects a TypeScript config that throws while loading', async () => {
+      const configPath = join(testDir, 'speckeeper.config.ts');
+      writeFileSync(configPath, "throw new Error('config exploded');\n");
+
+      await expect(loadConfig(configPath)).rejects.toThrow(/config exploded/);
+    });
+
+    it('rejects a config that does not produce an object', async () => {
+      const configPath = join(testDir, 'speckeeper.config.yaml');
+      writeFileSync(configPath, '# only a comment\n');
+
+      await expect(loadConfig(configPath)).rejects.toThrow(/must export an object/);
+    });
+
+    it('rejects an unsupported config file extension', async () => {
+      const configPath = join(testDir, 'speckeeper.config.toml');
+      writeFileSync(configPath, 'srcDir = "custom-src"\n');
+
+      await expect(loadConfig(configPath)).rejects.toThrow(/Unsupported config file extension/);
     });
   });
-  
+
   describe('getOutputPaths', () => {
     it('should return correct output paths', () => {
       const config: SpeckeeperConfig = {

@@ -1,8 +1,30 @@
 #!/usr/bin/env node
 
-import { register } from 'tsx/esm/api';
-register();
+import { register as registerLoaderHooks } from 'node:module';
+import { register as registerTypeScript } from 'tsx/esm/api';
 
+registerTypeScript();
+
+// Project TypeScript sources — speckeeper.config.ts and the design modules it
+// imports — are ES modules. Their module format would otherwise be taken from
+// the consumer's nearest package.json "type" field, and under CommonJS the
+// documented `import { defineConfig } from 'speckeeper'` cannot resolve.
+// Registered after tsx so the format is handed down to tsx's own hooks.
+registerLoaderHooks(
+  'data:text/javascript,' + encodeURIComponent(`
+const isProjectTypeScript = (url) =>
+  url.startsWith('file:') && !url.includes('/node_modules/') && /\\.[cm]?tsx?(\\?|$)/.test(url);
+
+export async function load(url, context, nextLoad) {
+  return isProjectTypeScript(url)
+    ? nextLoad(url, { ...context, format: 'module' })
+    : nextLoad(url, context);
+}
+`),
+  import.meta.url,
+);
+
+import chalk from 'chalk';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -127,4 +149,9 @@ const handlers: CommandHandlers = {
   },
 };
 
-createProgram(handlers, getVersion()).parse();
+createProgram(handlers, getVersion())
+  .parseAsync()
+  .catch((error: unknown) => {
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    process.exit((error as { exitCode?: number }).exitCode ?? 1);
+  });
