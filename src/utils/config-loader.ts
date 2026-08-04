@@ -239,62 +239,65 @@ export function findConfigFile(startDir: string = process.cwd()): string | null 
   return null;
 }
 
+/**
+ * Merge a loaded config document over the defaults
+ *
+ * A config file that does not yield a plain object carries no settings, so it is
+ * rejected instead of collapsing into the defaults.
+ */
+function mergeOverDefaults(parsed: unknown, resolvedPath: string): SpeckeeperConfig {
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(
+      `Config at ${resolvedPath} must export an object, received ${parsed === null ? 'null' : typeof parsed}`,
+    );
+  }
+
+  return { ...defaultConfig, ...(parsed as Partial<SpeckeeperConfig>) };
+}
+
+/**
+ * Load the project config
+ *
+ * Returns the built-in defaults only when no config file exists. A config file
+ * that exists but cannot be loaded throws, so callers fail instead of reporting
+ * success against settings that were never applied.
+ */
 export async function loadConfig(
   configPath?: string,
   cwd: string = process.cwd()
 ): Promise<SpeckeeperConfig> {
   const resolvedPath = configPath ?? findConfigFile(cwd);
-  
+
   if (!resolvedPath) {
     return { ...defaultConfig };
   }
-  
+
   const ext = resolvedPath.split('.').pop()?.toLowerCase();
-  
+
   try {
     if (ext === 'yaml' || ext === 'yml') {
       const content = readFileSync(resolvedPath, 'utf-8');
-      const parsed = parseYaml(content) as Partial<SpeckeeperConfig>;
-      return { ...defaultConfig, ...parsed };
+      return mergeOverDefaults(parseYaml(content), resolvedPath);
     }
-    
+
     if (ext === 'json') {
       const content = readFileSync(resolvedPath, 'utf-8');
-      const parsed = JSON.parse(content) as Partial<SpeckeeperConfig>;
-      return { ...defaultConfig, ...parsed };
+      return mergeOverDefaults(JSON.parse(content), resolvedPath);
     }
-    
+
     if (ext === 'ts' || ext === 'js') {
       const module = await import(resolvedPath);
-      const parsed = module.default ?? module;
-      return { ...defaultConfig, ...parsed };
+      return mergeOverDefaults(module.default ?? module, resolvedPath);
     }
-    
-    return { ...defaultConfig };
   } catch (error) {
-    console.error(`Failed to load config from ${resolvedPath}:`, error);
-    return { ...defaultConfig };
+    throw new Error(
+      `Failed to load config from ${resolvedPath}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
   }
-}
 
-// ============================================================================
-// Configuration Validation
-// ============================================================================
-
-export function validateConfig(config: SpeckeeperConfig): string[] {
-  const errors: string[] = [];
-  
-  if (!config.srcDir) {
-    errors.push('srcDir is required');
-  }
-  
-  if (!config.docsDir) {
-    errors.push('docsDir is required');
-  }
-  
-  if (!config.specsDir) {
-    errors.push('specsDir is required');
-  }
-  
-  return errors;
+  throw new Error(
+    `Unsupported config file extension: ${resolvedPath}. ` +
+    `Supported extensions: ${CONFIG_FILES.map(file => file.split('.').pop()).join(', ')}`,
+  );
 }
