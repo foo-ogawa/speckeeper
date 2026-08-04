@@ -97,7 +97,7 @@
     "zod": "^4.4.3"
   },
   "overrides": {
-    "js-yaml": "^4.1.2",
+    "js-yaml": "^4.3.0",
     "tsup": {
       "esbuild": "^0.28.1"
     }
