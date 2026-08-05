@@ -12,8 +12,13 @@ registerTypeScript();
 // Registered after tsx so the format is handed down to tsx's own hooks.
 registerLoaderHooks(
   'data:text/javascript,' + encodeURIComponent(`
-const isProjectTypeScript = (url) =>
-  url.startsWith('file:') && !url.includes('/node_modules/') && /\\.[cm]?tsx?(\\?|$)/.test(url);
+const isProjectTypeScript = (rawUrl) => {
+  if (!rawUrl.startsWith('file:')) return false;
+  const url = rawUrl.replace(/%5C/gi, '/').replace(/\\\\/g, '/');
+  if (url.includes('/node_modules/') || url.includes('/dist/')) return false;
+  if (/\\.d\\.[cm]?ts(\\?|$)/.test(url)) return false;
+  return /\\.[cm]?tsx?(\\?|$)/.test(url);
+};
 
 export async function load(url, context, nextLoad) {
   return isProjectTypeScript(url)
