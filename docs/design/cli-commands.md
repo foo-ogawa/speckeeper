@@ -15,6 +15,9 @@
 | propose-acceptance-criteria | Propose testable acceptance criteria in Given/When/Then format for specified specs |
 | convert | Convert a TS spec data file to YAML format |
 | impact | Analyze the change impact scope of a specified ID |
+| insights | Export spec relation edges as ExternalInsight JSON |
+| agents | Output the full resolved agent DSL as structured data |
+| extract | Extract the contract specification for this CLI tool |
 
 ---
 
@@ -545,5 +548,108 @@ speckeeper impact UC-001 --format mermaid
 |------|-------------|
 | 0 | Analysis successful |
 | 1 | Target ID not found |
+
+---
+
+## CMD-INSIGHTS: insights
+
+Export spec relation edges as ExternalInsight JSON
+
+### Usage
+
+```bash
+speckeeper insights [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -f, --format | option | enum |  | json | Output format (json only) |
+| --project-root | option | path |  | . | Project root directory containing speckeeper.config |
+| -c, --config | option | path |  | - | Path to config file |
+
+### Examples
+
+```bash
+speckeeper insights
+speckeeper insights --format json
+speckeeper insights --format json --project-root .
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | ExternalInsight JSON emitted to stdout |
+| 1 | Export failed (config error or internal error) |
+
+---
+
+## CMD-AGENTS: agents
+
+Output the full resolved agent DSL as structured data
+
+### Usage
+
+```bash
+speckeeper agents [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -F, --format | option | enum |  | yaml | Output format |
+
+### Examples
+
+```bash
+speckeeper agents
+speckeeper agents --format json
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Resolved DSL emitted to stdout |
+| 1 | Failed to load embedded DSL |
+
+---
+
+## CMD-EXTRACT: extract
+
+Extract the contract specification for this CLI tool
+
+### Usage
+
+```bash
+speckeeper extract [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| <commands> | argument | string |  | - | Command IDs to extract, in dot notation |
+| -a, --all | option | boolean |  | false | Extract all commands |
+| --include-meta | option | boolean |  | true | Include extraction metadata |
+| -F, --format | option | enum |  | yaml | Output format |
+
+### Examples
+
+```bash
+speckeeper extract --all
+speckeeper extract --all --format json
+speckeeper extract speckeeper.lint
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Contract specification emitted to stdout |
+| 2 | Neither command IDs nor --all was specified |
 
 ---

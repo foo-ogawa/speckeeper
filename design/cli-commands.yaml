@@ -903,3 +903,120 @@ specs:
         description: Analysis successful
       - code: 1
         description: Target ID not found
+  - id: CMD-INSIGHTS
+    name: insights
+    description: Export spec relation edges as ExternalInsight JSON
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: format
+        alias: f
+        type: enum
+        description: Output format (json only)
+        required: false
+        choices:
+          - json
+        default: json
+      - kind: option
+        name: project-root
+        type: path
+        description: Project root directory containing speckeeper.config
+        required: false
+        default: .
+      - kind: option
+        name: config
+        alias: c
+        type: path
+        description: Path to config file
+        required: false
+    subCommands: []
+    relatedRequirements:
+      - FR-701
+      - FR-800
+    examples:
+      - speckeeper insights
+      - speckeeper insights --format json
+      - speckeeper insights --format json --project-root .
+    exitCodes:
+      - code: 0
+        description: ExternalInsight JSON emitted to stdout
+      - code: 1
+        description: Export failed (config error or internal error)
+  - id: CMD-AGENTS
+    name: agents
+    description: Output the full resolved agent DSL as structured data
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: format
+        alias: F
+        type: enum
+        description: Output format
+        required: false
+        choices:
+          - yaml
+          - json
+        default: yaml
+    subCommands: []
+    relatedRequirements:
+      - FR-1100
+      - FR-1101
+      - FR-1102
+      - FR-1103
+    examples:
+      - speckeeper agents
+      - speckeeper agents --format json
+    exitCodes:
+      - code: 0
+        description: Resolved DSL emitted to stdout
+      - code: 1
+        description: Failed to load embedded DSL
+  - id: CMD-EXTRACT
+    name: extract
+    description: Extract the contract specification for this CLI tool
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: argument
+        name: commands
+        type: string
+        description: Command IDs to extract, in dot notation
+        required: false
+        example: speckeeper.lint
+      - kind: option
+        name: all
+        alias: a
+        type: boolean
+        description: Extract all commands
+        required: false
+        default: false
+      - kind: option
+        name: include-meta
+        type: boolean
+        description: Include extraction metadata
+        required: false
+        default: true
+      - kind: option
+        name: format
+        alias: F
+        type: enum
+        description: Output format
+        required: false
+        choices:
+          - yaml
+          - json
+        default: yaml
+    subCommands: []
+    relatedRequirements:
+      - NFR-014
+    examples:
+      - speckeeper extract --all
+      - speckeeper extract --all --format json
+      - speckeeper extract speckeeper.lint
+    exitCodes:
+      - code: 0
+        description: Contract specification emitted to stdout
+      - code: 2
+        description: Neither command IDs nor --all was specified
