@@ -917,3 +917,95 @@ specs:
       - type: verifies
         target: FR-602
         description: Verifies acceptance criteria for FR-602
+  - id: TEST-050
+    description: Scan diagnostic severity and opt-in deep validation verification test
+    source:
+      path: test/core/dsl/checkers.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1004
+      - FR-1005
+      - FR-1007
+      - FR-1008
+      - FR-1011
+      - FR-1014
+      - FR-1015
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1004-01
+        pattern: leaves the method check off unless the mapper opts in
+        description: A mapper without a method declaration runs no method check
+      - acceptanceCriteriaId: FR-1005-01
+        pattern: leaves the parameter check off unless the mapper opts in
+        description: A mapper without parameters runs no parameter check
+      - acceptanceCriteriaId: FR-1005-02
+        pattern: leaves the response property check off unless the mapper opts in
+        description: A mapper without response properties runs no property check
+      - acceptanceCriteriaId: FR-1007-01
+        pattern: reports an error naming the missing OpenAPI file path
+        description: A missing OpenAPI file is an error carrying the path
+      - acceptanceCriteriaId: FR-1008-01
+        pattern: reports an error for an unparseable OpenAPI file
+        description: Malformed OpenAPI YAML is an error
+      - acceptanceCriteriaId: FR-1008-02
+        pattern: reports an error for an empty OpenAPI file
+        description: An empty OpenAPI file is an error
+      - acceptanceCriteriaId: FR-1011-02
+        pattern: skips the column check when the table is missing
+        description: A missing table suppresses per-column warnings
+      - acceptanceCriteriaId: FR-1014-01
+        pattern: reports an error naming the missing DDL file path
+        description: A missing DDL file is an error carrying the path
+      - acceptanceCriteriaId: FR-1015-02
+        pattern: emits a warning when DDL parsing falls back to regex
+        description: The regex fallback reports the degradation as a warning
+    relations:
+      - type: verifies
+        target: FR-1004
+        description: Verifies acceptance criteria for FR-1004
+      - type: verifies
+        target: FR-1005
+        description: Verifies acceptance criteria for FR-1005
+      - type: verifies
+        target: FR-1007
+        description: Verifies acceptance criteria for FR-1007
+      - type: verifies
+        target: FR-1008
+        description: Verifies acceptance criteria for FR-1008
+      - type: verifies
+        target: FR-1011
+        description: Verifies acceptance criteria for FR-1011
+      - type: verifies
+        target: FR-1014
+        description: Verifies acceptance criteria for FR-1014
+      - type: verifies
+        target: FR-1015
+        description: Verifies acceptance criteria for FR-1015
+  - id: TEST-051
+    description: Absent spec ID warning verification test
+    source:
+      path: test/cli/check-sources.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1003
+      - FR-1010
+      - FR-1013
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1003-01
+        pattern: FR-1003-01 warns about an operation absent from the OpenAPI document
+        description: A spec ID missing from the OpenAPI document warns by default
+      - acceptanceCriteriaId: FR-1010-01
+        pattern: FR-1010-01, FR-1013-01 warns about a table absent from the DDL
+        description: A spec-referenced table missing from the DDL warns by default
+      - acceptanceCriteriaId: FR-1013-01
+        pattern: FR-1010-01, FR-1013-01 warns about a table absent from the DDL
+        description: The missing table is reported as a warning
+    relations:
+      - type: verifies
+        target: FR-1003
+        description: Verifies acceptance criteria for FR-1003
+      - type: verifies
+        target: FR-1010
+        description: Verifies acceptance criteria for FR-1010
+      - type: verifies
+        target: FR-1013
+        description: Verifies acceptance criteria for FR-1013

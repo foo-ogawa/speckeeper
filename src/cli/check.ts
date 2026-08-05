@@ -104,18 +104,18 @@ export async function checkCommand(
         : sources.filter(s => s.type === checkType);
 
       // Run global scan (with lookup key overrides)
-      const { matches, warnings: scanWarnings } = runGlobalScan(
+      const { matches, diagnostics: scanDiagnostics } = runGlobalScan(
         filteredSources, allSpecIds, cwd,
         lookupKeyMap.size > 0 ? lookupKeyMap : undefined,
       );
 
-      for (const sw of scanWarnings) {
+      for (const sd of scanDiagnostics) {
         results.push({
-          type: sw.sourceType,
-          success: true,
+          type: sd.sourceType,
+          success: sd.severity !== 'error',
           issues: [{
-            severity: 'warning',
-            message: sw.message,
+            severity: sd.severity,
+            message: sd.message,
           }],
         });
       }
@@ -163,20 +163,18 @@ export async function checkCommand(
       }
 
       // Report unmatched specs (excluding transitively covered)
-      if (options.verbose) {
-        for (const specId of allSpecIds) {
-          if (!coveredSet.has(specId)) {
-            const entry = specIdToModel.get(specId);
-            results.push({
-              type: entry?.modelId ?? 'unknown',
-              success: true,
-              issues: [{
-                severity: 'warning',
-                message: `Spec ID "${specId}" not found in any configured source`,
-                specId,
-              }],
-            });
-          }
+      for (const specId of allSpecIds) {
+        if (!coveredSet.has(specId)) {
+          const entry = specIdToModel.get(specId);
+          results.push({
+            type: entry?.modelId ?? 'unknown',
+            success: true,
+            issues: [{
+              severity: 'warning',
+              message: `Spec ID "${specId}" not found in any configured source`,
+              specId,
+            }],
+          });
         }
       }
     }
