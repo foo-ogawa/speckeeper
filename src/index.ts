@@ -37,6 +37,7 @@ export type {
   LookupKeyConfig,
   DeepValidationConfig,
   DeepValidationRule,
+  ExternalConstraint,
   OpenAPIValidationMapping,
   DDLValidationMapping,
 } from './core/model.js';

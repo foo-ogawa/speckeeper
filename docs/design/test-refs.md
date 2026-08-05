@@ -6,7 +6,7 @@
 | TEST-004 | File writing utility verification test | vitest | 1 |
 | TEST-018 | Model level configuration feature verification test | vitest | 1 |
 | TEST-019 | Project initialization feature verification test | vitest | 1 |
-| TEST-020 | Lint command verification test | vitest | 2 |
+| TEST-020 | Lint command verification test | vitest | 3 |
 | TEST-021 | Check command verification test | vitest | 4 |
 | TEST-022 | Build command verification test | vitest | 2 |
 | TEST-023 | Impact command verification test | vitest | 1 |
@@ -22,7 +22,7 @@
 | TEST-033 | Insight provider verification test (spec relations to external edges) | vitest | 2 |
 | TEST-034 | Edge vocabulary verification test (verifiedBy / verifies categories) | vitest | 1 |
 | TEST-035 | Scaffold template registry verification test (base template resolution) | vitest | 1 |
-| TEST-036 | Scaffold model generator verification test (no checker generation) | vitest | 2 |
+| TEST-036 | Scaffold model generator verification test (no checker generation) | vitest | 3 |
 | TEST-037 | Audit report formatting verification test | vitest | 1 |
 | TEST-038 | Impact explanation context builder verification test | vitest | 1 |
 | TEST-039 | Model renderer verification test | vitest | 3 |
@@ -32,6 +32,11 @@
 | TEST-043 | Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph) | vitest | 2 |
 | TEST-044 | Model-declared lint rule verification test | vitest | 1 |
 | TEST-045 | Check command source filtering verification test | vitest | 1 |
+| TEST-070 | Common lint item verification test | vitest | 3 |
+| TEST-071 | Core-provided test verification logic test | vitest | 1 |
+| TEST-072 | External SSOT reference interface test | vitest | 1 |
+| TEST-073 | External SSOT constraint check test | vitest | 2 |
+| TEST-074 | External SSOT path configuration test | vitest | 1 |
 
 ---
 
@@ -138,6 +143,7 @@
 
 ### Verified Requirements
 
+- FR-400
 - FR-401
 - FR-402
 
@@ -149,6 +155,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-400-01 | `FR-400-01 verifies ID uniqueness across models and fails the run` | The lint command runs the common lint items over the whole design |
 | FR-401-01 | `FR-401-01.*lintAll.*exits.*code 1` | Error-severity results trigger exit(1) |
 | FR-401-03 | `FR-401-03.*exits.*code 1.*error message` | Ref-exists error triggers exit and output |
 | FR-402-01 | `FR-402-01.*lintAll.*outputs warning` | Warnings output without exit |
@@ -569,6 +576,7 @@
 
 - FR-106
 - FR-605
+- FR-703
 
 ### Test Case Patterns
 
@@ -577,6 +585,7 @@
 | FR-106-02 | `deduplicates nodes with the same template class` | Same-class nodes aggregate into one model file |
 | FR-106-08 | `does not generate externalChecker code` | No fixed external node to checker mapping remains |
 | FR-605-01 | `emits no _checkers/ file for any edge category` | Scaffold generates no _checkers/ directory |
+| FR-703-02 | `FR-703-02 names the implements target and points at the config binding` | A check edge produces checker binding guidance, not checker code |
 
 ---
 
@@ -772,5 +781,113 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-602-02 | `FR-602-02 scans only the OpenAPI source when the type is openapi` | The type argument narrows the scanned sources to that type |
+
+---
+
+## TEST-070: Common lint item verification test
+
+### Test Source
+
+- **Path**: `test/core/design-lint.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-101
+- FR-102
+- FR-401
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-101-01 | `FR-101-01 reports an id that more than one element declares` | An id declared by more than one element is an error |
+| FR-101-03 | `FR-101-03 reports a relation whose target no model declares` | A relation target that resolves to nothing is an error |
+| FR-101-04 | `FR-101-04 names every reference location left behind by an id change` | Every location still pointing at a changed id is reported |
+| FR-102-01 | `FR-102-01 accepts REQ, HLD, LLD and OPS and orders them` | The phase vocabulary carries REQ, HLD, LLD and OPS in order |
+| FR-102-02 | `FR-102-02 keeps the phase set on a model definition and verifies the gate against it` | A model definition carries a phase and the gate is verified |
+| FR-102-03 | `FR-102-03 prohibits a TBD once the gate reaches its deadline phase` | A TBD is allowed before its deadline phase and prohibited at it |
+| FR-401-05 | `FR-401-05 reports every slot left unresolved at the specified phase` | Every TBD still unresolved at the specified phase is reported |
+| FR-401-06 | `FR-401-06 detects an element that takes part in no relation` | Orphan elements are detected |
+
+---
+
+## TEST-071: Core-provided test verification logic test
+
+### Test Source
+
+- **Path**: `test/core/dsl/test-verification.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-107
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-107-04 | `FR-107-04 finds the test files, checks spec ID references and parses results from the test file path` | Test file search, spec ID reference check and result parsing come from core |
+
+---
+
+## TEST-072: External SSOT reference interface test
+
+### Test Source
+
+- **Path**: `test/core/dsl/external-refs.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-200
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-200-01 | `FR-200-01 provides a .* interface that targets its external SSOT` | APIRef, TableRef, IaCRef and BatchRef interfaces are provided |
+| FR-200-02 | `FR-200-02 carries the file path and the identifier of the referenced target` | A reference carries the path and identifier of its target |
+| FR-200-03 | `FR-200-03 associates a reference with a component and an entity` | A reference associates with related components and entities |
+
+---
+
+## TEST-073: External SSOT constraint check test
+
+### Test Source
+
+- **Path**: `test/core/constraint-check.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-600
+- FR-601
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-600-03 | `FR-600-03 fails the check when a non-functional constraint is not satisfied` | A violated guardrail fails the external SSOT check |
+| FR-601-03 | `FR-601-03 reports every declared constraint that the external object violates` | The constraint category reports every violated constraint |
+
+---
+
+## TEST-074: External SSOT path configuration test
+
+### Test Source
+
+- **Path**: `test/cli/external-ssot-paths.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-201
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-201-01 | `FR-201-01 resolves the external SSOT from the paths declared in the config` | External SSOT paths are read from the config |
 
 ---

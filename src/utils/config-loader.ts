@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import type { Phase } from '../types/common.js';
 
 // ============================================================================
 // Configuration Types
@@ -24,29 +25,6 @@ export interface SpeckeeperConfig {
   // Global source definitions for spec ID scanning
   sources?: import('../core/config-api.js').SourceConfig[];
   
-  // External SSOT paths
-  externalSsot?: {
-    openapi?: {
-      enabled: boolean;
-      paths: string[];
-      microContracts?: {
-        enabled: boolean;
-        requiredExtensions?: string[];
-        strictMode?: boolean;
-      };
-    };
-    ddl?: {
-      enabled: boolean;
-      paths: string[];
-      type: 'ddl' | 'prisma' | 'typeorm' | 'drizzle';
-    };
-    iac?: {
-      enabled: boolean;
-      paths: string[];
-      type: 'cloudformation' | 'terraform' | 'cdk';
-    };
-  };
-  
   // Lint configuration
   lint?: {
     architecture?: {
@@ -66,7 +44,7 @@ export interface SpeckeeperConfig {
       checkAuthPaths?: boolean;
     };
     phaseGate?: {
-      currentPhase?: 'REQ' | 'HLD' | 'LLD' | 'OPS';
+      currentPhase?: Phase;
       strictMode?: boolean;
     };
   };

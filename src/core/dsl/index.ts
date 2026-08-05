@@ -9,6 +9,24 @@
 export { baseSpecSchema } from './schema.js';
 export type { BaseSpec } from './schema.js';
 
+// External SSOT reference schemas
+export {
+  externalRefSourceSchema,
+  externalRefSchema,
+  apiRefSchema,
+  tableRefSchema,
+  iacRefSchema,
+  batchRefSchema,
+} from './external-refs.js';
+export type {
+  ExternalRefSource,
+  ExternalRef,
+  APIRef,
+  TableRef,
+  IaCRef,
+  BatchRef,
+} from './external-refs.js';
+
 // Lint rule factories
 export { requireField, arrayMinLength, idFormat, childIdFormat } from './lint-rules.js';
 
@@ -26,6 +44,15 @@ export {
 export type {
   AnnotationCoverageConfig,
 } from './checkers.js';
+
+// Test verification common logic
+export { verifyTests, findTestFiles, parseTestResults } from './test-verification.js';
+export type {
+  TestCasePatternInput,
+  TestVerificationInput,
+  TestVerificationResult,
+  TestResultSummary,
+} from './test-verification.js';
 
 // Type compatibility utility
 export { isTypeContainedBy } from './type-compat.js';

@@ -5,12 +5,13 @@ import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ModelLevel, Renderer, RenderContext } from '../../src/core/model.ts';
 import { requireField, arrayMinLength } from '../../src/core/dsl/index.ts';
+import { PhaseSchema } from '../../src/types/common.ts';
 
 // ============================================================================
 // Schema Definition
 // ============================================================================
 
-export const PhaseSchema = z.enum(['REQ', 'HLD', 'LLD', 'IMPL', 'OPS', 'CI']);
+export { PhaseSchema };
 
 export const ActorSchema = z.object({
   id: z.string(),
