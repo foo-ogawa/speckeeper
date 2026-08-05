@@ -1691,13 +1691,10 @@ entries:
         category: portability
         acceptanceCriteria:
           - id: NFR-002-01
-            description: Verified on Node.js 18 LTS
+            description: Verified on Node.js 22 LTS
             verificationMethod: test
           - id: NFR-002-02
-            description: Verified on Node.js 20 LTS
-            verificationMethod: test
-          - id: NFR-002-03
-            description: Verified on Node.js 22 LTS
+            description: Verified on Node.js 24 LTS
             verificationMethod: test
       - id: NFR-003
         name: Multi-OS Support

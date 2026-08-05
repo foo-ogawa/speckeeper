@@ -44,9 +44,8 @@ Works on Node.js (LTS)
 
 ### Acceptance Criteria
 
-- **NFR-002-01**: Verified on Node.js 18 LTS [test]
-- **NFR-002-02**: Verified on Node.js 20 LTS [test]
-- **NFR-002-03**: Verified on Node.js 22 LTS [test]
+- **NFR-002-01**: Verified on Node.js 22 LTS [test]
+- **NFR-002-02**: Verified on Node.js 24 LTS [test]
 
 ---
 
