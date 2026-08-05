@@ -1261,9 +1261,6 @@ specs:
       - acceptanceCriteriaId: NFR-003-02
         pattern: NFR-003 covers each declared operating system
         description: The matrix covers the declared operating system
-      - acceptanceCriteriaId: NFR-003-03
-        pattern: NFR-003 covers each declared operating system
-        description: The matrix covers the declared operating system
     relations:
       - type: verifies
         target: FR-605

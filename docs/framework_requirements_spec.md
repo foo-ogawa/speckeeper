@@ -956,11 +956,10 @@ Works on Node.js (LTS)
 
 **NFR-003: Multi-OS Support**
 
-Avoid OS dependencies and work on Linux/macOS/Windows
+Avoid OS dependencies and work on Linux/macOS
 
 - Verified on Linux (Ubuntu)
 - Verified on macOS
-- Verified on Windows (PowerShell)
 - Eliminate OS-dependent code such as path separators
 
 ### 9.3 Modifiability (Extensibility)

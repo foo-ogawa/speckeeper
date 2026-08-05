@@ -1040,7 +1040,6 @@
 | NFR-002-02 | `NFR-002 covers each declared Node.js line, and each one satisfies engines` | The matrix covers the declared Node.js line |
 | NFR-003-01 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
 | NFR-003-02 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
-| NFR-003-03 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
 
 ---
 
