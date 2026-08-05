@@ -270,3 +270,28 @@ specs:
       - type: verifies
         target: CMD-SCAFFOLD
         description: Verifies CMD-SCAFFOLD
+  - id: TEST-027
+    description: Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph)
+    source:
+      path: test/cli/build-specs.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-302
+      - FR-800
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-302-01
+        pattern: FR-302-01.*maps entity attributes.*JSON Schema properties
+        description: Entity attributes become JSON Schema properties under specs/schemas/entities/
+      - acceptanceCriteriaId: FR-302-02
+        pattern: FR-302-02.*reference resolution graph
+        description: Reference resolution graph is written to specs/index.json
+      - acceptanceCriteriaId: FR-800-01
+        pattern: FR-800-01.*aggregated JSON
+        description: Aggregated JSON for machine processing is written on every build
+    relations:
+      - type: verifies
+        target: FR-302
+        description: Verifies acceptance criteria for FR-302
+      - type: verifies
+        target: FR-800
+        description: Verifies acceptance criteria for FR-800

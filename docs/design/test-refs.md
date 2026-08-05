@@ -13,6 +13,7 @@
 | TEST-024 | Drift command verification test | vitest | 1 |
 | TEST-025 | New command verification test | vitest | 1 |
 | TEST-026 | Scaffold integration verification test (mermaid parsing, class-based generation) | vitest | 1 |
+| TEST-027 | Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph) | vitest | 2 |
 
 ---
 
@@ -280,5 +281,27 @@
 | FR-106-01 | `base template.*core factory|generated models.*base template` | Artifact class generates from base template |
 | FR-106-03 | `SR.*FR.*NFR.*map to requirement.*de-duplicated` | Same-class node aggregation into single model file |
 | FR-106-05 | `de-duplicated model files.*spec data` | Model file generation with naming conventions |
+
+---
+
+## TEST-027: Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph)
+
+### Test Source
+
+- **Path**: `test/cli/build-specs.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-302
+- FR-800
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-302-01 | `FR-302-01.*maps entity attributes.*JSON Schema properties` | Entity attributes become JSON Schema properties under specs/schemas/entities/ |
+| FR-302-02 | `FR-302-02.*reference resolution graph` | Reference resolution graph is written to specs/index.json |
+| FR-800-01 | `FR-800-01.*aggregated JSON` | Aggregated JSON for machine processing is written on every build |
 
 ---

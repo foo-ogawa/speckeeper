@@ -9,11 +9,7 @@ import { join } from 'node:path';
 import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import {
   loadConfig,
-  getOutputPaths,
-  getExpectedOutputDirs,
-  validateOutputPaths,
   findConfigFile,
-  type SpeckeeperConfig,
 } from '../../src/utils/config-loader.js';
 
 describe('FR-103, CR-002: config-loader', () => {
@@ -122,96 +118,6 @@ docsDir: custom-docs
     });
   });
 
-  describe('getOutputPaths', () => {
-    it('should return correct output paths', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const paths = getOutputPaths(config, testDir);
-      
-      expect(paths.requirements).toBe(join(testDir, 'docs', 'requirements'));
-      expect(paths.usecases).toBe(join(testDir, 'docs', 'usecases'));
-      expect(paths.architecture).toBe(join(testDir, 'docs', 'architecture'));
-      expect(paths.dataModel).toBe(join(testDir, 'docs', 'data-model'));
-      expect(paths.screens).toBe(join(testDir, 'docs', 'screens'));
-      expect(paths.flows).toBe(join(testDir, 'docs', 'flows'));
-      expect(paths.glossary).toBe(join(testDir, 'docs', 'glossary'));
-      expect(paths.schemasEntities).toBe(join(testDir, 'specs', 'schemas', 'entities'));
-    });
-  });
-  
-  describe('getExpectedOutputDirs', () => {
-    it('should return all expected directories', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const dirs = getExpectedOutputDirs(config, testDir);
-      
-      expect(dirs).toContain(join(testDir, 'docs', 'requirements'));
-      expect(dirs).toContain(join(testDir, 'docs', 'architecture'));
-      expect(dirs).toContain(join(testDir, 'docs', 'data-model'));
-      expect(dirs).toContain(join(testDir, 'specs', 'schemas', 'entities'));
-    });
-  });
-  
-  describe('validateOutputPaths', () => {
-    it('should validate correct path', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const result = validateOutputPaths(
-        join(testDir, 'docs', 'requirements', 'FR-001.md'),
-        config,
-        testDir
-      );
-      
-      expect(result.valid).toBe(true);
-    });
-    
-    it('should reject path outside docs/specs', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const result = validateOutputPaths(
-        join(testDir, 'other', 'file.md'),
-        config,
-        testDir
-      );
-      
-      expect(result.valid).toBe(false);
-      expect(result.message).toContain('not under docs/ or specs/');
-    });
-    
-    it('should reject non-compliant path under docs/', () => {
-      const config: SpeckeeperConfig = {
-        srcDir: 'src',
-        docsDir: 'docs',
-        specsDir: 'specs',
-      };
-      
-      const result = validateOutputPaths(
-        join(testDir, 'docs', 'generated', 'file.md'),
-        config,
-        testDir
-      );
-      
-      expect(result.valid).toBe(false);
-      expect(result.message).toContain('does not match spec-compliant paths');
-    });
-  });
-  
   describe('findConfigFile', () => {
     it('should find YAML config', () => {
       writeFileSync(join(testDir, 'speckeeper.config.yaml'), 'srcDir: src');

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { join } from 'node:path';
 import { buildCommand } from '../../src/cli/build.js';
 
 vi.mock('../../src/utils/config-loader.js');
@@ -35,7 +36,10 @@ function createMockModel(overrides: {
   };
 }
 
-function createMockConfig(models: ReturnType<typeof createMockModel>[]) {
+function createMockConfig(
+  models: ReturnType<typeof createMockModel>[],
+  specData: Array<{ id: string }> = [{ id: 'SPEC-001' }],
+) {
   return {
     designDir: 'design',
     docsDir: 'docs',
@@ -43,7 +47,7 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[]) {
     models,
     specs: models.map(m => ({
       model: { id: m.id, register: m.register },
-      data: [{ id: 'SPEC-001' }],
+      data: specData,
     })),
   };
 }
@@ -100,9 +104,23 @@ describe('buildCommand', () => {
   });
 
   describe('model without exporters', () => {
-    it('skips models without exporters and logs no files to generate', async () => {
+    it('FR-800-01 writes only the aggregated reference graph for a model without exporters', async () => {
       const model = createMockModel({ exporters: [] });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+
+      const { batchWriteFiles } = await import('../../src/utils/file-writer.js');
+      const mockedBatchWrite = vi.mocked(batchWriteFiles);
+
+      await buildCommand({});
+
+      expect(exitSpy).not.toHaveBeenCalled();
+      const writtenFiles = mockedBatchWrite.mock.calls[0][0] as Array<{ path: string }>;
+      expect(writtenFiles.map(f => f.path)).toEqual([join(process.cwd(), 'specs', 'index.json')]);
+    });
+
+    it('logs no files to generate when no specs are registered', async () => {
+      const model = createMockModel({ exporters: [] });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model], []) as never);
 
       const { batchWriteFiles } = await import('../../src/utils/file-writer.js');
       const mockedBatchWrite = vi.mocked(batchWriteFiles);
