@@ -69,7 +69,7 @@ function writeTempFile(relativePath: string, content: string): string {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('NFR-005: loadYamlSpecs', () => {
+describe('FR-104, NFR-004, NFR-005, NFR-007: loadYamlSpecs', () => {
   beforeEach(() => {
     if (existsSync(testDir)) rmSync(testDir, { recursive: true });
     mkdirSync(testDir, { recursive: true });

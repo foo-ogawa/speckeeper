@@ -88,7 +88,7 @@ describe('checkCommand', () => {
     });
   });
 
-  describe('FR-602-04 only models with externalChecker are targeted', () => {
+  describe('FR-104-05, FR-602-04 only models with externalChecker are targeted', () => {
     it('FR-602-04 skips models without external source path', async () => {
       const model = createMockModel({ externalSourcePath: null });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
@@ -137,7 +137,7 @@ describe('checkCommand', () => {
     });
   });
 
-  describe('coverage check', () => {
+  describe('FR-604: coverage check', () => {
     it('runs coverage checks when --coverage option is specified', async () => {
       const model = createMockModel({
         hasCoverageChecker: true,

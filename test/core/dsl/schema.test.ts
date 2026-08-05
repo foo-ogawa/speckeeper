@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { baseSpecSchema } from '../../../src/core/dsl/schema.js';
 import { ImplementsRelationSchema, VerifiedByRelationSchema } from '../../../src/core/dsl/relation-schemas.js';
 
-describe('baseSpecSchema', () => {
+describe('FR-107, FR-701: baseSpecSchema', () => {
   it('parses valid base spec', () => {
     const result = baseSpecSchema.safeParse({
       id: 'FR-001',
@@ -46,7 +46,7 @@ describe('baseSpecSchema', () => {
   });
 });
 
-describe('ImplementsRelationSchema', () => {
+describe('FR-703: ImplementsRelationSchema', () => {
   it('parses valid implements relation', () => {
     const result = ImplementsRelationSchema.safeParse({
       target: 'API-001',

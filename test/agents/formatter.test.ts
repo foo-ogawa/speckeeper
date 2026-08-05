@@ -19,7 +19,7 @@ function makeResult(overrides: Partial<AuditRunResult> = {}): AuditRunResult {
   };
 }
 
-describe("computeExitCode", () => {
+describe("FR-1100: computeExitCode", () => {
   it("returns 1 for non-success status", () => {
     const result = makeResult({ status: "error", data: null });
     expect(computeExitCode(result, {})).toBe(1);

@@ -23,7 +23,7 @@ function createMockModel(id = 'functional-requirement') {
   };
 }
 
-describe('SpeckeeperInsightProvider', () => {
+describe('FR-700, FR-701: SpeckeeperInsightProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
