@@ -7,8 +7,14 @@
 import chalk from 'chalk';
 import { join } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
-import { batchWriteFiles, ensureDir } from '../utils/file-writer.js';
-import { getSpecsFromConfig } from '../core/model.js';
+import { batchWriteFiles } from '../utils/file-writer.js';
+import {
+  buildReferenceGraph,
+  getExporterIndexPath,
+  getExporterSinglePath,
+  getSpecsFromConfig,
+  type ExporterOutputRoots,
+} from '../core/model.js';
 
 // ============================================================================
 // Build Command Options
@@ -43,9 +49,11 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
     const models = (config.models || []) as any[];
     const specs = config.specs;
     
-    ensureDir(join(cwd, config.docsDir));
-    ensureDir(join(cwd, config.specsDir));
-    
+    const roots: ExporterOutputRoots = {
+      docs: join(cwd, config.docsDir),
+      specs: join(cwd, config.specsDir),
+    };
+
     const files: Array<{ path: string; content: string }> = [];
     
     if (models.length === 0) {
@@ -75,43 +83,37 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
       }
       
       for (const exporter of exporters) {
-        const outputDir = exporter.outputDir 
-          ? join(cwd, config.docsDir, exporter.outputDir)
-          : join(cwd, config.docsDir);
-        
-        if (exporter.single) {
-          ensureDir(outputDir);
-        }
-        
         if (exporter.single) {
           for (const spec of modelSpecs) {
             const content = exporter.single(spec);
             const filename = model.getFilename(spec, exporter.format) || (spec as { id: string }).id;
             files.push({
-              path: join(outputDir, `${filename}.md`),
+              path: getExporterSinglePath(exporter, roots, filename),
               content,
             });
           }
         }
-        
+
         if (exporter.index) {
-          const indexContent = exporter.index(modelSpecs);
-          const indexPath = exporter.outputFile
-            ? join(cwd, config.docsDir, exporter.outputFile)
-            : join(outputDir, 'index.md');
-          if (!exporter.outputFile) {
-            ensureDir(outputDir);
-          }
           files.push({
-            path: indexPath,
-            content: indexContent,
+            path: getExporterIndexPath(exporter, roots),
+            content: exporter.index(modelSpecs),
           });
         }
       }
-      
+
       console.log(chalk.green(`    ✓ ${model.name}`));
     }
-    
+
+    const referenceGraph = buildReferenceGraph(specs);
+
+    if (referenceGraph.nodes.length > 0) {
+      files.push({
+        path: join(roots.specs, 'index.json'),
+        content: JSON.stringify(referenceGraph, null, 2) + '\n',
+      });
+    }
+
     if (files.length > 0) {
       console.log('');
       console.log(chalk.blue(`  Writing ${files.length} files...`));

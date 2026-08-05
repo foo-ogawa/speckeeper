@@ -1,41 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { resolve, dirname, join } from 'node:path';
+import { resolve, dirname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 // ============================================================================
 // Configuration Types
 // ============================================================================
-
-/**
- * Specification-compliant output path definitions
- * 
- * Human-readable artifacts (docs/):
- *   requirements/     - Requirements Markdown
- *   usecases/         - Use cases
- *   architecture/     - Architecture (C4 diagrams)
- *   data-model/       - Conceptual model (ER diagrams)
- *   screens/          - Screen specifications
- *   flows/            - Process flows
- *   glossary/         - Glossary
- * 
- * Machine-readable artifacts (specs/):
- *   schemas/entities/       - Entity JSON Schema
- *   index.json              - Aggregated data
- */
-export interface OutputPaths {
-  // docs/ subdirectories
-  requirements: string;
-  usecases: string;
-  architecture: string;
-  dataModel: string;
-  screens: string;
-  flows: string;
-  glossary: string;
-  component: string;
-  
-  // specs/ subdirectories
-  schemasEntities: string;
-}
 
 export interface SpeckeeperConfig {
   // Project info
@@ -127,89 +96,6 @@ const defaultConfig: SpeckeeperConfig = {
   docsDir: 'docs',
   specsDir: 'specs',
 };
-
-// ============================================================================
-// Output Paths (spec-compliant)
-// ============================================================================
-
-/**
- * Get output paths compliant with specification
- */
-export function getOutputPaths(config: SpeckeeperConfig, cwd: string = process.cwd()): OutputPaths {
-  const docsDir = resolve(cwd, config.docsDir);
-  const specsDir = resolve(cwd, config.specsDir);
-  
-  return {
-    // docs/ subdirectories (compliant with spec section 7.1)
-    requirements: join(docsDir, 'requirements'),
-    usecases: join(docsDir, 'usecases'),
-    architecture: join(docsDir, 'architecture'),
-    dataModel: join(docsDir, 'data-model'),
-    screens: join(docsDir, 'screens'),
-    flows: join(docsDir, 'flows'),
-    glossary: join(docsDir, 'glossary'),
-    component: join(docsDir, 'component'),
-    
-    // specs/ subdirectories (compliant with spec section 7.1)
-    schemasEntities: join(specsDir, 'schemas', 'entities'),
-  };
-}
-
-/**
- * List of expected output paths (for drift check)
- */
-export function getExpectedOutputDirs(config: SpeckeeperConfig, cwd: string = process.cwd()): string[] {
-  const paths = getOutputPaths(config, cwd);
-  return [
-    paths.requirements,
-    paths.usecases,
-    paths.architecture,
-    paths.dataModel,
-    paths.screens,
-    paths.flows,
-    paths.glossary,
-    paths.component,
-    paths.schemasEntities,
-  ];
-}
-
-/**
- * Validate if output path complies with specification
- */
-export function validateOutputPaths(actualPath: string, config: SpeckeeperConfig, cwd: string = process.cwd()): {
-  valid: boolean;
-  expectedPaths: string[];
-  message?: string;
-} {
-  const expectedDirs = getExpectedOutputDirs(config, cwd);
-  const docsDir = resolve(cwd, config.docsDir);
-  const specsDir = resolve(cwd, config.specsDir);
-  
-  // Check if actualPath is under docs/ or specs/
-  const isUnderDocs = actualPath.startsWith(docsDir);
-  const isUnderSpecs = actualPath.startsWith(specsDir);
-  
-  if (!isUnderDocs && !isUnderSpecs) {
-    return {
-      valid: false,
-      expectedPaths: expectedDirs,
-      message: `Output path "${actualPath}" is not under docs/ or specs/`,
-    };
-  }
-  
-  // Check if under any of the expected paths
-  const isValidPath = expectedDirs.some(dir => actualPath.startsWith(dir));
-  
-  if (!isValidPath) {
-    return {
-      valid: false,
-      expectedPaths: expectedDirs,
-      message: `Output path "${actualPath}" does not match spec-compliant paths. Expected one of: ${expectedDirs.map(d => d.replace(cwd + '/', '')).join(', ')}`,
-    };
-  }
-  
-  return { valid: true, expectedPaths: expectedDirs };
-}
 
 // ============================================================================
 // Configuration Loading

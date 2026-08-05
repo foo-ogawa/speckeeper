@@ -8,7 +8,12 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { getSpecsFromConfig } from '../core/model.js';
+import {
+  getExporterIndexPath,
+  getExporterSinglePath,
+  getSpecsFromConfig,
+  type ExporterOutputRoots,
+} from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -46,24 +51,25 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
     const models = (config.models || []) as any[];
     const specs = config.specs;
     
+    const roots: ExporterOutputRoots = {
+      docs: join(cwd, config.docsDir),
+      specs: join(cwd, config.specsDir),
+    };
+
     const results: DriftResult[] = [];
-    
+
     for (const model of models) {
       const modelSpecs = getSpecsFromConfig(specs, model.id);
       if (modelSpecs.length === 0) continue;
       
       for (const exporter of model.getExporters()) {
         if (exporter.format !== 'markdown') continue;
-        
-        const outputDir = exporter.outputDir 
-          ? join(cwd, config.docsDir, exporter.outputDir)
-          : join(cwd, config.docsDir);
-        
+
         if (exporter.single) {
           for (const spec of modelSpecs) {
             const filename = model.getFilename(spec, 'markdown') || (spec as { id: string }).id;
-            const filePath = join(outputDir, `${filename}.md`);
-            
+            const filePath = getExporterSinglePath(exporter, roots, filename);
+
             if (!existsSync(filePath)) {
               results.push({ file: filePath, status: 'missing' });
               continue;
@@ -81,10 +87,8 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
         }
         
         if (exporter.index) {
-          const indexPath = exporter.outputFile
-            ? join(cwd, config.docsDir, exporter.outputFile)
-            : join(outputDir, 'index.md');
-          
+          const indexPath = getExporterIndexPath(exporter, roots);
+
           if (!existsSync(indexPath)) {
             results.push({ file: indexPath, status: 'missing' });
           } else {
