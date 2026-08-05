@@ -214,7 +214,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="27" end="84" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="27" end="86" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -245,9 +245,11 @@ export interface Exporter<T> {
   format: 'markdown' | 'json' | 'mermaid';
   single?: (spec: T) => string;
   index?: (specs: T[]) => string;
-  /** Subdirectory under docsDir (used with single + index/index.md) */
+  /** Output tree this exporter writes into: human-readable docsDir or machine-readable specsDir */
+  target?: 'docs' | 'specs';
+  /** Subdirectory under the target root (used with single + index/index.md) */
   outputDir?: string;
-  /** Direct output file path relative to docsDir (used with index-only exporters) */
+  /** Direct output file path relative to the target root (used with index-only exporters) */
   outputFile?: string;
   filename?: (spec: T) => string;
 }
@@ -281,7 +283,7 @@ export interface CheckResult {
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="228" end="272" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="230" end="274" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript

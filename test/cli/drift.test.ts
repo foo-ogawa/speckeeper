@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { join } from 'node:path';
 import { driftCommand } from '../../src/cli/drift.js';
 
 vi.mock('../../src/utils/config-loader.js');
@@ -54,6 +55,23 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[]) {
   };
 }
 
+/** Content the reference graph of createMockConfig() produces in specs/index.json */
+const REFERENCE_GRAPH_JSON = JSON.stringify(
+  { nodes: [{ id: 'SPEC-001', model: 'test-model' }], edges: [] },
+  null,
+  2,
+) + '\n';
+
+/**
+ * Serve on-disk content per file: the aggregated reference graph for
+ * specs/index.json, `exporterOutput` for every exporter file.
+ */
+function mockDisk(exporterOutput: string): void {
+  mockedExistsSync.mockReturnValue(true);
+  mockedReadFileSync.mockImplementation(((path: unknown) =>
+    String(path).endsWith('index.json') ? REFERENCE_GRAPH_JSON : exporterOutput) as never);
+}
+
 describe('driftCommand', () => {
   let logSpy: ReturnType<typeof vi.spyOn>;
 
@@ -76,13 +94,13 @@ describe('driftCommand', () => {
       });
       const model = createMockModel({ exporters: [exporter] });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
-      mockedExistsSync.mockReturnValue(true);
-      mockedReadFileSync.mockReturnValue('# Expected Content' as never);
+      mockDisk('# Expected Content');
 
       await driftCommand({});
 
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('No drift detected');
+      expect(output).toContain('Checked: 2 files');
     });
   });
 
@@ -93,13 +111,13 @@ describe('driftCommand', () => {
       });
       const model = createMockModel({ exporters: [exporter] });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
-      mockedExistsSync.mockReturnValue(true);
-      mockedReadFileSync.mockReturnValue('# Modified Content' as never);
+      mockDisk('# Modified Content');
 
       await driftCommand({});
 
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('drifted');
+      expect(output).toContain(join('docs', 'output', 'test-file.md'));
     });
   });
 
@@ -110,10 +128,39 @@ describe('driftCommand', () => {
       });
       const model = createMockModel({ exporters: [exporter] });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
-      mockedExistsSync.mockReturnValue(true);
-      mockedReadFileSync.mockReturnValue('# Manually Edited' as never);
+      mockDisk('# Manually Edited');
 
       await expect(driftCommand({ failOnDrift: true })).rejects.toThrow('process.exit(1)');
+    });
+  });
+
+  describe('FR-500-03 orchestration: drift output prompts to regenerate and commit', () => {
+    it('FR-500-03 outputs a message prompting to regenerate and commit when drift is detected', async () => {
+      const exporter = createMockExporter({
+        single: () => '# Expected Content',
+      });
+      const model = createMockModel({ exporters: [exporter] });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      mockDisk('# Manually Edited');
+
+      await driftCommand({});
+
+      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(output).toContain('Regenerate the artifacts with "speckeeper build" and commit the result.');
+    });
+
+    it('FR-500-03 does not prompt to regenerate when no drift is detected', async () => {
+      const exporter = createMockExporter({
+        single: () => '# Expected Content',
+      });
+      const model = createMockModel({ exporters: [exporter] });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      mockDisk('# Expected Content');
+
+      await driftCommand({});
+
+      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(output).not.toContain('Regenerate');
     });
   });
 
@@ -133,15 +180,18 @@ describe('driftCommand', () => {
     });
   });
 
-  describe('orchestration: no exporters means no files to check', () => {
-    it('completes without drift when model has no exporters', async () => {
+  describe('orchestration: a model without exporters still contributes the aggregated graph', () => {
+    it('checks only specs/index.json when the model has no exporters', async () => {
       const model = createMockModel({ exporters: [] });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      mockDisk('# unused');
 
       await driftCommand({});
 
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
-      expect(output).not.toContain('drifted');
+      expect(output).toContain('No drift detected');
+      expect(output).toContain('Checked: 1 files');
+      expect(mockedReadFileSync).toHaveBeenCalledWith(join(process.cwd(), 'specs', 'index.json'), 'utf-8');
     });
   });
 

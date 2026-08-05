@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { resolveModelTemplate, inferLevelFromSubgraph } from '../../src/scaffold/template-registry.js';
 
 describe('resolveModelTemplate', () => {
-  describe('always uses base template (FR-SCF-028)', () => {
+  describe('FR-106: always uses base template (FR-SCF-028)', () => {
     it('resolves any class to base template with correct name derivation', () => {
       const result = resolveModelTemplate('FR', ['speckeeper', 'requirement']);
       expect(result.templateName).toBe('base');

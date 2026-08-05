@@ -69,7 +69,7 @@ function writeTempFile(relativePath: string, content: string): string {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('NFR-005: loadYamlSpecs', () => {
+describe('FR-104, NFR-004, NFR-005, NFR-007: loadYamlSpecs', () => {
   beforeEach(() => {
     if (existsSync(testDir)) rmSync(testDir, { recursive: true });
     mkdirSync(testDir, { recursive: true });
@@ -163,7 +163,7 @@ specs:
     expect(() => loadYamlSpecs(path, models)).toThrow(/Validation failed.*TERM-001.*term/);
   });
 
-  it('throws on YAML syntax error', () => {
+  it('NFR-007-02 throws on YAML syntax error with the file path and the line number', () => {
     const path = writeTempFile('broken.yaml', `
 model: term
 specs:
@@ -171,7 +171,17 @@ specs:
     [invalid yaml
 `);
 
-    expect(() => loadYamlSpecs(path, models)).toThrow(/Failed to parse/);
+    let message = '';
+    try {
+      loadYamlSpecs(path, models);
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+
+    expect(message).toContain('Failed to parse');
+    expect(message).toContain(path);
+    // The offending token sits on line 5 of the file written above
+    expect(message).toMatch(/at line 5, column \d+/);
   });
 
   it('validates all specs through Zod schema', () => {

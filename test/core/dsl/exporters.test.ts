@@ -8,7 +8,7 @@ interface TestSpec {
   priority: string;
 }
 
-describe('markdownExporter', () => {
+describe('FR-107: markdownExporter', () => {
   const exporter = markdownExporter<TestSpec>({
     outputDir: 'test-output',
     single: {

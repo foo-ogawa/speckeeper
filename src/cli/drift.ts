@@ -8,7 +8,11 @@ import chalk from 'chalk';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../utils/config-loader.js';
-import { getSpecsFromConfig } from '../core/model.js';
+import {
+  planBuildOutputs,
+  type BuildableModel,
+  type ExporterOutputRoots,
+} from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -42,65 +46,27 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
   console.log('');
   
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const models = (config.models || []) as any[];
+    const models = (config.models ?? []) as BuildableModel[];
     const specs = config.specs;
-    
+
+    const roots: ExporterOutputRoots = {
+      docs: join(cwd, config.docsDir),
+      specs: join(cwd, config.specsDir),
+    };
+
     const results: DriftResult[] = [];
-    
-    for (const model of models) {
-      const modelSpecs = getSpecsFromConfig(specs, model.id);
-      if (modelSpecs.length === 0) continue;
-      
-      for (const exporter of model.getExporters()) {
-        if (exporter.format !== 'markdown') continue;
-        
-        const outputDir = exporter.outputDir 
-          ? join(cwd, config.docsDir, exporter.outputDir)
-          : join(cwd, config.docsDir);
-        
-        if (exporter.single) {
-          for (const spec of modelSpecs) {
-            const filename = model.getFilename(spec, 'markdown') || (spec as { id: string }).id;
-            const filePath = join(outputDir, `${filename}.md`);
-            
-            if (!existsSync(filePath)) {
-              results.push({ file: filePath, status: 'missing' });
-              continue;
-            }
-            
-            const expected = exporter.single(spec);
-            const actual = readFileSync(filePath, 'utf-8');
-            
-            if (normalizeContent(expected) !== normalizeContent(actual)) {
-              results.push({ file: filePath, status: 'drifted' });
-            } else {
-              results.push({ file: filePath, status: 'ok' });
-            }
-          }
-        }
-        
-        if (exporter.index) {
-          const indexPath = exporter.outputFile
-            ? join(cwd, config.docsDir, exporter.outputFile)
-            : join(outputDir, 'index.md');
-          
-          if (!existsSync(indexPath)) {
-            results.push({ file: indexPath, status: 'missing' });
-          } else {
-            const expected = exporter.index(modelSpecs);
-            const actual = readFileSync(indexPath, 'utf-8');
-            
-            if (normalizeContent(expected) !== normalizeContent(actual)) {
-              results.push({ file: indexPath, status: 'drifted' });
-            } else {
-              results.push({ file: indexPath, status: 'ok' });
-            }
-          }
-        }
+
+    for (const file of planBuildOutputs(models, specs, roots).files) {
+      if (!existsSync(file.path)) {
+        results.push({ file: file.path, status: 'missing' });
+        continue;
       }
+
+      const actual = readFileSync(file.path, 'utf-8');
+      const drifted = normalizeContent(file.content) !== normalizeContent(actual);
+      results.push({ file: file.path, status: drifted ? 'drifted' : 'ok' });
     }
-    
+
     outputDriftResults(results, options);
     
     const hasDrift = results.some(r => r.status === 'drifted' || r.status === 'missing');
@@ -151,4 +117,5 @@ function outputDriftResults(results: DriftResult[], _options: DriftCommandOption
   
   console.log('');
   console.log(chalk.gray(`  Summary: ${ok.length} ok, ${drifted.length} drifted, ${missing.length} missing`));
+  console.log(chalk.cyan('  → Regenerate the artifacts with "speckeeper build" and commit the result.'));
 }

@@ -37,6 +37,7 @@ jobs:
         run: node dist/speckeeper.bundle.mjs lint
       - name: Documentation is regenerated from the models
         run: |
+          node dist/speckeeper.bundle.mjs build
           npm run docs
           git diff --exit-code -- docs/
           if grep -rn '⚠️' docs/; then
@@ -45,5 +46,7 @@ jobs:
           fi
       - name: Test
         run: npm run test:ci
+      - name: The bundle runs standalone outside the repository
+        run: npm run test:bundle
       - name: Verify package contents
         run: npm pack --dry-run

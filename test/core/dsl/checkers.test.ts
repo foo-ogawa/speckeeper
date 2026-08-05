@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
+import nodeSqlParser from 'node-sql-parser';
 import { relationCoverage } from '../../../src/core/dsl/checkers.js';
 import {
   openapiScanner,
@@ -43,7 +44,7 @@ function loadSql(filename: string): string {
 // openapiScanner
 // ---------------------------------------------------------------------------
 
-describe('openapiScanner', () => {
+describe('FR-1001, FR-1002: openapiScanner', () => {
   describe('spec ID existence check', () => {
     it('finds spec ID via operationId', () => {
       const doc = loadYaml('valid.openapi.yaml');
@@ -113,7 +114,7 @@ describe('openapiScanner', () => {
 // ddlScanner
 // ---------------------------------------------------------------------------
 
-describe('ddlScanner', () => {
+describe('FR-1009: ddlScanner', () => {
   describe('table existence check', () => {
     it('finds existing table (case-insensitive)', () => {
       const content = loadSql('valid.schema.sql');
@@ -154,13 +155,25 @@ describe('ddlScanner', () => {
       expect(matches[0].specId).toBe('accounts');
     });
   });
+
+  describe('FR-1015: parser failure fallback', () => {
+    it('falls back to regex parsing when node-sql-parser rejects the file', () => {
+      const content = loadSql('parser-fail-regex-ok.schema.sql');
+      // Without a working fallback this file yields nothing: the parser rejects it.
+      expect(() => new nodeSqlParser.Parser().astify(content)).toThrow();
+
+      const matches = ddlScanner.findSpecIds(content, ['audit_log'], 'db/schema.sql');
+      expect(matches).toHaveLength(1);
+      expect(matches[0].specId).toBe('audit_log');
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
 // runGlobalScan integration
 // ---------------------------------------------------------------------------
 
-describe('runGlobalScan', () => {
+describe('FR-600, FR-601, FR-1016: runGlobalScan', () => {
   it('scans OpenAPI source and returns matches', () => {
     const sources: SourceConfig[] = [{
       type: 'openapi',
@@ -212,7 +225,7 @@ describe('runGlobalScan', () => {
 // runDeepValidation — OpenAPI
 // ---------------------------------------------------------------------------
 
-describe('runDeepValidation (OpenAPI)', () => {
+describe('FR-1004, FR-1005, FR-1006: runDeepValidation (OpenAPI)', () => {
   function getOpenAPIMatchesForSpec(specId: string, fixture = 'valid.openapi.yaml') {
     const sources: SourceConfig[] = [{
       type: 'openapi',
@@ -294,6 +307,30 @@ describe('runDeepValidation (OpenAPI)', () => {
     expect(result.warnings).toHaveLength(0);
   });
 
+  it('compares response property types by containment, not equality', () => {
+    const matches = getOpenAPIMatchesForSpec('listOrders');
+    // Order.total is declared as "number"; "integer" is contained by it.
+    const contained = runDeepValidation('listOrders', matches, {
+      openapi: {
+        mapper: () => ({
+          path: '/orders',
+          responseProperties: [{ name: 'total', type: 'integer' }],
+        }),
+      },
+    }, { id: 'listOrders', name: 'List Orders' });
+    expect(contained.warnings).toHaveLength(0);
+
+    const unrelated = runDeepValidation('listOrders', matches, {
+      openapi: {
+        mapper: () => ({
+          path: '/orders',
+          responseProperties: [{ name: 'total', type: 'string' }],
+        }),
+      },
+    }, { id: 'listOrders', name: 'List Orders' });
+    expect(unrelated.warnings.some(w => w.message.includes('type mismatch'))).toBe(true);
+  });
+
   it('warns when response property is missing', () => {
     const matches = getOpenAPIMatchesForSpec('listUsers');
     const result = runDeepValidation('listUsers', matches, {
@@ -342,7 +379,7 @@ describe('runDeepValidation (OpenAPI)', () => {
 // runDeepValidation — DDL
 // ---------------------------------------------------------------------------
 
-describe('runDeepValidation (DDL)', () => {
+describe('FR-1011, FR-1012, FR-1013: runDeepValidation (DDL)', () => {
   function getDDLMatchesForSpec(specId: string, fixture = 'valid.schema.sql') {
     const sources: SourceConfig[] = [{
       type: 'ddl',
@@ -407,13 +444,26 @@ describe('runDeepValidation (DDL)', () => {
     }, { id: 'users', name: 'Users' });
     expect(result.warnings.some(w => w.message.includes('type mismatch'))).toBe(true);
   });
+
+  it('leaves the type check off unless checkTypes opts in', () => {
+    const matches = getDDLMatchesForSpec('users', 'type-mismatch.schema.sql');
+    const result = runDeepValidation('users', matches, {
+      ddl: {
+        mapper: () => ({
+          tableName: 'users',
+          columns: [{ name: 'id', type: 'INT' }],
+        }),
+      },
+    }, { id: 'users', name: 'Users' });
+    expect(result.warnings.filter(w => w.message.includes('type mismatch'))).toHaveLength(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
 // relationCoverage (unchanged — existing tests)
 // ---------------------------------------------------------------------------
 
-describe('relationCoverage', () => {
+describe('FR-107, FR-604: relationCoverage', () => {
   const coverage = relationCoverage<SimpleSpec>({
     targetModel: 'usecase',
     description: 'Requirements cover UseCases',

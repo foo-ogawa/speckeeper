@@ -27,7 +27,7 @@ function makeEdge(
 // Vocabulary structure
 // ---------------------------------------------------------------------------
 
-describe('EDGE_VOCABULARY', () => {
+describe('FR-702: EDGE_VOCABULARY', () => {
   it('contains verifiedBy as check category', () => {
     const entry = EDGE_VOCABULARY.find(v => v.label === 'verifiedBy');
     expect(entry).toBeDefined();

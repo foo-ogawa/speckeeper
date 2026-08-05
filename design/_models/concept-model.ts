@@ -133,6 +133,13 @@ class EntityModel extends Model<typeof EntitySchema> {
       },
       outputFile: 'design/entities.md',
     },
+    {
+      format: 'json',
+      target: 'specs',
+      outputDir: 'schemas/entities',
+      filename: (spec) => spec.id,
+      single: (spec) => JSON.stringify(entityJsonSchema(spec), null, 2) + '\n',
+    },
   ];
 
   /**
@@ -203,6 +210,137 @@ class EntityModel extends Model<typeof EntitySchema> {
 }
 
 export { EntityModel };
+
+// ============================================================================
+// JSON Schema Derivation
+// ============================================================================
+
+type EntityAttribute = Entity['attributes'][number];
+
+/** JSON Schema keywords produced for a single attribute */
+interface JsonSchemaProperty {
+  type?: string;
+  format?: string;
+  enum?: string[];
+  items?: JsonSchemaProperty;
+  description?: string;
+  $comment?: string;
+  minLength?: number;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  pattern?: string;
+}
+
+/** JSON Schema document describing instances of one Entity */
+interface EntityJsonSchema {
+  $schema: string;
+  $id: string;
+  title: string;
+  description: string;
+  type: 'object';
+  properties: Record<string, JsonSchemaProperty>;
+  required?: string[];
+}
+
+/**
+ * Map a logical type to the JSON Schema keywords it implies
+ */
+function logicalTypeSchema(
+  attr: Pick<EntityAttribute, 'type' | 'enumValues' | 'itemType' | 'referenceTo'>,
+  where: string,
+): JsonSchemaProperty {
+  switch (attr.type) {
+    case 'string':
+      return { type: 'string' };
+    case 'number':
+      return { type: 'number' };
+    case 'integer':
+      return { type: 'integer' };
+    case 'boolean':
+      return { type: 'boolean' };
+    case 'date':
+      return { type: 'string', format: 'date' };
+    case 'datetime':
+      return { type: 'string', format: 'date-time' };
+    case 'time':
+      return { type: 'string', format: 'time' };
+    case 'uuid':
+      return { type: 'string', format: 'uuid' };
+    case 'email':
+      return { type: 'string', format: 'email' };
+    case 'url':
+      return { type: 'string', format: 'uri' };
+    case 'json':
+      return {};
+    case 'array':
+      return attr.itemType
+        ? { type: 'array', items: logicalTypeSchema({ type: attr.itemType }, where) }
+        : { type: 'array' };
+    case 'enum':
+      if (!attr.enumValues || attr.enumValues.length === 0) {
+        throw new Error(`${where}: attribute of type "enum" requires enumValues`);
+      }
+      return { type: 'string', enum: attr.enumValues };
+    case 'reference':
+      return attr.referenceTo
+        ? { type: 'string', $comment: `Reference to ${attr.referenceTo}` }
+        : { type: 'string' };
+  }
+}
+
+/**
+ * Derive the JSON Schema property for one entity attribute
+ */
+function attributeSchema(attr: EntityAttribute, where: string): JsonSchemaProperty {
+  const property = logicalTypeSchema(attr, where);
+
+  if (attr.description) {
+    property.description = attr.description;
+  }
+
+  const constraints = attr.constraints;
+  if (constraints) {
+    if (constraints.minLength !== undefined) property.minLength = constraints.minLength;
+    if (constraints.maxLength !== undefined) property.maxLength = constraints.maxLength;
+    if (constraints.minimum !== undefined) property.minimum = constraints.minimum;
+    if (constraints.maximum !== undefined) property.maximum = constraints.maximum;
+    if (constraints.pattern !== undefined) property.pattern = constraints.pattern;
+    if (constraints.format !== undefined) property.format = constraints.format;
+  }
+
+  return property;
+}
+
+/**
+ * Derive the JSON Schema of an Entity: its attributes become properties
+ */
+function entityJsonSchema(entity: Entity): EntityJsonSchema {
+  const properties: Record<string, JsonSchemaProperty> = {};
+  const required: string[] = [];
+
+  for (const attr of entity.attributes) {
+    properties[attr.name] = attributeSchema(attr, `${entity.id}.${attr.name}`);
+    if (attr.required !== false) {
+      required.push(attr.name);
+    }
+  }
+
+  const schema: EntityJsonSchema = {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: `${entity.id}.json`,
+    title: entity.name,
+    description: entity.description,
+    type: 'object',
+    properties,
+  };
+
+  if (required.length > 0) {
+    schema.required = required;
+  }
+
+  return schema;
+}
 
 // ============================================================================
 // Rendering Helper Functions

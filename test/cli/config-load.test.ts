@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const bundlePath = join(repoRoot, 'dist', 'speckeeper.bundle.mjs');
 
-describe('speckeeper CLI config loading', () => {
+describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () => {
   let projectDir: string;
 
   const runLint = (env: Record<string, string> = {}): SpawnSyncReturns<string> =>

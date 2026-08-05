@@ -117,6 +117,9 @@ specs:
       - acceptanceCriteriaId: FR-402-01
         pattern: FR-402-01.*lintAll.*outputs warning
         description: Warnings output without exit
+      - acceptanceCriteriaId: FR-402-03
+        pattern: FR-402-03.*rule ID, message, and target ID
+        description: Lint output carries the rule ID, message, and target ID
     relations:
       - type: verifies
         target: FR-401
@@ -133,10 +136,15 @@ specs:
       path: test/cli/check.test.ts
       framework: vitest
     verifiesRequirements:
+      - FR-104
       - FR-602
       - FR-603
+      - FR-604
     implementsCommand: CMD-CHECK
     testCasePatterns:
+      - acceptanceCriteriaId: FR-104-05
+        pattern: FR-104-05.*only models with externalChecker
+        description: externalChecker is optional per model
       - acceptanceCriteriaId: FR-602-01
         pattern: FR-602-01.*check.*consistency
         description: Check runs external SSOT check
@@ -146,13 +154,28 @@ specs:
       - acceptanceCriteriaId: FR-603-03
         pattern: FR-603-03.*exits.*code 1.*outputs.*error
         description: Outputs error/warning messages and exits
+      - acceptanceCriteriaId: FR-603-04
+        pattern: FR-602-01.*check runs external SSOT consistency check for all models
+        description: Models carrying an externalChecker are detected and run
+      - acceptanceCriteriaId: FR-604-01
+        pattern: runs coverage checks when --coverage option is specified
+        description: --coverage runs the coverage verification
+      - acceptanceCriteriaId: FR-604-03
+        pattern: runs coverage checks when --coverage option is specified
+        description: Models carrying a coverageChecker are detected and run
     relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
       - type: verifies
         target: FR-602
         description: Verifies acceptance criteria for FR-602
       - type: verifies
         target: FR-603
         description: Verifies acceptance criteria for FR-603
+      - type: verifies
+        target: FR-604
+        description: Verifies acceptance criteria for FR-604
       - type: verifies
         target: CMD-CHECK
         description: Verifies CMD-CHECK
@@ -197,6 +220,9 @@ specs:
       - acceptanceCriteriaId: FR-700-03
         pattern: FR-700-03.*depth value.*--depth
         description: Outputs depth from --depth option
+      - acceptanceCriteriaId: FR-700-04
+        pattern: FR-700-04.*impacted specs, components, and documents
+        description: Output lists the impacted specs with their model type and depth
     relations:
       - type: verifies
         target: FR-700
@@ -219,6 +245,9 @@ specs:
       - acceptanceCriteriaId: FR-500-02
         pattern: FR-500-02.*exits.*code 1.*failOnDrift
         description: Exits with code 1 on failOnDrift
+      - acceptanceCriteriaId: FR-500-03
+        pattern: FR-500-03.*prompting to regenerate and commit
+        description: Drift output prompts to regenerate and commit
     relations:
       - type: verifies
         target: FR-500
@@ -270,3 +299,621 @@ specs:
       - type: verifies
         target: CMD-SCAFFOLD
         description: Verifies CMD-SCAFFOLD
+  - id: TEST-027
+    description: Global scanner and coverage checker verification test (OpenAPI, SQL DDL, relation coverage)
+    source:
+      path: test/core/dsl/checkers.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-107
+      - FR-600
+      - FR-601
+      - FR-604
+      - FR-1001
+      - FR-1002
+      - FR-1004
+      - FR-1005
+      - FR-1006
+      - FR-1009
+      - FR-1011
+      - FR-1012
+      - FR-1013
+      - FR-1015
+      - FR-1016
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-107-05
+        pattern: computes coverage from relations
+        description: Relation-based coverage checker factory
+      - acceptanceCriteriaId: FR-600-01
+        pattern: scans OpenAPI source and returns matches
+        description: Existence check against an external artifact
+      - acceptanceCriteriaId: FR-600-02
+        pattern: warns on parameter type mismatch
+        description: Type check against an external artifact
+      - acceptanceCriteriaId: FR-601-01
+        pattern: scans DDL source and returns matches
+        description: Existence category of the consistency check
+      - acceptanceCriteriaId: FR-601-02
+        pattern: warns on narrower type
+        description: Type category of the consistency check
+      - acceptanceCriteriaId: FR-604-04
+        pattern: computes coverage from relations
+        description: Coverage rate calculation
+      - acceptanceCriteriaId: FR-604-05
+        pattern: computes coverage from relations
+        description: Uncovered items are listed
+      - acceptanceCriteriaId: FR-1001-01
+        pattern: scans OpenAPI source and returns matches
+        description: YAML OpenAPI file is parsed
+      - acceptanceCriteriaId: FR-1001-02
+        pattern: parses JSON format OpenAPI file
+        description: JSON OpenAPI file is parsed
+      - acceptanceCriteriaId: FR-1002-01
+        pattern: finds spec ID via operationId
+        description: Spec ID resolved through operationId
+      - acceptanceCriteriaId: FR-1002-02
+        pattern: finds spec ID via path segment
+        description: Spec ID resolved through a path segment
+      - acceptanceCriteriaId: FR-1002-03
+        pattern: finds spec ID via schema name
+        description: Spec ID resolved through a schema name
+      - acceptanceCriteriaId: FR-1002-04
+        pattern: finds spec ID via x-spec-id extension
+        description: Spec ID resolved through the x-spec-id extension
+      - acceptanceCriteriaId: FR-1004-02
+        pattern: warns on method mismatch
+        description: HTTP method mismatch warning
+      - acceptanceCriteriaId: FR-1005-03
+        pattern: compares response property types by containment
+        description: Type comparison uses containment
+      - acceptanceCriteriaId: FR-1006-01
+        pattern: warns on method mismatch
+        description: Warning for a wrong HTTP method
+      - acceptanceCriteriaId: FR-1006-02
+        pattern: warns when parameter is missing
+        description: Warning for a missing request parameter
+      - acceptanceCriteriaId: FR-1006-03
+        pattern: warns when response property is missing
+        description: Warning for a missing response property
+      - acceptanceCriteriaId: FR-1006-04
+        pattern: warns on parameter type mismatch
+        description: Warning for a type mismatch
+      - acceptanceCriteriaId: FR-1009-01
+        pattern: finds existing table
+        description: DDL parsed with node-sql-parser
+      - acceptanceCriteriaId: FR-1009-02
+        pattern: finds existing columns
+        description: Table and column names are extracted
+      - acceptanceCriteriaId: FR-1011-01
+        pattern: warns when column is missing
+        description: Warning for a missing column
+      - acceptanceCriteriaId: FR-1012-01
+        pattern: leaves the type check off unless checkTypes opts in
+        description: Type check is opt-in through checkTypes
+      - acceptanceCriteriaId: FR-1012-02
+        pattern: accepts wider type
+        description: Wider DDL type is accepted
+      - acceptanceCriteriaId: FR-1012-03
+        pattern: warns on narrower type
+        description: Narrower DDL type warns
+      - acceptanceCriteriaId: FR-1013-02
+        pattern: warns when column is missing
+        description: Missing column warning
+      - acceptanceCriteriaId: FR-1013-03
+        pattern: warns on narrower type
+        description: Type mismatch warning
+      - acceptanceCriteriaId: FR-1015-01
+        pattern: falls back to regex parsing when node-sql-parser rejects the file
+        description: Regex fallback runs when the SQL parser fails
+      - acceptanceCriteriaId: FR-1016-01
+        pattern: scans OpenAPI source and returns matches
+        description: OpenAPI checker runs file, parse, verify
+      - acceptanceCriteriaId: FR-1016-02
+        pattern: scans DDL source and returns matches
+        description: SQL checker runs file, parse, verify
+    relations:
+      - type: verifies
+        target: FR-107
+        description: Verifies acceptance criteria for FR-107
+      - type: verifies
+        target: FR-600
+        description: Verifies acceptance criteria for FR-600
+      - type: verifies
+        target: FR-601
+        description: Verifies acceptance criteria for FR-601
+      - type: verifies
+        target: FR-604
+        description: Verifies acceptance criteria for FR-604
+      - type: verifies
+        target: FR-1001
+        description: Verifies acceptance criteria for FR-1001
+      - type: verifies
+        target: FR-1002
+        description: Verifies acceptance criteria for FR-1002
+      - type: verifies
+        target: FR-1004
+        description: Verifies acceptance criteria for FR-1004
+      - type: verifies
+        target: FR-1005
+        description: Verifies acceptance criteria for FR-1005
+      - type: verifies
+        target: FR-1006
+        description: Verifies acceptance criteria for FR-1006
+      - type: verifies
+        target: FR-1009
+        description: Verifies acceptance criteria for FR-1009
+      - type: verifies
+        target: FR-1011
+        description: Verifies acceptance criteria for FR-1011
+      - type: verifies
+        target: FR-1012
+        description: Verifies acceptance criteria for FR-1012
+      - type: verifies
+        target: FR-1013
+        description: Verifies acceptance criteria for FR-1013
+      - type: verifies
+        target: FR-1015
+        description: Verifies acceptance criteria for FR-1015
+      - type: verifies
+        target: FR-1016
+        description: Verifies acceptance criteria for FR-1016
+  - id: TEST-028
+    description: Core lint rule factory verification test
+    source:
+      path: test/core/dsl/lint-rules.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-101
+      - FR-107
+      - FR-400
+      - FR-401
+      - FR-402
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-101-02
+        pattern: supports custom pattern
+        description: ID convention is enforced by a configurable pattern
+      - acceptanceCriteriaId: FR-107-01
+        pattern: combines factory and custom rules in one array
+        description: Core provides the generic lint rule factories
+      - acceptanceCriteriaId: FR-107-06
+        pattern: only custom rule triggers on spec that passes factory rules
+        description: Custom rules coexist with the core factories
+      - acceptanceCriteriaId: FR-400-02
+        pattern: factory and custom rules detect violations independently
+        description: Model-specific custom lint rules execute
+      - acceptanceCriteriaId: FR-401-02
+        pattern: returns true for invalid ID FR-1
+        description: ID convention violation is detected
+      - acceptanceCriteriaId: FR-402-02
+        pattern: uses provided severity
+        description: Severity is settable on a custom rule
+    relations:
+      - type: verifies
+        target: FR-101
+        description: Verifies acceptance criteria for FR-101
+      - type: verifies
+        target: FR-107
+        description: Verifies acceptance criteria for FR-107
+      - type: verifies
+        target: FR-400
+        description: Verifies acceptance criteria for FR-400
+      - type: verifies
+        target: FR-401
+        description: Verifies acceptance criteria for FR-401
+      - type: verifies
+        target: FR-402
+        description: Verifies acceptance criteria for FR-402
+  - id: TEST-029
+    description: Core markdown exporter factory verification test
+    source:
+      path: test/core/dsl/exporters.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-107
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-107-02
+        pattern: generates single markdown with title, meta, and sections
+        description: Core provides the declarative markdown exporter factories
+    relations:
+      - type: verifies
+        target: FR-107
+        description: Verifies acceptance criteria for FR-107
+  - id: TEST-030
+    description: Core schema and edge-type relation schema verification test
+    source:
+      path: test/core/dsl/schema.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-107
+      - FR-701
+      - FR-703
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-107-03
+        pattern: can be extended with additional fields
+        description: Common schema base is extended by models
+      - acceptanceCriteriaId: FR-701-01
+        pattern: accepts optional relations
+        description: Relations are declared through the relations property
+      - acceptanceCriteriaId: FR-703-01
+        pattern: parses valid implements relation
+        description: Edge-type-specific schema carries additional properties
+      - acceptanceCriteriaId: FR-703-03
+        pattern: parses valid verifiedBy relation
+        description: Edge-type-specific schemas ship with core
+    relations:
+      - type: verifies
+        target: FR-107
+        description: Verifies acceptance criteria for FR-107
+      - type: verifies
+        target: FR-701
+        description: Verifies acceptance criteria for FR-701
+      - type: verifies
+        target: FR-703
+        description: Verifies acceptance criteria for FR-703
+  - id: TEST-031
+    description: YAML/JSON spec loader verification test
+    source:
+      path: test/core/yaml-loader.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-104
+      - NFR-004
+      - NFR-007
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-104-02
+        pattern: throws on schema validation failure with helpful message
+        description: Runtime validation runs through the Zod schema
+      - acceptanceCriteriaId: NFR-004-01
+        pattern: loads single-model YAML
+        description: A model defined by inheriting the base class is usable
+      - acceptanceCriteriaId: NFR-007-01
+        pattern: throws on schema validation failure with helpful message
+        description: Error message carries the spec ID
+      - acceptanceCriteriaId: NFR-007-02
+        pattern: NFR-007-02.*file path and the line number
+        description: Parse error message carries the file path and the line number
+      - acceptanceCriteriaId: NFR-007-03
+        pattern: throws on schema validation failure with helpful message
+        description: Error message carries the offending field name
+    relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
+      - type: verifies
+        target: NFR-004
+        description: Verifies acceptance criteria for NFR-004
+      - type: verifies
+        target: NFR-007
+        description: Verifies acceptance criteria for NFR-007
+  - id: TEST-032
+    description: CLI config loading verification test
+    source:
+      path: test/cli/config-load.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-104
+      - NFR-004
+      - NFR-005
+      - NFR-009
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-104-07
+        pattern: loads the project scaffolded by init
+        description: Registered models become lint targets
+      - acceptanceCriteriaId: NFR-004-03
+        pattern: loads the project scaffolded by init
+        description: Models registered in the config become command targets
+      - acceptanceCriteriaId: NFR-005-01
+        pattern: loads the project scaffolded by init, whose config imports the design modules
+        description: TypeScript DSL input is loaded
+      - acceptanceCriteriaId: NFR-009-01
+        pattern: applies a config written with defineConfig imported from the package entry
+        description: Package entry is consumed through an import statement
+    relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
+      - type: verifies
+        target: NFR-004
+        description: Verifies acceptance criteria for NFR-004
+      - type: verifies
+        target: NFR-005
+        description: Verifies acceptance criteria for NFR-005
+      - type: verifies
+        target: NFR-009
+        description: Verifies acceptance criteria for NFR-009
+  - id: TEST-033
+    description: Insight provider verification test (spec relations to external edges)
+    source:
+      path: test/external/insight-provider.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-700
+      - FR-701
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-700-02
+        pattern: converts spec relations to ExternalEdge with spec_relation evidence
+        description: Relations between models are tracked as associations
+      - acceptanceCriteriaId: FR-701-03
+        pattern: filters edges by changedFiles
+        description: Relations feed the impact analysis graph
+    relations:
+      - type: verifies
+        target: FR-700
+        description: Verifies acceptance criteria for FR-700
+      - type: verifies
+        target: FR-701
+        description: Verifies acceptance criteria for FR-701
+  - id: TEST-034
+    description: Edge vocabulary verification test (verifiedBy / verifies categories)
+    source:
+      path: test/scaffold/edge-vocabulary.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-702
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-702-01
+        pattern: contains verifiedBy as check category
+        description: verifiedBy is a check-category relation type
+      - acceptanceCriteriaId: FR-702-03
+        pattern: warns when verifiedBy is speckeeper
+        description: speckeeper to speckeeper verifiedBy warns
+      - acceptanceCriteriaId: FR-702-05
+        pattern: contains verifies as external category
+        description: verifies is traceability only, not a checker target
+    relations:
+      - type: verifies
+        target: FR-702
+        description: Verifies acceptance criteria for FR-702
+  - id: TEST-035
+    description: Scaffold template registry verification test (base template resolution)
+    source:
+      path: test/scaffold/template-registry.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-106
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-106-04
+        pattern: uses base when no classes provided
+        description: Classless node falls back to the base template
+      - acceptanceCriteriaId: FR-106-06
+        pattern: resolves unknown class to base template
+        description: No fixed node ID to template mapping remains
+      - acceptanceCriteriaId: FR-106-07
+        pattern: resolves logical-entity class to base with correct names
+        description: Level, name and filename are derived, not registered
+      - acceptanceCriteriaId: FR-106-09
+        pattern: resolves any class to base template with correct name derivation
+        description: Only the base template remains
+    relations:
+      - type: verifies
+        target: FR-106
+        description: Verifies acceptance criteria for FR-106
+  - id: TEST-036
+    description: Scaffold model generator verification test (no checker generation)
+    source:
+      path: test/scaffold/model-generator.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-106
+      - FR-605
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-106-02
+        pattern: deduplicates nodes with the same template class
+        description: Same-class nodes aggregate into one model file
+      - acceptanceCriteriaId: FR-106-08
+        pattern: does not generate externalChecker code
+        description: No fixed external node to checker mapping remains
+      - acceptanceCriteriaId: FR-605-01
+        pattern: emits no _checkers/ file for any edge category
+        description: Scaffold generates no _checkers/ directory
+    relations:
+      - type: verifies
+        target: FR-106
+        description: Verifies acceptance criteria for FR-106
+      - type: verifies
+        target: FR-605
+        description: Verifies acceptance criteria for FR-605
+  - id: TEST-037
+    description: Audit report formatting verification test
+    source:
+      path: test/agents/formatter.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1100
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1100-02
+        pattern: formats findings with severity icons
+        description: Report findings carry severity and affected spec ID
+      - acceptanceCriteriaId: FR-1100-04
+        pattern: respects failOn=warning threshold
+        description: failOn controls the exit code threshold
+    relations:
+      - type: verifies
+        target: FR-1100
+        description: Verifies acceptance criteria for FR-1100
+  - id: TEST-038
+    description: Impact explanation context builder verification test
+    source:
+      path: test/agents/context-builder.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1102
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1102-01
+        pattern: wraps stdin JSON in context
+        description: Impact analysis JSON from stdin is read into the prompt context
+    relations:
+      - type: verifies
+        target: FR-1102
+        description: Verifies acceptance criteria for FR-1102
+  - id: TEST-039
+    description: Model renderer verification test
+    source:
+      path: test/core/model-render.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-104
+      - FR-301
+      - NFR-004
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-104-04
+        pattern: FR-104-04, NFR-004-02 lets each model class define its own output functions
+        description: Model-specific renderers are declarable
+      - acceptanceCriteriaId: FR-301-01
+        pattern: FR-301-01 exposes every renderer declared in the subclass
+        description: Renderers are declared through the renderers property
+      - acceptanceCriteriaId: FR-301-02
+        pattern: FR-301-02 renders through Model.render using the supplied RenderContext
+        description: Rendering runs through the common Model.render interface
+      - acceptanceCriteriaId: FR-301-03
+        pattern: FR-301-03 renders the same format differently per model class
+        description: Rendering result depends on the model class
+      - acceptanceCriteriaId: FR-301-04
+        pattern: FR-301-04 selects the renderer matching the requested format
+        description: The format parameter selects the renderer
+      - acceptanceCriteriaId: NFR-004-02
+        pattern: NFR-004-02 lets each model class define its own output functions
+        description: Each model defines its own renderers
+    relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
+      - type: verifies
+        target: FR-301
+        description: Verifies acceptance criteria for FR-301
+      - type: verifies
+        target: NFR-004
+        description: Verifies acceptance criteria for NFR-004
+  - id: TEST-040
+    description: Relation level constraint and cycle detection verification test
+    source:
+      path: test/core/relation.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-401
+      - FR-701
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-401-04
+        pattern: FR-401-04 detects a cycle and names every node on the cycle path
+        description: Circular references are detected
+      - acceptanceCriteriaId: FR-701-04
+        pattern: FR-701-04 applies a different target-level constraint to each relation type
+        description: Level constraints are defined per relation type
+      - acceptanceCriteriaId: FR-701-05
+        pattern: FR-701-05 reports a level violation when source is not more concrete than target
+        description: Level violations are detected
+    relations:
+      - type: verifies
+        target: FR-401
+        description: Verifies acceptance criteria for FR-401
+      - type: verifies
+        target: FR-701
+        description: Verifies acceptance criteria for FR-701
+  - id: TEST-041
+    description: Convert command verification test
+    source:
+      path: test/cli/convert.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1104
+    implementsCommand: CMD-CONVERT
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1104-01
+        pattern: FR-1104-01 writes YAML carrying the model id and every spec of the module
+        description: SpecModule file converts to equivalent YAML
+      - acceptanceCriteriaId: FR-1104-02
+        pattern: FR-1104-02 writes next to the source file with the extension replaced
+        description: Output defaults to the source filename with .yaml
+      - acceptanceCriteriaId: FR-1104-03
+        pattern: FR-1104-03 writes to the path given by output and not to the default path
+        description: output selects a custom output path
+      - acceptanceCriteriaId: FR-1104-04
+        pattern: FR-1104-04 prints the YAML and leaves no output file behind
+        description: dry-run previews without writing
+    relations:
+      - type: verifies
+        target: FR-1104
+        description: Verifies acceptance criteria for FR-1104
+      - type: verifies
+        target: CMD-CONVERT
+        description: Verifies CMD-CONVERT
+  - id: TEST-042
+    description: Model-declared externalChecker and coverageChecker verification test
+    source:
+      path: test/core/model-checkers.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-603
+      - FR-604
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-603-01
+        pattern: FR-603-01 resolves the external source path from the declared checker
+        description: externalChecker is settable in the model definition
+      - acceptanceCriteriaId: FR-603-02
+        pattern: FR-603-02 returns the declared errors when the external data misses the spec
+        description: Declared check logic runs against the target data
+      - acceptanceCriteriaId: FR-604-02
+        pattern: FR-604-02 runs the declared checker against the model registry
+        description: coverageChecker interface is defined on the model class
+    relations:
+      - type: verifies
+        target: FR-603
+        description: Verifies acceptance criteria for FR-603
+      - type: verifies
+        target: FR-604
+        description: Verifies acceptance criteria for FR-604
+  - id: TEST-043
+    description: Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph)
+    source:
+      path: test/cli/build-specs.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-302
+      - FR-800
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-302-01
+        pattern: FR-302-01.*maps entity attributes.*JSON Schema properties
+        description: Entity attributes become JSON Schema properties under specs/schemas/entities/
+      - acceptanceCriteriaId: FR-302-02
+        pattern: FR-302-02.*reference resolution graph
+        description: Reference resolution graph is written to specs/index.json
+      - acceptanceCriteriaId: FR-800-01
+        pattern: FR-800-01.*aggregated JSON
+        description: Aggregated JSON for machine processing is written on every build
+    relations:
+      - type: verifies
+        target: FR-302
+        description: Verifies acceptance criteria for FR-302
+      - type: verifies
+        target: FR-800
+        description: Verifies acceptance criteria for FR-800
+  - id: TEST-044
+    description: Model-declared lint rule verification test
+    source:
+      path: test/core/model-lint.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-104
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-104-03
+        pattern: FR-104-03 runs the declared rules and reports the violated ones only
+        description: Rules declared in the model definition run against the specs
+    relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
+  - id: TEST-045
+    description: Check command source filtering verification test
+    source:
+      path: test/cli/check-sources.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-602
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-602-02
+        pattern: FR-602-02 scans only the OpenAPI source when the type is openapi
+        description: The type argument narrows the scanned sources to that type
+    relations:
+      - type: verifies
+        target: FR-602
+        description: Verifies acceptance criteria for FR-602

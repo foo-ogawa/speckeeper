@@ -10,7 +10,7 @@ interface TestSpec {
   children: { childId: string }[];
 }
 
-describe('requireField', () => {
+describe('FR-402: requireField', () => {
   const rule = requireField<TestSpec>('description');
 
   it('returns true when field is empty string', () => {
@@ -52,7 +52,7 @@ describe('arrayMinLength', () => {
   });
 });
 
-describe('idFormat', () => {
+describe('FR-101, FR-401: idFormat', () => {
   const rule = idFormat<TestSpec>('FR');
 
   it('returns false for valid ID FR-001', () => {
@@ -95,7 +95,7 @@ describe('childIdFormat', () => {
   });
 });
 
-describe('FR-SCF-014: core factory + custom lint rule coexistence', () => {
+describe('FR-107, FR-400, FR-SCF-014: core factory + custom lint rule coexistence', () => {
   const factoryRules: LintRule<TestSpec>[] = [
     requireField<TestSpec>('description', 'error'),
     arrayMinLength<TestSpec>('items', 1),

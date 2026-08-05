@@ -51,9 +51,11 @@ export interface Exporter<T> {
   format: 'markdown' | 'json' | 'mermaid';
   single?: (spec: T) => string;
   index?: (specs: T[]) => string;
-  /** Subdirectory under docsDir (used with single + index/index.md) */
+  /** Output tree this exporter writes into: human-readable docsDir or machine-readable specsDir */
+  target?: 'docs' | 'specs';
+  /** Subdirectory under the target root (used with single + index/index.md) */
   outputDir?: string;
-  /** Direct output file path relative to docsDir (used with index-only exporters) */
+  /** Direct output file path relative to the target root (used with index-only exporters) */
   outputFile?: string;
   filename?: (spec: T) => string;
 }
@@ -793,6 +795,223 @@ export function findModelTypeFromConfig(
     }
   }
   return null;
+}
+
+/**
+ * One spec in the reference graph.
+ */
+export interface ReferenceGraphNode {
+  /** Spec ID */
+  id: string;
+  /** ID of the model this spec belongs to */
+  model: string;
+}
+
+/**
+ * One declared relation in the reference graph.
+ */
+export interface ReferenceGraphEdge {
+  /** Spec ID declaring the relation */
+  from: string;
+  /** Relation type */
+  type: string;
+  /** Target ID of the relation */
+  to: string;
+}
+
+/**
+ * Reference graph across every model: the spec ID list plus the relations
+ * declared between them.
+ */
+export interface ReferenceGraph {
+  nodes: ReferenceGraphNode[];
+  edges: ReferenceGraphEdge[];
+}
+
+/** Locale-independent string ordering, so generated output is byte-stable everywhere */
+function compareStrings(a: string, b: string): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+/**
+ * Build the reference graph from config.specs.
+ * Pure function — no global state. Nodes and edges are sorted so that
+ * repeated builds produce identical output.
+ */
+export function buildReferenceGraph(specs: SpecEntry[] | undefined): ReferenceGraph {
+  const nodes: ReferenceGraphNode[] = [];
+  const edges: ReferenceGraphEdge[] = [];
+
+  for (const entry of specs ?? []) {
+    for (const spec of entry.data) {
+      const { id, relations } = spec as { id: string; relations?: Relation[] };
+      nodes.push({ id, model: entry.model.id });
+      for (const relation of relations ?? []) {
+        edges.push({ from: id, type: relation.type, to: relation.target });
+      }
+    }
+  }
+
+  nodes.sort((a, b) => compareStrings(a.id, b.id) || compareStrings(a.model, b.model));
+  edges.sort((a, b) =>
+    compareStrings(a.from, b.from) ||
+    compareStrings(a.type, b.type) ||
+    compareStrings(a.to, b.to));
+
+  return { nodes, edges };
+}
+
+// ============================================================================
+// Exporter Output Paths
+// ============================================================================
+
+/** File extension written for each exporter format */
+const EXPORTER_FILE_EXTENSIONS: Record<Exporter<never>['format'], string> = {
+  markdown: 'md',
+  json: 'json',
+  mermaid: 'mmd',
+};
+
+/** Absolute paths of the output trees a build writes into */
+export interface ExporterOutputRoots {
+  /** Human-readable artifacts root (docsDir) */
+  docs: string;
+  /** Machine-readable artifacts root (specsDir) */
+  specs: string;
+}
+
+/** The exporter fields that determine where its output lands */
+export type ExporterLocation = Pick<Exporter<never>, 'format' | 'target' | 'outputDir' | 'outputFile'>;
+
+function resolveExporterRoot(exporter: ExporterLocation, roots: ExporterOutputRoots): string {
+  return exporter.target === 'specs' ? roots.specs : roots.docs;
+}
+
+/**
+ * Directory holding the per-spec files of an exporter
+ */
+export function getExporterOutputDir(exporter: ExporterLocation, roots: ExporterOutputRoots): string {
+  const root = resolveExporterRoot(exporter, roots);
+  return exporter.outputDir ? join(root, exporter.outputDir) : root;
+}
+
+/**
+ * Path of the file a `single` exporter writes for one spec
+ */
+export function getExporterSinglePath(
+  exporter: ExporterLocation,
+  roots: ExporterOutputRoots,
+  filename: string,
+): string {
+  const extension = EXPORTER_FILE_EXTENSIONS[exporter.format];
+  return join(getExporterOutputDir(exporter, roots), `${filename}.${extension}`);
+}
+
+/**
+ * Path of the file an `index` exporter writes for all specs of a model
+ */
+export function getExporterIndexPath(exporter: ExporterLocation, roots: ExporterOutputRoots): string {
+  if (exporter.outputFile) {
+    return join(resolveExporterRoot(exporter, roots), exporter.outputFile);
+  }
+  const extension = EXPORTER_FILE_EXTENSIONS[exporter.format];
+  return join(getExporterOutputDir(exporter, roots), `index.${extension}`);
+}
+
+// ============================================================================
+// Build Output Plan
+// ============================================================================
+
+/** One artifact file, with the content derived from the specs */
+export interface PlannedOutputFile {
+  /** Absolute path of the file */
+  path: string;
+  /** Content derived from the specs */
+  content: string;
+}
+
+/** Why a model produces no artifact file */
+export type ModelOutputSkipReason = 'no-exporters' | 'no-specs';
+
+/** What one model produces */
+export interface PlannedModelOutput {
+  /** Display name of the model */
+  name: string;
+  /** Reason the model produces no file, or null when it produces some */
+  skipped: ModelOutputSkipReason | null;
+}
+
+/** Every artifact file the specs produce */
+export interface BuildOutputPlan {
+  /** Every file, in write order */
+  files: PlannedOutputFile[];
+  /** Per-model outcome, in registration order */
+  models: PlannedModelOutput[];
+}
+
+/** The model surface an artifact plan reads */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BuildableModel = Pick<Model<any>, 'id' | 'name' | 'getExporters' | 'getFilename'>;
+
+/**
+ * Derive every artifact file the specs produce: the output of each model
+ * exporter plus the cross-model reference graph. `build` writes this set and
+ * `drift` compares it against the files on disk, so both see the same files.
+ */
+export function planBuildOutputs(
+  models: BuildableModel[],
+  specs: SpecEntry[] | undefined,
+  roots: ExporterOutputRoots,
+): BuildOutputPlan {
+  const files: PlannedOutputFile[] = [];
+  const modelOutputs: PlannedModelOutput[] = [];
+
+  for (const model of models) {
+    const exporters = model.getExporters();
+    if (exporters.length === 0) {
+      modelOutputs.push({ name: model.name, skipped: 'no-exporters' });
+      continue;
+    }
+
+    const modelSpecs = getSpecsFromConfig(specs, model.id);
+    if (modelSpecs.length === 0) {
+      modelOutputs.push({ name: model.name, skipped: 'no-specs' });
+      continue;
+    }
+
+    for (const exporter of exporters) {
+      if (exporter.single) {
+        for (const spec of modelSpecs) {
+          const filename = model.getFilename(spec, exporter.format) || (spec as { id: string }).id;
+          files.push({
+            path: getExporterSinglePath(exporter, roots, filename),
+            content: exporter.single(spec),
+          });
+        }
+      }
+
+      if (exporter.index) {
+        files.push({
+          path: getExporterIndexPath(exporter, roots),
+          content: exporter.index(modelSpecs),
+        });
+      }
+    }
+
+    modelOutputs.push({ name: model.name, skipped: null });
+  }
+
+  const referenceGraph = buildReferenceGraph(specs);
+  if (referenceGraph.nodes.length > 0) {
+    files.push({
+      path: join(roots.specs, 'index.json'),
+      content: JSON.stringify(referenceGraph, null, 2) + '\n',
+    });
+  }
+
+  return { files, models: modelOutputs };
 }
 
 // ============================================================================

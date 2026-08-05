@@ -32,7 +32,7 @@ function makeEdge(
   };
 }
 
-describe('generateModelFile', () => {
+describe('FR-106, FR-605: generateModelFile', () => {
   it('generates base template for any class with core factory imports', () => {
     const node = makeNode('FR', ['speckeeper', 'requirement']);
     const result = generateModelFile(node, [], []);
@@ -116,6 +116,23 @@ describe('generateAllModelFiles', () => {
     const index = files.find(f => f.relativePath === 'index.ts');
     expect(index).toBeDefined();
     expect(index!.content).toContain('mergeSpecs');
+  });
+
+  it('emits no _checkers/ file for any edge category', () => {
+    const fr = makeNode('FR', ['speckeeper', 'requirement']);
+    const api = makeNode('API', ['openapi']);
+    const ut = makeNode('UT', ['test']);
+    const allNodesMap = new Map<string, MermaidNode>([['FR', fr], ['API', api], ['UT', ut]]);
+    const edges: ResolvedEdge[] = [
+      makeEdge('FR', 'API', 'implements'),
+      makeEdge('FR', 'UT', 'verifiedBy'),
+      makeEdge('FR', 'API', 'verifies', 'external'),
+    ];
+
+    const files = generateAllModelFiles([fr], edges, allNodesMap);
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(files.filter(f => f.relativePath.startsWith('_checkers/'))).toEqual([]);
   });
 
   it('generated model does not include checker code even with edges', () => {

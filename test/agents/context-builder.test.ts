@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildExplainImpactContext } from "../../src/agents/context-builder.js";
 
-describe("buildExplainImpactContext", () => {
+describe("FR-1102: buildExplainImpactContext", () => {
   it("wraps stdin JSON in context", () => {
     const json = JSON.stringify({
       target: "FR-001",
