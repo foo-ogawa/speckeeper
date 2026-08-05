@@ -82,16 +82,17 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1) SSOT (design/ TypeScript models)                              │
-│    - requirements.ts  : Requirements (requests/acceptance criteria/TBD slots) │
-│    - architecture.ts  : Logical architecture (component/boundary/layer) │
-│    - concept-model.ts : Conceptual model (entity/relation + rules) │
-│    - usecases.ts      : Use cases/actors                         │
-│    - glossary.ts      : Glossary/abbreviations                   │
-│    - artifacts.ts     : Artifacts/directory structure            │
-│    - cli-commands.ts  : CLI command specifications               │
-│    - test-refs.ts     : Test definitions/requirement linkage     │
-│    - _models/         : Model definitions (schema/Lint/output)   │
+│ 1) SSOT (design/ YAML spec data + TypeScript models)             │
+│    - requirements.yaml  : Requirements (requests/acceptance criteria/TBD slots) │
+│    - architecture.yaml  : Logical architecture (component/boundary/layer) │
+│    - concept-model.yaml : Conceptual model (entity/relation + rules) │
+│    - usecases.yaml      : Use cases/actors                       │
+│    - glossary.yaml      : Glossary/abbreviations                 │
+│    - artifacts.yaml     : Artifacts/directory structure          │
+│    - cli-commands.yaml  : CLI command specifications             │
+│    - test-refs.yaml     : Test definitions/requirement linkage   │
+│    - index.ts           : Model and spec registration            │
+│    - _models/           : Model definitions (schema/Lint/output) │
 └─────────────────────────────────────────────────────────────────┘
                               ↓ npm run ci
 ┌─────────────────────────────────────────────────────────────────┐
@@ -103,7 +104,7 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 │   ③ eslint design/      : Design file quality                    │
 │   ④ tsup                : Build (dist/ generation)               │
 │   ⑤ speckeeper lint        : Model consistency (references/ID/phase gates) │
-│   ⑥ vitest run          : Unit tests (288 cases)                 │
+│   ⑥ vitest run          : Unit tests                             │
 ├─────────────────────────────────────────────────────────────────┤
 │ Phase 2: ci:generate (Generation)                                │
 │   ⑦ embedoc build       : docs/ marker update                    │
@@ -162,22 +163,26 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 
 <!--@embedoc:model_data model="artifact" format="directory-tree"-->
 ```
-design/  # TypeScript (source of truth) = upstream SSOT (requirement/design models)
+design/  # YAML spec data and TypeScript models (source of truth) = upstream SSOT
 ├── _models/  # Model definitions (schemas, lint rules, exporters)
-├── requirements.ts  # Requirement definitions
-├── usecases.ts  # Use case and actor definitions
-├── architecture.ts  # Logical architecture (C4 System/Container)
-├── concept-model.ts  # Concept model (Entity/Relation)
-├── glossary.ts  # Glossary
-├── artifacts.ts  # Artifact and directory structure definitions
-└── cli-commands.ts  # CLI command specifications
+├── requirements.yaml  # Requirement definitions
+├── usecases.yaml  # Use case and actor definitions
+├── architecture.yaml  # Logical architecture (C4 System/Container)
+├── concept-model.yaml  # Concept model (Entity/Relation)
+├── glossary.yaml  # Glossary
+├── artifacts.yaml  # Artifact and directory structure definitions
+├── cli-commands.yaml  # CLI command specifications
+├── test-refs.yaml  # Test definitions and requirement linkage
+└── index.ts  # Design entry point (model and spec registration)
 
-docs/  # Human-readable documents (auto-updated via embedoc)
+docs/  # Human-readable documents (generated; embedoc updates marker sections)
 ├── framework_requirements_spec.md  # Framework requirements specification (sections auto-updated via embedoc)
-├── model-design.md  # Model design guide
 ├── model-guide.md  # Model definition guide
 ├── model_entity_catalog.md  # Model and entity catalog
-└── framework_evaluation.md  # Framework evaluation
+├── scaffold-mermaid-spec.md  # Mermaid-driven model scaffolding specification
+├── cli-reference.md  # CLI reference (generated from cli-contract.yaml)
+├── directory-entries.md  # Directory structure
+└── design/  # Per-model specification documents
 
 specs/  # Machine-readable artifacts (JSON Schema for consistency checking)
 ├── schemas/  # JSON Schema
@@ -585,18 +590,30 @@ Each model can define externalChecker to implement consistency check with extern
 **External checker definition example**
 
 ```typescript
-// design/_models/api-ref.ts
-externalChecker: ExternalChecker<APIRef> = {
+// design/_models/test-ref.ts
+protected externalChecker: ExternalChecker<TestRef> = {
+  targetType: 'test',
   sourcePath: (spec) => spec.source.path,
-  check: (spec, openApiDoc) => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    
-    // operationId existence check
-    if (!findOperationId(openApiDoc, spec.operationId)) {
-      errors.push(`operationId '${spec.operationId}' not found`);
+  check: (spec): CheckResult => {
+    const errors: CheckResult['errors'] = [];
+    const warnings: CheckResult['warnings'] = [];
+    const basePath = process.cwd();
+
+    // 1. Check test file existence
+    const pattern = spec.source.path;
+    const testFiles = glob.sync(pattern, { cwd: basePath });
+
+    if (testFiles.length === 0) {
+      errors.push({
+        message: `Test file(s) not found: ${pattern}`,
+        specId: spec.id,
+        field: 'source.path',
+      });
+      return { success: false, errors, warnings };
     }
-    
+
+    // ... requirement mention, test case pattern and test result checks
+
     return {
       success: errors.length === 0,
       errors,

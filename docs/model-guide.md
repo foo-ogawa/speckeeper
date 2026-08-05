@@ -47,10 +47,133 @@ The speckeeper model system is designed with the following structure:
 
 Below are examples of models actually defined in the speckeeper project.
 
-### APIRef Model (with External SSOT Checker)
+### CLICommand Model (with External SSOT Checker)
 
-<!--@embedoc:code_snippet file="design/_models/api-ref.ts" lang="typescript" title="design/_models/api-ref.ts" no_source="true"-->
-⚠️ File not found: design/_models/api-ref.ts
+<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="300" end="419" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
+**design/_models/cli-command.ts (excerpt)**
+
+```typescript
+class CLICommandModel extends Model<typeof CLICommandSchema> {
+  readonly id = 'cli-command';
+  readonly name = 'CLICommand';
+  readonly idPrefix = 'CMD';
+  readonly schema = CLICommandSchema;
+  readonly description = 'Defines CLI command specifications';
+  protected modelLevel: ModelLevel = 'L3';
+
+  protected lintRules: LintRule<CLICommand>[] = [
+    {
+      id: 'cmd-has-description',
+      severity: 'error',
+      message: 'Command must have a description (min 5 chars)',
+      check: (spec) => !spec.description || spec.description.length < 5,
+    },
+    arrayMinLength<CLICommand>('examples', 1, 'warning'),
+    {
+      id: 'cmd-has-exit-codes',
+      severity: 'info',
+      message: 'Command should define exit codes',
+      check: (spec) => spec.exitCodes.length === 0,
+    },
+  ];
+
+  protected exporters: Exporter<CLICommand>[] = [
+    {
+      format: 'markdown',
+      index: (specs) => {
+        const lines: string[] = [];
+        lines.push('# CLI Commands');
+        lines.push('');
+        lines.push('| Command | Description |');
+        lines.push('|---------|-------------|');
+        for (const spec of specs) {
+          lines.push(`| ${spec.name} | ${spec.description} |`);
+        }
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+
+          lines.push('### Usage');
+          lines.push('');
+          lines.push('```bash');
+          if (spec.subCommands.length > 0) {
+            lines.push(`speckeeper ${spec.name} <subcommand> [options]`);
+          } else {
+            lines.push(`speckeeper ${spec.name} [options]`);
+          }
+          lines.push('```');
+          lines.push('');
+
+          if (spec.parameters.length > 0) {
+            lines.push('### Parameters');
+            lines.push('');
+            lines.push('| Name | Kind | Type | Required | Default | Description |');
+            lines.push('|------|------|------|----------|---------|-------------|');
+            for (const p of spec.parameters) {
+              const alias = p.alias ? `-${p.alias}, ` : '';
+              const flag = p.kind === 'option' ? `${alias}--${p.name}` : `<${p.name}>`;
+              const req = p.required ? '✓' : '';
+              const def = p.default !== undefined ? String(p.default) : '-';
+              const type = p.choices?.length ? `${p.type} (${p.choices.join(', ')})` : p.type;
+              lines.push(`| ${flag} | ${p.kind} | ${type} | ${req} | ${def} | ${p.description} |`);
+            }
+            lines.push('');
+          }
+
+          if (spec.subCommands.length > 0) {
+            lines.push('### Subcommands');
+            lines.push('');
+            for (const sub of spec.subCommands) {
+              lines.push(`#### ${sub.name}`);
+              lines.push('');
+              lines.push(sub.description);
+              lines.push('');
+            }
+          }
+
+          if (spec.examples.length > 0) {
+            lines.push('### Examples');
+            lines.push('');
+            lines.push('```bash');
+            lines.push(spec.examples.join('\n'));
+            lines.push('```');
+            lines.push('');
+          }
+
+          if (spec.exitCodes.length > 0) {
+            lines.push('### Exit Codes');
+            lines.push('');
+            lines.push('| Code | Description |');
+            lines.push('|------|-------------|');
+            for (const ec of spec.exitCodes) {
+              lines.push(`| ${ec.code} | ${ec.description} |`);
+            }
+            lines.push('');
+          }
+
+          lines.push('---');
+          lines.push('');
+        }
+
+        return lines.join('\n').replace(/\n---\n\n$/s, '\n');
+      },
+      outputFile: 'design/cli-commands.md',
+    },
+  ];
+
+  protected externalChecker: ExternalChecker<CLICommand> = {
+    targetType: 'typescript',
+    sourcePath: () => PROGRAM_PATH,
+    check: (spec): CheckResult =>
+      checkCLICommand(spec, parseCommanderCLI(join(process.cwd(), PROGRAM_PATH))),
+  };
+```
 <!--@embedoc:end-->
 
 ### Model Registration (design/_models/index.ts)

@@ -30,13 +30,13 @@ export const codeSnippet = defineEmbed({
     const noSource = ctx.params['no_source'] === 'true';
 
     if (!filePath) {
-      return { content: '⚠️ `file` parameter is required' };
+      throw new Error(`code_snippet in ${ctx.filePath}: the \`file\` parameter is required`);
     }
 
     const resolvedPath = path.resolve(process.cwd(), filePath);
-    
+
     if (!fs.existsSync(resolvedPath)) {
-      return { content: `⚠️ File not found: ${filePath}` };
+      throw new Error(`code_snippet in ${ctx.filePath}: referenced file does not exist: ${filePath}`);
     }
 
     const content = fs.readFileSync(resolvedPath, 'utf-8');

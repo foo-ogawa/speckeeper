@@ -65,6 +65,10 @@ jobs:
         run: |
           npm run docs
           git diff --exit-code -- docs/
+          if grep -rn '⚠️' docs/; then
+            echo "::error::generated documentation contains an unresolved embed marker"
+            exit 1
+          fi
       - name: Test
         if: steps.tag.outcome == 'failure'
         run: npm run test:ci

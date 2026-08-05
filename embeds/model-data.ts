@@ -133,12 +133,12 @@ export const modelData = defineEmbed({
     const { model: modelId, format = 'table', validate } = ctx.params;
     
     if (!modelId) {
-      return { content: '⚠️ `model` parameter is required' };
+      throw new Error(`model_data in ${ctx.filePath}: the \`model\` parameter is required`);
     }
-    
+
     const config = MODEL_REGISTRY[modelId];
     if (!config) {
-      return { content: `⚠️ Unknown model: ${modelId}` };
+      throw new Error(`model_data in ${ctx.filePath}: unknown model: ${modelId}`);
     }
     
     // Validation mode (for artifacts)
