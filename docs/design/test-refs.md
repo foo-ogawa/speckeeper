@@ -41,10 +41,11 @@
 | TEST-074 | External SSOT path configuration test | vitest | 1 |
 | TEST-060 | Model-integrated external SSOT check verification test (declared checkers and source path resolution) | vitest | 2 |
 | TEST-061 | CLI test traceability verification test (command coverage, TestRef linkage, definition consistency) | vitest | 3 |
-| TEST-062 | Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring) | vitest | 3 |
+| TEST-062 | Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring) | vitest | 5 |
 | TEST-063 | Insights command verification test (ExternalInsight JSON export) | vitest | 2 |
 | TEST-064 | Drift verification test over the machine-readable artifacts (specs/) | vitest | 1 |
 | TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 3 |
+| TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
 
 ---
 
@@ -1007,6 +1008,7 @@
 | NFR-013-02 | `NFR-013-02 TestRefs link to command IDs via implementsCommand` | TestRef linkage to command IDs resolves and covers every commands test file |
 | NFR-013-03 | `NFR-013-03 the declared TestRef check succeeds for every TestRef` | The TestRef checker reports no error for any declared TestRef |
 | NFR-014-01 | `NFR-014-01 every command definition matches the contract and the generated program` | Command definitions agree with cli-contract.yaml and the generated program |
+| NFR-013-04 | `NFR-013-04 every acceptance criterion the coverage checker targets is covered` | The coverage checker reports full coverage of the criteria it targets |
 
 ---
 
@@ -1022,6 +1024,8 @@
 - FR-605
 - NFR-008
 - NFR-015
+- NFR-002
+- NFR-003
 
 ### Test Case Patterns
 
@@ -1032,6 +1036,11 @@
 | NFR-008-01 | `NFR-008-01 the project compiles on the required TypeScript version` | The installed compiler meets the required version and the project compiles |
 | NFR-008-02 | `NFR-008-02 the compilation the check runs is a strict-mode compilation` | The compiler settings the check uses enable strict mode |
 | NFR-015-01 | `NFR-015-01 every test file on disk is collected by exactly one configured suite` | No existing test file drops out of the configured suites |
+| NFR-002-01 | `NFR-002 covers each declared Node.js line, and each one satisfies engines` | The matrix covers the declared Node.js line |
+| NFR-002-02 | `NFR-002 covers each declared Node.js line, and each one satisfies engines` | The matrix covers the declared Node.js line |
+| NFR-003-01 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
+| NFR-003-02 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
+| NFR-003-03 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
 
 ---
 
@@ -1098,5 +1107,26 @@
 | FR-1102-03 | `FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
 | FR-1103-01 | `FR-1103-01 narrows the prompt to the specs named on the command line` | Only the named specs reach the prompt |
 | FR-1103-03 | `FR-1103-03 propose-acceptance-criteria --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+
+---
+
+## TEST-081: Command performance verification test at the declared requirement, file and entity scale
+
+### Test Source
+
+- **Path**: `test/cli/performance.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- NFR-001
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| NFR-001-01 | `NFR-001-01 runs lint, build and drift within the budget at the declared requirement scale` | lint, build and drift stay within the declared budget |
+| NFR-001-02 | `NFR-001-02 runs check within the budget at the declared file scale` | check stays within the declared budget at the file scale |
+| NFR-001-03 | `NFR-001-03 builds within the budget from an empty output directory` | A cold build stays within the declared budget |
 
 ---

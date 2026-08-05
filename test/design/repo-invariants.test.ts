@@ -1,7 +1,8 @@
 /**
- * FR-605, NFR-008, NFR-015: repository-level facts the requirements state —
- * the retired checker locations, the TypeScript compilation settings, and the
- * wiring that keeps the existing test suites running.
+ * FR-605, NFR-002, NFR-003, NFR-008, NFR-015: repository-level facts the
+ * requirements state — the retired checker locations, the runtimes and operating
+ * systems the suites run on, the TypeScript compilation settings, and the wiring
+ * that keeps the existing test suites running.
  *
  * The paths, versions and thresholds come from the requirement text, the artifact
  * contracts and the tool configuration, never from a copy kept in this file.
@@ -30,7 +31,7 @@ interface VitestSuiteConfig {
   test: { include: string[]; exclude?: string[] };
 }
 
-function packageJson(): { scripts: Record<string, string> } {
+function packageJson(): { scripts: Record<string, string>; engines: { node: string } } {
   return JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf-8'));
 }
 
@@ -139,5 +140,70 @@ describe('NFR-015: the existing tests keep running', () => {
       expect(scripts[script], script).toContain('vitest');
       expect(commands, script).toContain(`npm run ${script}`);
     }
+  });
+});
+
+describe('NFR-002, NFR-003: the suites run on every supported runtime and system', () => {
+  interface MatrixJob {
+    'runs-on'?: string;
+    strategy?: { matrix?: { os?: string[]; 'node-version'?: Array<number | string> } };
+    steps?: Array<{ run?: string }>;
+  }
+
+  /** The job whose strategy declares the platform matrix. */
+  function matrixJob(): MatrixJob {
+    const workflow = parseYaml(
+      readFileSync(join(repoRoot, '.github', 'workflows', 'ci.yml'), 'utf-8'),
+    ) as { jobs: Record<string, MatrixJob> };
+
+    const jobs = Object.values(workflow.jobs).filter((job) => job.strategy?.matrix);
+    expect(jobs, 'ci.yml declares no platform matrix').toHaveLength(1);
+    return jobs[0];
+  }
+
+  it('NFR-002 covers each declared Node.js line, and each one satisfies engines', () => {
+    const declared = requirement('NFR-002').acceptanceCriteria!.map((ac) => {
+      const match = /Node\.js (\d+)/.exec(ac.description);
+      expect(match, `${ac.id} names no Node.js version: ${ac.description}`).not.toBeNull();
+      return Number(match![1]);
+    });
+    expect(declared.length).toBeGreaterThan(0);
+
+    const matrix = matrixJob().strategy!.matrix!['node-version']!.map(Number);
+    for (const version of declared) {
+      expect(matrix, `Node ${version} is declared but not in the matrix`).toContain(version);
+    }
+
+    // A line the package excludes cannot be one it is verified on.
+    const floor = Number(/>=\s*(\d+)/.exec(packageJson().engines.node)![1]);
+    for (const version of declared) {
+      expect(version, `Node ${version} is below the engines floor`).toBeGreaterThanOrEqual(floor);
+    }
+  });
+
+  it('NFR-003 covers each declared operating system', () => {
+    const runners = matrixJob().strategy!.matrix!.os!;
+
+    for (const ac of requirement('NFR-003').acceptanceCriteria!) {
+      if (ac.verificationMethod !== 'test') continue;
+
+      // "Verified on Linux (Ubuntu)" / "Verified on macOS" / "Verified on Windows (PowerShell)"
+      const named = ac.description
+        .toLowerCase()
+        .split(/[^a-z]+/)
+        .filter((word) => word.length > 2);
+
+      const matched = runners.filter((runner) =>
+        named.some((word) => word.length > 2 && runner.toLowerCase().startsWith(word)),
+      );
+      expect(matched, `${ac.id} has no runner in the matrix: ${ac.description}`).not.toEqual([]);
+    }
+  });
+
+  it('NFR-002, NFR-003 run the suites inside the matrix rather than beside it', () => {
+    const commands = (matrixJob().steps ?? []).map((step) => step.run ?? '').join('\n');
+
+    expect(commands).toContain('npm run test:ci');
+    expect(commands).toContain('npm run test:bundle');
   });
 });

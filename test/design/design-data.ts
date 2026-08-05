@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { glob } from 'glob';
-import { getSpecsFromConfig } from '../../src/core/model.js';
+import { buildRegistryFromConfig, getSpecsFromConfig } from '../../src/core/model.js';
 import design from '../../design/index.ts';
 import { REQUIREMENT_MODEL_IDS } from '../../design/_models/requirement.ts';
 import { CLICommandModel } from '../../design/_models/cli-command.ts';
@@ -97,4 +97,9 @@ export function artifactFiles(artifactId: string): string[] {
       nodir: true,
     })
     .sort();
+}
+
+/** The spec registry the coverage checkers consume, keyed by model id. */
+export function specRegistry(): Record<string, Map<string, unknown>> {
+  return buildRegistryFromConfig(design.specs);
 }

@@ -22,6 +22,7 @@ import {
   parenthesisedLists,
   repoRoot,
   requirement,
+  specRegistry,
   testRefSpecs,
 } from './design-data.ts';
 
@@ -175,6 +176,15 @@ describe('NFR-013: tests and specifications trace to each other', () => {
       const owning = refs.filter((ref) => ref.source.path === testFile);
       expect(owning.map((ref) => ref.implementsCommand), testFile).toContain(command.id);
     }
+  });
+
+  it('NFR-013-04 every acceptance criterion the coverage checker targets is covered', () => {
+    const result = TestRefModel.instance.checkCoverage(testRefSpecs() as never[], specRegistry());
+
+    expect(result, 'the TestRef model declares no coverage checker').not.toBeNull();
+    expect(result!.total, 'the checker targets no criteria').toBeGreaterThan(0);
+    expect(result!.uncoveredItems.map((item) => item.id)).toEqual([]);
+    expect(result!.coveragePercent).toBe(100);
   });
 
   it('NFR-013-03 the declared TestRef check succeeds for every TestRef', () => {

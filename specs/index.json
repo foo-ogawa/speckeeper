@@ -825,6 +825,10 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-081",
+      "model": "test-ref"
+    },
+    {
       "id": "UC-001",
       "model": "usecase"
     },
@@ -2036,6 +2040,16 @@
     {
       "from": "TEST-062",
       "type": "verifies",
+      "to": "NFR-002"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-003"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
       "to": "NFR-008"
     },
     {
@@ -2112,6 +2126,11 @@
       "from": "TEST-080",
       "type": "verifies",
       "to": "FR-1103"
+    },
+    {
+      "from": "TEST-081",
+      "type": "verifies",
+      "to": "NFR-001"
     },
     {
       "from": "UC-001",

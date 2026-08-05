@@ -1209,6 +1209,9 @@ specs:
       - acceptanceCriteriaId: NFR-014-01
         pattern: NFR-014-01 every command definition matches the contract and the generated program
         description: Command definitions agree with cli-contract.yaml and the generated program
+      - acceptanceCriteriaId: NFR-013-04
+        pattern: NFR-013-04 every acceptance criterion the coverage checker targets is covered
+        description: The coverage checker reports full coverage of the criteria it targets
     relations:
       - type: verifies
         target: NFR-012
@@ -1228,6 +1231,8 @@ specs:
       - FR-605
       - NFR-008
       - NFR-015
+      - NFR-002
+      - NFR-003
     testCasePatterns:
       - acceptanceCriteriaId: FR-605-04
         pattern: FR-605-04 no speckeeper source file references the retired checker directory
@@ -1244,6 +1249,21 @@ specs:
       - acceptanceCriteriaId: NFR-015-01
         pattern: NFR-015-01 every test file on disk is collected by exactly one configured suite
         description: No existing test file drops out of the configured suites
+      - acceptanceCriteriaId: NFR-002-01
+        pattern: NFR-002 covers each declared Node.js line, and each one satisfies engines
+        description: The matrix covers the declared Node.js line
+      - acceptanceCriteriaId: NFR-002-02
+        pattern: NFR-002 covers each declared Node.js line, and each one satisfies engines
+        description: The matrix covers the declared Node.js line
+      - acceptanceCriteriaId: NFR-003-01
+        pattern: NFR-003 covers each declared operating system
+        description: The matrix covers the declared operating system
+      - acceptanceCriteriaId: NFR-003-02
+        pattern: NFR-003 covers each declared operating system
+        description: The matrix covers the declared operating system
+      - acceptanceCriteriaId: NFR-003-03
+        pattern: NFR-003 covers each declared operating system
+        description: The matrix covers the declared operating system
     relations:
       - type: verifies
         target: FR-605
@@ -1251,6 +1271,12 @@ specs:
       - type: verifies
         target: NFR-008
         description: Verifies acceptance criteria for NFR-008
+      - type: verifies
+        target: NFR-002
+        description: Verifies acceptance criteria for NFR-002
+      - type: verifies
+        target: NFR-003
+        description: Verifies acceptance criteria for NFR-003
       - type: verifies
         target: NFR-015
         description: Verifies acceptance criteria for NFR-015
@@ -1332,3 +1358,25 @@ specs:
       - type: verifies
         target: FR-1103
         description: Verifies acceptance criteria for FR-1103
+  - id: TEST-081
+    description: Command performance verification test at the declared requirement, file and entity scale
+    source:
+      path: test/cli/performance.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - NFR-001
+    testCasePatterns:
+      - acceptanceCriteriaId: NFR-001-01
+        pattern: NFR-001-01 runs lint, build and drift within the budget at the declared requirement scale
+        description: lint, build and drift stay within the declared budget
+      - acceptanceCriteriaId: NFR-001-02
+        pattern: NFR-001-02 runs check within the budget at the declared file scale
+        description: check stays within the declared budget at the file scale
+      - acceptanceCriteriaId: NFR-001-03
+        pattern: NFR-001-03 builds within the budget from an empty output directory
+        description: A cold build stays within the declared budget
+    relations:
+      - type: verifies
+        target: NFR-001
+        description: Verifies acceptance criteria for NFR-001
+
