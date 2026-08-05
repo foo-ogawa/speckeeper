@@ -1,0 +1,2191 @@
+{
+  "nodes": [
+    {
+      "id": "ACTOR-001",
+      "model": "actor-component"
+    },
+    {
+      "id": "ACTOR-002",
+      "model": "actor-component"
+    },
+    {
+      "id": "ACTOR-003",
+      "model": "actor-component"
+    },
+    {
+      "id": "ACTOR-004",
+      "model": "actor-component"
+    },
+    {
+      "id": "ART-001",
+      "model": "artifact"
+    },
+    {
+      "id": "ART-002",
+      "model": "artifact"
+    },
+    {
+      "id": "ART-003",
+      "model": "artifact"
+    },
+    {
+      "id": "ART-004",
+      "model": "artifact"
+    },
+    {
+      "id": "BND-001",
+      "model": "boundary"
+    },
+    {
+      "id": "BND-002",
+      "model": "boundary"
+    },
+    {
+      "id": "BND-003",
+      "model": "boundary"
+    },
+    {
+      "id": "CMD-AGENTS",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-AUDIT-REQ",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-BUILD",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-CHECK",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-CONVERT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-DRIFT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-EXPLAIN-IMPACT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-EXTRACT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-IMPACT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-INIT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-INSIGHTS",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-LINT",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-NEW",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-PROPOSE-AC",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-PROPOSE-TRACE",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-SCAFFOLD",
+      "model": "cli-command"
+    },
+    {
+      "id": "CONT-001",
+      "model": "container"
+    },
+    {
+      "id": "CONT-002",
+      "model": "container"
+    },
+    {
+      "id": "CONT-003",
+      "model": "container"
+    },
+    {
+      "id": "CONT-004",
+      "model": "container"
+    },
+    {
+      "id": "CONT-005",
+      "model": "container"
+    },
+    {
+      "id": "CONT-006",
+      "model": "container"
+    },
+    {
+      "id": "CONT-007",
+      "model": "container"
+    },
+    {
+      "id": "CONT-008",
+      "model": "container"
+    },
+    {
+      "id": "CR-001",
+      "model": "constraint"
+    },
+    {
+      "id": "CR-002",
+      "model": "constraint"
+    },
+    {
+      "id": "CR-003",
+      "model": "constraint"
+    },
+    {
+      "id": "CR-004",
+      "model": "constraint"
+    },
+    {
+      "id": "DIR-001",
+      "model": "directory-entry"
+    },
+    {
+      "id": "DIR-002",
+      "model": "directory-entry"
+    },
+    {
+      "id": "DIR-003",
+      "model": "directory-entry"
+    },
+    {
+      "id": "DIR-004",
+      "model": "directory-entry"
+    },
+    {
+      "id": "E-001",
+      "model": "entity"
+    },
+    {
+      "id": "E-010",
+      "model": "entity"
+    },
+    {
+      "id": "E-011",
+      "model": "entity"
+    },
+    {
+      "id": "E-012",
+      "model": "entity"
+    },
+    {
+      "id": "E-020",
+      "model": "entity"
+    },
+    {
+      "id": "E-030",
+      "model": "entity"
+    },
+    {
+      "id": "E-040",
+      "model": "entity"
+    },
+    {
+      "id": "E-041",
+      "model": "entity"
+    },
+    {
+      "id": "E-050",
+      "model": "entity"
+    },
+    {
+      "id": "EXT-001",
+      "model": "external-system"
+    },
+    {
+      "id": "EXT-002",
+      "model": "external-system"
+    },
+    {
+      "id": "EXT-003",
+      "model": "external-system"
+    },
+    {
+      "id": "EXT-004",
+      "model": "external-system"
+    },
+    {
+      "id": "FR-100",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1000",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1001",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1002",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1003",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1004",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1005",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1006",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1007",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1008",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1009",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-101",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1010",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1011",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1012",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1013",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1014",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1015",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1016",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1017",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1018",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1019",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-102",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-104",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-105",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-106",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-107",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1100",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1101",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1102",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1103",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1104",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-200",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-201",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-300",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-301",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-302",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-400",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-401",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-402",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-500",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-600",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-601",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-602",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-603",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-604",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-605",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-700",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-701",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-702",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-703",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-800",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "LAYER-001",
+      "model": "layer"
+    },
+    {
+      "id": "LAYER-002",
+      "model": "layer"
+    },
+    {
+      "id": "LAYER-003",
+      "model": "layer"
+    },
+    {
+      "id": "LAYER-004",
+      "model": "layer"
+    },
+    {
+      "id": "NFR-001",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-002",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-003",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-004",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-005",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-006",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-007",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-008",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-009",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-010",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-011",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-012",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-013",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-014",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-015",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "REL-A001",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A002",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A003",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A004",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A005",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A006",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A007",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A008",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A009",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A010",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A011",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A012",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A013",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A014",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A015",
+      "model": "relation"
+    },
+    {
+      "id": "REL-A016",
+      "model": "relation"
+    },
+    {
+      "id": "TERM-001",
+      "model": "term"
+    },
+    {
+      "id": "TERM-002",
+      "model": "term"
+    },
+    {
+      "id": "TERM-003",
+      "model": "term"
+    },
+    {
+      "id": "TERM-004",
+      "model": "term"
+    },
+    {
+      "id": "TERM-010",
+      "model": "term"
+    },
+    {
+      "id": "TERM-011",
+      "model": "term"
+    },
+    {
+      "id": "TERM-012",
+      "model": "term"
+    },
+    {
+      "id": "TERM-013",
+      "model": "term"
+    },
+    {
+      "id": "TERM-014",
+      "model": "term"
+    },
+    {
+      "id": "TERM-015",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A001",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A002",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A003",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A004",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A005",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A006",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A007",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A008",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A009",
+      "model": "term"
+    },
+    {
+      "id": "TERM-A010",
+      "model": "term"
+    },
+    {
+      "id": "TEST-003",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-004",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-018",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-019",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-020",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-021",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-022",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-023",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-024",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-025",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-026",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-027",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-028",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-029",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-030",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-031",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-032",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-033",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-034",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-035",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-036",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-037",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-038",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-039",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-040",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-041",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-042",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-043",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-044",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-045",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-050",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-051",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-060",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-061",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-062",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-063",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-064",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-070",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-071",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-072",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-073",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-074",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-080",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-081",
+      "model": "test-ref"
+    },
+    {
+      "id": "UC-001",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-002",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-004",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-006",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-010",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-011",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-012",
+      "model": "usecase"
+    },
+    {
+      "id": "UC-ACTOR-001",
+      "model": "actor"
+    },
+    {
+      "id": "UC-ACTOR-002",
+      "model": "actor"
+    },
+    {
+      "id": "UC-ACTOR-003",
+      "model": "actor"
+    },
+    {
+      "id": "UC-ACTOR-004",
+      "model": "actor"
+    },
+    {
+      "id": "UC-ACTOR-005",
+      "model": "actor"
+    },
+    {
+      "id": "UC-ACTOR-SYS-001",
+      "model": "actor"
+    }
+  ],
+  "edges": [
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-105"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-300"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-400"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-500"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-600"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-602"
+    },
+    {
+      "from": "CONT-001",
+      "type": "implements",
+      "to": "FR-700"
+    },
+    {
+      "from": "CONT-002",
+      "type": "implements",
+      "to": "FR-100"
+    },
+    {
+      "from": "CONT-002",
+      "type": "implements",
+      "to": "FR-104"
+    },
+    {
+      "from": "CONT-003",
+      "type": "dependsOn",
+      "to": "CONT-002"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1000"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1001"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1002"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1003"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1004"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1005"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1006"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1007"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1008"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1009"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1010"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1011"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1012"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1013"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1014"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1015"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1016"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1017"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-1018"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-104"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-107"
+    },
+    {
+      "from": "CONT-003",
+      "type": "implements",
+      "to": "FR-703"
+    },
+    {
+      "from": "CONT-004",
+      "type": "dependsOn",
+      "to": "CONT-002"
+    },
+    {
+      "from": "CONT-004",
+      "type": "implements",
+      "to": "FR-300"
+    },
+    {
+      "from": "CONT-004",
+      "type": "implements",
+      "to": "FR-301"
+    },
+    {
+      "from": "CONT-004",
+      "type": "implements",
+      "to": "FR-302"
+    },
+    {
+      "from": "CONT-004",
+      "type": "implements",
+      "to": "FR-800"
+    },
+    {
+      "from": "CONT-005",
+      "type": "dependsOn",
+      "to": "CONT-002"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-102"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-400"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-401"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-402"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-701"
+    },
+    {
+      "from": "CONT-005",
+      "type": "implements",
+      "to": "FR-702"
+    },
+    {
+      "from": "CONT-006",
+      "type": "dependsOn",
+      "to": "CONT-007"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-1019"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-200"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-600"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-601"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-603"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-604"
+    },
+    {
+      "from": "CONT-006",
+      "type": "implements",
+      "to": "FR-605"
+    },
+    {
+      "from": "CONT-007",
+      "type": "implements",
+      "to": "FR-101"
+    },
+    {
+      "from": "CONT-007",
+      "type": "implements",
+      "to": "FR-201"
+    },
+    {
+      "from": "CONT-008",
+      "type": "dependsOn",
+      "to": "CONT-002"
+    },
+    {
+      "from": "CONT-008",
+      "type": "implements",
+      "to": "FR-106"
+    },
+    {
+      "from": "E-001",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-001",
+      "type": "refines",
+      "to": "FR-104"
+    },
+    {
+      "from": "E-010",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-010",
+      "type": "refines",
+      "to": "FR-104"
+    },
+    {
+      "from": "E-011",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-012",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-020",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-030",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "E-040",
+      "type": "implements",
+      "to": "FR-200"
+    },
+    {
+      "from": "E-040",
+      "type": "refines",
+      "to": "ART-003"
+    },
+    {
+      "from": "E-041",
+      "type": "dependsOn",
+      "to": "E-020"
+    },
+    {
+      "from": "E-041",
+      "type": "implements",
+      "to": "FR-200"
+    },
+    {
+      "from": "E-041",
+      "type": "refines",
+      "to": "ART-003"
+    },
+    {
+      "from": "E-050",
+      "type": "refines",
+      "to": "ART-001"
+    },
+    {
+      "from": "FR-100",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-100",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-1000",
+      "type": "refines",
+      "to": "FR-600"
+    },
+    {
+      "from": "FR-1001",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1002",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1003",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1004",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1005",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1006",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1007",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1008",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1009",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-101",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-1010",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1011",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1012",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1013",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1014",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1015",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1016",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1017",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1018",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-1019",
+      "type": "refines",
+      "to": "FR-1000"
+    },
+    {
+      "from": "FR-102",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-104",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-104",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-104",
+      "type": "satisfies",
+      "to": "UC-004"
+    },
+    {
+      "from": "FR-105",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-106",
+      "type": "refines",
+      "to": "FR-105"
+    },
+    {
+      "from": "FR-107",
+      "type": "refines",
+      "to": "FR-104"
+    },
+    {
+      "from": "FR-1100",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-1101",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-1102",
+      "type": "refines",
+      "to": "FR-700"
+    },
+    {
+      "from": "FR-1103",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-1104",
+      "type": "refines",
+      "to": "FR-104"
+    },
+    {
+      "from": "FR-200",
+      "type": "satisfies",
+      "to": "UC-006"
+    },
+    {
+      "from": "FR-201",
+      "type": "refines",
+      "to": "FR-200"
+    },
+    {
+      "from": "FR-300",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-301",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-302",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-400",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-401",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-402",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-500",
+      "type": "satisfies",
+      "to": "UC-011"
+    },
+    {
+      "from": "FR-600",
+      "type": "satisfies",
+      "to": "UC-006"
+    },
+    {
+      "from": "FR-600",
+      "type": "satisfies",
+      "to": "UC-012"
+    },
+    {
+      "from": "FR-601",
+      "type": "satisfies",
+      "to": "UC-006"
+    },
+    {
+      "from": "FR-602",
+      "type": "satisfies",
+      "to": "UC-006"
+    },
+    {
+      "from": "FR-603",
+      "type": "satisfies",
+      "to": "UC-006"
+    },
+    {
+      "from": "FR-604",
+      "type": "refines",
+      "to": "FR-600"
+    },
+    {
+      "from": "FR-605",
+      "type": "refines",
+      "to": "FR-600"
+    },
+    {
+      "from": "FR-605",
+      "type": "refines",
+      "to": "FR-603"
+    },
+    {
+      "from": "FR-700",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "FR-701",
+      "type": "satisfies",
+      "to": "UC-001"
+    },
+    {
+      "from": "FR-701",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "FR-702",
+      "type": "refines",
+      "to": "FR-701"
+    },
+    {
+      "from": "FR-703",
+      "type": "refines",
+      "to": "FR-701"
+    },
+    {
+      "from": "FR-800",
+      "type": "satisfies",
+      "to": "UC-002"
+    },
+    {
+      "from": "NFR-011",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "NFR-012",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "NFR-013",
+      "type": "refines",
+      "to": "FR-604"
+    },
+    {
+      "from": "NFR-014",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "NFR-015",
+      "type": "satisfies",
+      "to": "UC-010"
+    },
+    {
+      "from": "TERM-001",
+      "type": "traces",
+      "to": "FR-100"
+    },
+    {
+      "from": "TERM-002",
+      "type": "traces",
+      "to": "FR-200"
+    },
+    {
+      "from": "TERM-002",
+      "type": "traces",
+      "to": "FR-600"
+    },
+    {
+      "from": "TERM-003",
+      "type": "traces",
+      "to": "FR-200"
+    },
+    {
+      "from": "TEST-003",
+      "type": "verifies",
+      "to": "CR-002"
+    },
+    {
+      "from": "TEST-004",
+      "type": "verifies",
+      "to": "FR-300"
+    },
+    {
+      "from": "TEST-018",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-019",
+      "type": "verifies",
+      "to": "CMD-INIT"
+    },
+    {
+      "from": "TEST-019",
+      "type": "verifies",
+      "to": "FR-105"
+    },
+    {
+      "from": "TEST-020",
+      "type": "verifies",
+      "to": "CMD-LINT"
+    },
+    {
+      "from": "TEST-020",
+      "type": "verifies",
+      "to": "FR-400"
+    },
+    {
+      "from": "TEST-020",
+      "type": "verifies",
+      "to": "FR-401"
+    },
+    {
+      "from": "TEST-020",
+      "type": "verifies",
+      "to": "FR-402"
+    },
+    {
+      "from": "TEST-021",
+      "type": "verifies",
+      "to": "CMD-CHECK"
+    },
+    {
+      "from": "TEST-021",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-021",
+      "type": "verifies",
+      "to": "FR-602"
+    },
+    {
+      "from": "TEST-021",
+      "type": "verifies",
+      "to": "FR-603"
+    },
+    {
+      "from": "TEST-021",
+      "type": "verifies",
+      "to": "FR-604"
+    },
+    {
+      "from": "TEST-022",
+      "type": "verifies",
+      "to": "CMD-BUILD"
+    },
+    {
+      "from": "TEST-022",
+      "type": "verifies",
+      "to": "FR-300"
+    },
+    {
+      "from": "TEST-022",
+      "type": "verifies",
+      "to": "FR-301"
+    },
+    {
+      "from": "TEST-023",
+      "type": "verifies",
+      "to": "CMD-IMPACT"
+    },
+    {
+      "from": "TEST-023",
+      "type": "verifies",
+      "to": "FR-700"
+    },
+    {
+      "from": "TEST-024",
+      "type": "verifies",
+      "to": "CMD-DRIFT"
+    },
+    {
+      "from": "TEST-024",
+      "type": "verifies",
+      "to": "FR-500"
+    },
+    {
+      "from": "TEST-025",
+      "type": "verifies",
+      "to": "CMD-NEW"
+    },
+    {
+      "from": "TEST-025",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-026",
+      "type": "verifies",
+      "to": "CMD-SCAFFOLD"
+    },
+    {
+      "from": "TEST-026",
+      "type": "verifies",
+      "to": "FR-106"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1001"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1002"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1004"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1005"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1006"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1009"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1011"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1012"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1013"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1015"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-1016"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-600"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-601"
+    },
+    {
+      "from": "TEST-027",
+      "type": "verifies",
+      "to": "FR-604"
+    },
+    {
+      "from": "TEST-028",
+      "type": "verifies",
+      "to": "FR-101"
+    },
+    {
+      "from": "TEST-028",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-028",
+      "type": "verifies",
+      "to": "FR-400"
+    },
+    {
+      "from": "TEST-028",
+      "type": "verifies",
+      "to": "FR-401"
+    },
+    {
+      "from": "TEST-028",
+      "type": "verifies",
+      "to": "FR-402"
+    },
+    {
+      "from": "TEST-029",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-030",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-030",
+      "type": "verifies",
+      "to": "FR-701"
+    },
+    {
+      "from": "TEST-030",
+      "type": "verifies",
+      "to": "FR-703"
+    },
+    {
+      "from": "TEST-031",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-031",
+      "type": "verifies",
+      "to": "NFR-004"
+    },
+    {
+      "from": "TEST-031",
+      "type": "verifies",
+      "to": "NFR-007"
+    },
+    {
+      "from": "TEST-032",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-032",
+      "type": "verifies",
+      "to": "NFR-004"
+    },
+    {
+      "from": "TEST-032",
+      "type": "verifies",
+      "to": "NFR-005"
+    },
+    {
+      "from": "TEST-032",
+      "type": "verifies",
+      "to": "NFR-009"
+    },
+    {
+      "from": "TEST-033",
+      "type": "verifies",
+      "to": "FR-700"
+    },
+    {
+      "from": "TEST-033",
+      "type": "verifies",
+      "to": "FR-701"
+    },
+    {
+      "from": "TEST-034",
+      "type": "verifies",
+      "to": "FR-702"
+    },
+    {
+      "from": "TEST-035",
+      "type": "verifies",
+      "to": "FR-106"
+    },
+    {
+      "from": "TEST-036",
+      "type": "verifies",
+      "to": "FR-106"
+    },
+    {
+      "from": "TEST-036",
+      "type": "verifies",
+      "to": "FR-605"
+    },
+    {
+      "from": "TEST-036",
+      "type": "verifies",
+      "to": "FR-703"
+    },
+    {
+      "from": "TEST-037",
+      "type": "verifies",
+      "to": "FR-1100"
+    },
+    {
+      "from": "TEST-038",
+      "type": "verifies",
+      "to": "FR-1102"
+    },
+    {
+      "from": "TEST-039",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-039",
+      "type": "verifies",
+      "to": "FR-301"
+    },
+    {
+      "from": "TEST-039",
+      "type": "verifies",
+      "to": "NFR-004"
+    },
+    {
+      "from": "TEST-040",
+      "type": "verifies",
+      "to": "FR-401"
+    },
+    {
+      "from": "TEST-040",
+      "type": "verifies",
+      "to": "FR-701"
+    },
+    {
+      "from": "TEST-041",
+      "type": "verifies",
+      "to": "CMD-CONVERT"
+    },
+    {
+      "from": "TEST-041",
+      "type": "verifies",
+      "to": "FR-1104"
+    },
+    {
+      "from": "TEST-042",
+      "type": "verifies",
+      "to": "FR-603"
+    },
+    {
+      "from": "TEST-042",
+      "type": "verifies",
+      "to": "FR-604"
+    },
+    {
+      "from": "TEST-043",
+      "type": "verifies",
+      "to": "FR-302"
+    },
+    {
+      "from": "TEST-043",
+      "type": "verifies",
+      "to": "FR-800"
+    },
+    {
+      "from": "TEST-044",
+      "type": "verifies",
+      "to": "FR-104"
+    },
+    {
+      "from": "TEST-045",
+      "type": "verifies",
+      "to": "FR-602"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1004"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1005"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1007"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1008"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1011"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1014"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1015"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1003"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1010"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1013"
+    },
+    {
+      "from": "TEST-060",
+      "type": "verifies",
+      "to": "FR-1017"
+    },
+    {
+      "from": "TEST-060",
+      "type": "verifies",
+      "to": "FR-605"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-012"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-013"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-014"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "FR-605"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-002"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-003"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-008"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-015"
+    },
+    {
+      "from": "TEST-063",
+      "type": "verifies",
+      "to": "FR-701"
+    },
+    {
+      "from": "TEST-063",
+      "type": "verifies",
+      "to": "FR-800"
+    },
+    {
+      "from": "TEST-064",
+      "type": "verifies",
+      "to": "FR-500"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-101"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-102"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-401"
+    },
+    {
+      "from": "TEST-071",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-072",
+      "type": "verifies",
+      "to": "FR-200"
+    },
+    {
+      "from": "TEST-073",
+      "type": "verifies",
+      "to": "FR-600"
+    },
+    {
+      "from": "TEST-073",
+      "type": "verifies",
+      "to": "FR-601"
+    },
+    {
+      "from": "TEST-074",
+      "type": "verifies",
+      "to": "FR-201"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1100"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1101"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1103"
+    },
+    {
+      "from": "TEST-081",
+      "type": "verifies",
+      "to": "NFR-001"
+    },
+    {
+      "from": "UC-001",
+      "type": "traces",
+      "to": "FR-100"
+    },
+    {
+      "from": "UC-001",
+      "type": "traces",
+      "to": "FR-104"
+    },
+    {
+      "from": "UC-002",
+      "type": "traces",
+      "to": "FR-104"
+    },
+    {
+      "from": "UC-002",
+      "type": "traces",
+      "to": "FR-300"
+    },
+    {
+      "from": "UC-002",
+      "type": "traces",
+      "to": "FR-500"
+    },
+    {
+      "from": "UC-006",
+      "type": "traces",
+      "to": "FR-200"
+    },
+    {
+      "from": "UC-006",
+      "type": "traces",
+      "to": "FR-600"
+    },
+    {
+      "from": "UC-010",
+      "type": "traces",
+      "to": "FR-500"
+    },
+    {
+      "from": "UC-010",
+      "type": "traces",
+      "to": "FR-701"
+    },
+    {
+      "from": "UC-011",
+      "type": "traces",
+      "to": "FR-500"
+    },
+    {
+      "from": "UC-012",
+      "type": "traces",
+      "to": "FR-600"
+    }
+  ]
+}

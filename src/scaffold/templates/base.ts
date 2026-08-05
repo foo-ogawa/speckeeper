@@ -1,10 +1,44 @@
-import type { ModelTemplateParams } from './types.js';
+import type { CheckerBinding, ModelTemplateParams } from './types.js';
+
+/**
+ * Guidance for the checker-triggering edges the flowchart declared.
+ *
+ * The flowchart says which external SSOT this model is checked against; the
+ * paths and scanners live in speckeeper.config.ts, so the generated file points
+ * at the binding to write rather than writing a checker itself.
+ */
+function renderCheckerBindingGuidance(bindings: CheckerBinding[]): string {
+  if (bindings.length === 0) return '';
+
+  const lines = bindings.map(binding => {
+    const target = binding.targetLabel && binding.targetLabel !== binding.targetId
+      ? `${binding.targetId} (${binding.targetLabel})`
+      : binding.targetId;
+    return ` * - ${binding.relation} → ${target}`;
+  });
+
+  return `
+// =============================================================================
+// Checker binding
+// =============================================================================
+
+/**
+ * The flowchart declares these checker-triggering edges for this model:
+${lines.join('\n')}
+ *
+ * Declare a matching entry under \`sources\` in speckeeper.config.ts — its
+ * \`type\`, \`paths\` and \`relation\` — so \`speckeeper check\` scans that external
+ * SSOT for this model's spec IDs.
+ */
+`;
+}
 
 export function generateBaseModel(params: ModelTemplateParams): string {
   const schemaName = `${params.modelName}Schema`;
   const className = `${params.modelName}Model`;
 
   const dslImportLine = `import { requireField } from 'speckeeper/dsl';`;
+  const checkerBindingGuidance = renderCheckerBindingGuidance(params.checkerBindings ?? []);
 
   return `/**
  * ${params.modelName} Model Definition
@@ -32,7 +66,7 @@ export const ${schemaName} = z.object({
 // =============================================================================
 
 export type ${params.modelName} = z.input<typeof ${schemaName}>;
-
+${checkerBindingGuidance}
 // =============================================================================
 // Model Class
 // =============================================================================

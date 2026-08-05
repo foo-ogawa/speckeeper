@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { glob } from 'glob';
+import { toPosixPaths } from '../paths.js';
 import type { CoverageChecker, CoverageResult } from '../model.js';
 import type { ArtifactConfig } from '../config-api.js';
 
@@ -77,10 +78,10 @@ export function annotationCoverage<T extends { id: string }>(
 
       const allFiles = new Set<string>();
       for (const pattern of artifactConfig.globs) {
-        const found = glob.sync(pattern, {
+        const found = toPosixPaths(glob.sync(pattern, {
           cwd: basePath,
           ignore: artifactConfig.exclude ?? [],
-        });
+        }));
         for (const f of found) {
           allFiles.add(f);
         }

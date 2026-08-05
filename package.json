@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.16.21",
+  "version": "0.16.22",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,13 +27,14 @@
     "speckeeper": "dist/speckeeper.bundle.mjs"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "dist/speckeeper.bundle.mjs",
     "dist/speckeeper.bundle.mjs.map",
     "dist",
     "docs",
+    "specs",
     "cli-contract.yaml"
   ],
   "scripts": {
@@ -74,24 +75,24 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "embedoc": "^0.10.1",
-    "glob": "^11.0.0",
+    "embedoc": "^0.14.5",
+    "glob": "^13.0.6",
     "tsx": "^4.21.0",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^20.19.42",
+    "@types/node": "^22.20.0",
     "@types/node-sql-parser": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@vitest/coverage-v8": "^4.1.7",
-    "agent-contracts": "^0.34.11",
+    "agent-contracts": "^0.35.5",
     "agent-contracts-runtime": "^0.36.4",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "cli-contracts": "^0.34.7",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
     "node-sql-parser": "^5.4.0",

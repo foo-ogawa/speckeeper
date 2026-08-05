@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Phase } from './common.js';
 
 // ============================================================================
 // Meta Model Types - Types for defining models
@@ -27,7 +28,7 @@ export interface LintContext {
   /** Access to all models (MetaModelRegistry type) */
   registry: unknown;
   /** Current phase */
-  phase?: 'REQ' | 'HLD' | 'LLD' | 'OPS';
+  phase?: Phase;
   /** Strict mode */
   strict?: boolean;
 }
@@ -224,7 +225,7 @@ export interface ModelDefinition<T extends z.ZodTypeAny = z.ZodTypeAny> {
   dslName?: string;
   
   /** Phase (the phase where this model is primarily used) */
-  phase?: 'REQ' | 'HLD' | 'LLD' | 'OPS';
+  phase?: Phase;
 }
 
 // ============================================================================
@@ -252,23 +253,6 @@ export interface MetaModelRegistry {
 export interface MetaModelConfig {
   /** Custom model definitions */
   models?: ModelDefinition[];
-  /** External SSOT settings */
-  externalSsot?: {
-    openapi?: {
-      enabled: boolean;
-      paths: string[];
-    };
-    ddl?: {
-      enabled: boolean;
-      type: 'ddl' | 'prisma' | 'typeorm' | 'drizzle';
-      path: string;
-    };
-    iac?: {
-      enabled: boolean;
-      type: 'cloudformation' | 'cdk' | 'terraform';
-      path: string;
-    };
-  };
 }
 
 // ============================================================================

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "E-010.json",
+  "title": "Component",
+  "description": "Architecture component (system, container, component, person)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID (COMP-001, etc.)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Component name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "person",
+        "system",
+        "container",
+        "component"
+      ],
+      "description": "Component type"
+    },
+    "external": {
+      "type": "boolean",
+      "description": "Whether external component"
+    },
+    "layerId": {
+      "type": "string",
+      "description": "Belonging layer ID"
+    },
+    "boundaryId": {
+      "type": "string",
+      "description": "Belonging boundary ID"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description",
+    "type"
+  ]
+}

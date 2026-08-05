@@ -9,6 +9,7 @@ import {
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { glob } from 'glob';
+import { toPosixPaths } from '../paths.js';
 import type { ArtifactConfig } from '../config-api.js';
 
 export interface ScanCacheEntry {
@@ -220,7 +221,7 @@ export function scanFilesWithCache(
 
   const allPaths = new Set<string>();
   for (const pattern of globs) {
-    const matches = glob.sync(pattern, globOptions);
+    const matches = toPosixPaths(glob.sync(pattern, globOptions));
     for (const p of matches) {
       allPaths.add(p);
     }

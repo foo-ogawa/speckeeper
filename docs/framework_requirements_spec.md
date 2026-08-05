@@ -951,17 +951,15 @@ lint/build/drift within 1 minute for typical requirement scale (~500 items), che
 
 Works on Node.js (LTS)
 
-- Verified on Node.js 18 LTS
-- Verified on Node.js 20 LTS
 - Verified on Node.js 22 LTS
+- Verified on Node.js 24 LTS
 
 **NFR-003: Multi-OS Support**
 
-Avoid OS dependencies and work on Linux/macOS/Windows
+Avoid OS dependencies and work on Linux/macOS
 
 - Verified on Linux (Ubuntu)
 - Verified on macOS
-- Verified on Windows (PowerShell)
 - Eliminate OS-dependent code such as path separators
 
 ### 9.3 Modifiability (Extensibility)

@@ -6,7 +6,7 @@
 | TEST-004 | File writing utility verification test | vitest | 1 |
 | TEST-018 | Model level configuration feature verification test | vitest | 1 |
 | TEST-019 | Project initialization feature verification test | vitest | 1 |
-| TEST-020 | Lint command verification test | vitest | 2 |
+| TEST-020 | Lint command verification test | vitest | 3 |
 | TEST-021 | Check command verification test | vitest | 4 |
 | TEST-022 | Build command verification test | vitest | 2 |
 | TEST-023 | Impact command verification test | vitest | 1 |
@@ -22,16 +22,30 @@
 | TEST-033 | Insight provider verification test (spec relations to external edges) | vitest | 2 |
 | TEST-034 | Edge vocabulary verification test (verifiedBy / verifies categories) | vitest | 1 |
 | TEST-035 | Scaffold template registry verification test (base template resolution) | vitest | 1 |
-| TEST-036 | Scaffold model generator verification test (no checker generation) | vitest | 2 |
+| TEST-036 | Scaffold model generator verification test (no checker generation) | vitest | 3 |
 | TEST-037 | Audit report formatting verification test | vitest | 1 |
 | TEST-038 | Impact explanation context builder verification test | vitest | 1 |
 | TEST-039 | Model renderer verification test | vitest | 3 |
 | TEST-040 | Relation level constraint and cycle detection verification test | vitest | 2 |
 | TEST-041 | Convert command verification test | vitest | 1 |
 | TEST-042 | Model-declared externalChecker and coverageChecker verification test | vitest | 2 |
-| TEST-043 | Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph) | vitest | 2 |
+| TEST-043 | Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph) | vitest | 3 |
 | TEST-044 | Model-declared lint rule verification test | vitest | 1 |
 | TEST-045 | Check command source filtering verification test | vitest | 1 |
+| TEST-050 | Scan diagnostic severity and opt-in deep validation verification test | vitest | 7 |
+| TEST-051 | Absent spec ID warning verification test | vitest | 3 |
+| TEST-070 | Common lint item verification test | vitest | 3 |
+| TEST-071 | Core-provided test verification logic test | vitest | 1 |
+| TEST-072 | External SSOT reference interface test | vitest | 1 |
+| TEST-073 | External SSOT constraint check test | vitest | 2 |
+| TEST-074 | External SSOT path configuration test | vitest | 1 |
+| TEST-060 | Model-integrated external SSOT check verification test (declared checkers and source path resolution) | vitest | 2 |
+| TEST-061 | CLI test traceability verification test (command coverage, TestRef linkage, definition consistency) | vitest | 3 |
+| TEST-062 | Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring) | vitest | 5 |
+| TEST-063 | Insights command verification test (ExternalInsight JSON export) | vitest | 2 |
+| TEST-064 | Drift verification test over the machine-readable artifacts (specs/) | vitest | 1 |
+| TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 3 |
+| TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
 
 ---
 
@@ -138,6 +152,7 @@
 
 ### Verified Requirements
 
+- FR-400
 - FR-401
 - FR-402
 
@@ -149,6 +164,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-400-01 | `FR-400-01 verifies ID uniqueness across models and fails the run` | The lint command runs the common lint items over the whole design |
 | FR-401-01 | `FR-401-01.*lintAll.*exits.*code 1` | Error-severity results trigger exit(1) |
 | FR-401-03 | `FR-401-03.*exits.*code 1.*error message` | Ref-exists error triggers exit and output |
 | FR-402-01 | `FR-402-01.*lintAll.*outputs warning` | Warnings output without exit |
@@ -532,6 +548,8 @@
 |------------------------|---------|-------------|
 | FR-702-01 | `contains verifiedBy as check category` | verifiedBy is a check-category relation type |
 | FR-702-03 | `warns when verifiedBy is speckeeper` | speckeeper to speckeeper verifiedBy warns |
+| FR-702-02 | `FR-702-02 resolves verifies from test code to implementation code` | verifies carries the test to implementation direction |
+| FR-702-04 | `FR-702-04 resolves both an implements and a verifiedBy edge of one source node` | One source node carries both edges and each is resolved on its own |
 | FR-702-05 | `contains verifies as external category` | verifies is traceability only, not a checker target |
 
 ---
@@ -569,6 +587,7 @@
 
 - FR-106
 - FR-605
+- FR-703
 
 ### Test Case Patterns
 
@@ -577,6 +596,7 @@
 | FR-106-02 | `deduplicates nodes with the same template class` | Same-class nodes aggregate into one model file |
 | FR-106-08 | `does not generate externalChecker code` | No fixed external node to checker mapping remains |
 | FR-605-01 | `emits no _checkers/ file for any edge category` | Scaffold generates no _checkers/ directory |
+| FR-703-02 | `FR-703-02 names the implements target and points at the config binding` | A check edge produces checker binding guidance, not checker code |
 
 ---
 
@@ -724,6 +744,7 @@
 
 ### Verified Requirements
 
+- FR-300
 - FR-302
 - FR-800
 
@@ -731,6 +752,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-300-02 | `FR-300-02 writes every file under specsDir as machine-readable JSON` | Every artifact the build writes under specsDir parses as JSON |
 | FR-302-01 | `FR-302-01.*maps entity attributes.*JSON Schema properties` | Entity attributes become JSON Schema properties under specs/schemas/entities/ |
 | FR-302-02 | `FR-302-02.*reference resolution graph` | Reference resolution graph is written to specs/index.json |
 | FR-800-01 | `FR-800-01.*aggregated JSON` | Aggregated JSON for machine processing is written on every build |
@@ -772,5 +794,338 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-602-02 | `FR-602-02 scans only the OpenAPI source when the type is openapi` | The type argument narrows the scanned sources to that type |
+
+---
+
+## TEST-050: Scan diagnostic severity and opt-in deep validation verification test
+
+### Test Source
+
+- **Path**: `test/core/dsl/checkers.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1004
+- FR-1005
+- FR-1007
+- FR-1008
+- FR-1011
+- FR-1014
+- FR-1015
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1004-01 | `leaves the method check off unless the mapper opts in` | A mapper without a method declaration runs no method check |
+| FR-1005-01 | `leaves the parameter check off unless the mapper opts in` | A mapper without parameters runs no parameter check |
+| FR-1005-02 | `leaves the response property check off unless the mapper opts in` | A mapper without response properties runs no property check |
+| FR-1007-01 | `reports an error naming the missing OpenAPI file path` | A missing OpenAPI file is an error carrying the path |
+| FR-1008-01 | `reports an error for an unparseable OpenAPI file` | Malformed OpenAPI YAML is an error |
+| FR-1008-02 | `reports an error for an empty OpenAPI file` | An empty OpenAPI file is an error |
+| FR-1011-02 | `skips the column check when the table is missing` | A missing table suppresses per-column warnings |
+| FR-1014-01 | `reports an error naming the missing DDL file path` | A missing DDL file is an error carrying the path |
+| FR-1015-02 | `emits a warning when DDL parsing falls back to regex` | The regex fallback reports the degradation as a warning |
+
+---
+
+## TEST-051: Absent spec ID warning verification test
+
+### Test Source
+
+- **Path**: `test/cli/check-sources.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1003
+- FR-1010
+- FR-1013
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1003-01 | `FR-1003-01 warns about an operation absent from the OpenAPI document` | A spec ID missing from the OpenAPI document warns by default |
+| FR-1010-01 | `FR-1010-01, FR-1013-01 warns about a table absent from the DDL` | A spec-referenced table missing from the DDL warns by default |
+| FR-1013-01 | `FR-1010-01, FR-1013-01 warns about a table absent from the DDL` | The missing table is reported as a warning |
+
+---
+
+## TEST-070: Common lint item verification test
+
+### Test Source
+
+- **Path**: `test/core/design-lint.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-101
+- FR-102
+- FR-401
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-101-01 | `FR-101-01 reports an id that more than one element declares` | An id declared by more than one element is an error |
+| FR-101-03 | `FR-101-03 reports a relation whose target no model declares` | A relation target that resolves to nothing is an error |
+| FR-101-04 | `FR-101-04 names every reference location left behind by an id change` | Every location still pointing at a changed id is reported |
+| FR-102-01 | `FR-102-01 accepts REQ, HLD, LLD and OPS and orders them` | The phase vocabulary carries REQ, HLD, LLD and OPS in order |
+| FR-102-02 | `FR-102-02 keeps the phase set on a model definition and verifies the gate against it` | A model definition carries a phase and the gate is verified |
+| FR-102-03 | `FR-102-03 prohibits a TBD once the gate reaches its deadline phase` | A TBD is allowed before its deadline phase and prohibited at it |
+| FR-401-05 | `FR-401-05 reports every slot left unresolved at the specified phase` | Every TBD still unresolved at the specified phase is reported |
+| FR-401-06 | `FR-401-06 detects an element that takes part in no relation` | Orphan elements are detected |
+
+---
+
+## TEST-071: Core-provided test verification logic test
+
+### Test Source
+
+- **Path**: `test/core/dsl/test-verification.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-107
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-107-04 | `FR-107-04 finds the test files, checks spec ID references and parses results from the test file path` | Test file search, spec ID reference check and result parsing come from core |
+
+---
+
+## TEST-072: External SSOT reference interface test
+
+### Test Source
+
+- **Path**: `test/core/dsl/external-refs.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-200
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-200-01 | `FR-200-01 provides a .* interface that targets its external SSOT` | APIRef, TableRef, IaCRef and BatchRef interfaces are provided |
+| FR-200-02 | `FR-200-02 carries the file path and the identifier of the referenced target` | A reference carries the path and identifier of its target |
+| FR-200-03 | `FR-200-03 associates a reference with a component and an entity` | A reference associates with related components and entities |
+
+---
+
+## TEST-073: External SSOT constraint check test
+
+### Test Source
+
+- **Path**: `test/core/constraint-check.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-600
+- FR-601
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-600-03 | `FR-600-03 fails the check when a non-functional constraint is not satisfied` | A violated guardrail fails the external SSOT check |
+| FR-601-03 | `FR-601-03 reports every declared constraint that the external object violates` | The constraint category reports every violated constraint |
+
+---
+
+## TEST-074: External SSOT path configuration test
+
+### Test Source
+
+- **Path**: `test/cli/external-ssot-paths.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-201
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-201-01 | `FR-201-01 resolves the external SSOT from the paths declared in the config` | External SSOT paths are read from the config |
+
+---
+
+## TEST-060: Model-integrated external SSOT check verification test (declared checkers and source path resolution)
+
+### Test Source
+
+- **Path**: `test/cli/check-external-ssot.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-605
+- FR-1017
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-605-02 | `FR-605-02 the registered models declare the verification logic themselves` | The registered models carry the verification logic in their own definitions |
+| FR-605-03 | `FR-605-03 check external-ssot reports exactly what the declared checkers report` | The check command reports only what the model-declared checkers produce |
+| FR-1017-01 | `FR-1017-01 uses the path each spec configures` | A configured source path is the path the checker resolves |
+| FR-1017-02 | `FR-1017-02 falls back to a hardcoded default when the spec configures no path` | Without a configured path the checker uses its hardcoded default |
+
+---
+
+## TEST-061: CLI test traceability verification test (command coverage, TestRef linkage, definition consistency)
+
+### Test Source
+
+- **Path**: `test/design/traceability.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- NFR-012
+- NFR-013
+- NFR-014
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| NFR-012-01 | `NFR-012-01 each CLI command the requirement names has a test file in test/cli/` | Every scoped CLI command has a test file under test/cli/ |
+| NFR-012-02 | `NFR-012-02 describe/it names in test/cli/ mention the requirements the TestRef declares` | CLI test suites name the requirements their TestRef declares |
+| NFR-012-03 | `NFR-012-03 statement coverage of the CLI command modules reaches the required percentage` | Measured statement coverage of the CLI command modules meets the threshold |
+| NFR-013-01 | `NFR-013-01 every test file in test/cli/ is declared by a TestRef` | No CLI test file is left undeclared in design/test-refs.yaml |
+| NFR-013-02 | `NFR-013-02 TestRefs link to command IDs via implementsCommand` | TestRef linkage to command IDs resolves and covers every commands test file |
+| NFR-013-03 | `NFR-013-03 the declared TestRef check succeeds for every TestRef` | The TestRef checker reports no error for any declared TestRef |
+| NFR-014-01 | `NFR-014-01 every command definition matches the contract and the generated program` | Command definitions agree with cli-contract.yaml and the generated program |
+| NFR-013-04 | `NFR-013-04 every acceptance criterion the coverage checker targets is covered` | The coverage checker reports full coverage of the criteria it targets |
+
+---
+
+## TEST-062: Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring)
+
+### Test Source
+
+- **Path**: `test/design/repo-invariants.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-605
+- NFR-008
+- NFR-015
+- NFR-002
+- NFR-003
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-605-04 | `FR-605-04 no speckeeper source file references the retired checker directory` | No source file mentions the retired checker directory |
+| FR-605-05 | `FR-605-05 the checker template directory is removed and the core DSL holds the logic` | The checker template directory is gone and the core DSL directory exists |
+| NFR-008-01 | `NFR-008-01 the project compiles on the required TypeScript version` | The installed compiler meets the required version and the project compiles |
+| NFR-008-02 | `NFR-008-02 the compilation the check runs is a strict-mode compilation` | The compiler settings the check uses enable strict mode |
+| NFR-015-01 | `NFR-015-01 every test file on disk is collected by exactly one configured suite` | No existing test file drops out of the configured suites |
+| NFR-002-01 | `NFR-002 covers each declared Node.js line, and each one satisfies engines` | The matrix covers the declared Node.js line |
+| NFR-002-02 | `NFR-002 covers each declared Node.js line, and each one satisfies engines` | The matrix covers the declared Node.js line |
+| NFR-003-01 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
+| NFR-003-02 | `NFR-003 covers each declared operating system` | The matrix covers the declared operating system |
+
+---
+
+## TEST-063: Insights command verification test (ExternalInsight JSON export)
+
+### Test Source
+
+- **Path**: `test/cli/insights.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-701
+- FR-800
+
+### Implemented Command
+
+- CMD-INSIGHTS
+
+---
+
+## TEST-064: Drift verification test over the machine-readable artifacts (specs/)
+
+### Test Source
+
+- **Path**: `test/cli/drift-specs.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-500
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-500-01 | `FR-500-01 detects a hand-edited entity JSON Schema under specs/` | A hand-edited machine-readable artifact is detected as drift |
+
+---
+
+## TEST-080: LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema)
+
+### Test Source
+
+- **Path**: `test/cli/llm-commands.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1100
+- FR-1101
+- FR-1103
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1100-01 | `FR-1100-01 builds the prompt from every registered spec` | The prompt carries every registered spec |
+| FR-1100-03 | `FR-1100-03 audit-requirements --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1100-05 | `FR-1100-05 renders a distinct report for each --report-format value` | Each report format renders its own output |
+| FR-1101-01 | `FR-1101-01 analyses every declared spec and lists the relations already present` | Trace link analysis spans every declared spec |
+| FR-1101-02 | `FR-1101-02 requires source, target, relation type and confidence on every proposed link` | The proposed link schema requires the four fields |
+| FR-1101-03 | `FR-1101-03 propose-trace-links --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1102-03 | `FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1103-01 | `FR-1103-01 narrows the prompt to the specs named on the command line` | Only the named specs reach the prompt |
+| FR-1103-03 | `FR-1103-03 propose-acceptance-criteria --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+
+---
+
+## TEST-081: Command performance verification test at the declared requirement, file and entity scale
+
+### Test Source
+
+- **Path**: `test/cli/performance.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- NFR-001
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| NFR-001-01 | `NFR-001-01 runs lint, build and drift within the budget at the declared requirement scale` | lint, build and drift stay within the declared budget |
+| NFR-001-02 | `NFR-001-02 runs check within the budget at the declared file scale` | check stays within the declared budget at the file scale |
+| NFR-001-03 | `NFR-001-03 builds within the budget from an empty output directory` | A cold build stays within the declared budget |
 
 ---

@@ -24,6 +24,7 @@ import {
   type RelationType,
 } from '../core/relation.js';
 import { loadConfig } from '../utils/config-loader.js';
+import { toPosixPaths } from '../core/paths.js';
 
 // ============================================================================
 // Types
@@ -207,7 +208,7 @@ function upsertAnchor(
 
   anchorBySpecId.set(spec.id, {
     domainId: spec.id,
-    filePaths: [...filePaths],
+    filePaths: toPosixPaths([...filePaths]),
     ...(symbols.length > 0 ? { symbols } : {}),
   });
 }

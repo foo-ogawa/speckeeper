@@ -21,7 +21,7 @@ const { createSpeckeeperInsightProvider } = await import(
 );
 const mockedCreate = vi.mocked(createSpeckeeperInsightProvider);
 
-describe('insightsCommand', () => {
+describe('FR-701, FR-800: insightsCommand', () => {
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {

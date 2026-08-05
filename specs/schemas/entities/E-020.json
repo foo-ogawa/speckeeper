@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "E-020.json",
+  "title": "Entity",
+  "description": "Concept model entity",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID (ENT-001, etc.)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Entity name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description"
+    },
+    "isAggregate": {
+      "type": "boolean",
+      "description": "Whether aggregate root"
+    },
+    "boundaryId": {
+      "type": "string",
+      "description": "Belonging boundary ID"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description"
+  ]
+}

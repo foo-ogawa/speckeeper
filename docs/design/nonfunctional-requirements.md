@@ -44,9 +44,8 @@ Works on Node.js (LTS)
 
 ### Acceptance Criteria
 
-- **NFR-002-01**: Verified on Node.js 18 LTS [test]
-- **NFR-002-02**: Verified on Node.js 20 LTS [test]
-- **NFR-002-03**: Verified on Node.js 22 LTS [test]
+- **NFR-002-01**: Verified on Node.js 22 LTS [test]
+- **NFR-002-02**: Verified on Node.js 24 LTS [test]
 
 ---
 
@@ -54,13 +53,12 @@ Works on Node.js (LTS)
 
 **Type**: non-functional | **Priority**: must | **Category**: portability
 
-Avoid OS dependencies and work on Linux/macOS/Windows
+Avoid OS dependencies and work on Linux/macOS
 
 ### Acceptance Criteria
 
 - **NFR-003-01**: Verified on Linux (Ubuntu) [test]
 - **NFR-003-02**: Verified on macOS [test]
-- **NFR-003-03**: Verified on Windows (PowerShell) [test]
 - **NFR-003-04**: Eliminate OS-dependent code such as path separators [review]
 
 ---

@@ -77,6 +77,62 @@ describe('FR-106, FR-605: generateModelFile', () => {
   });
 });
 
+describe('FR-703-02: scaffold emits checker binding guidance for check edges', () => {
+  it('FR-703-02 names the implements target and points at the config binding', () => {
+    const fr = makeNode('FR', ['speckeeper', 'requirement']);
+    const api = makeNode('API', ['openapi'], { label: 'API spec openapi SSoT' });
+    const nodes = new Map<string, MermaidNode>([['FR', fr], ['API', api]]);
+
+    const result = generateModelFile(fr, [], [makeEdge('FR', 'API', 'implements')], nodes);
+
+    expect(result.content).toContain('Checker binding');
+    expect(result.content).toContain('implements → API (API spec openapi SSoT)');
+    expect(result.content).toContain('speckeeper.config.ts');
+    // Guidance only — no checker code, per FR-106-08
+    expect(result.content).not.toContain('protected externalChecker');
+    expect(result.content).not.toContain('annotationChecker');
+  });
+
+  it('FR-703-02 names a verifiedBy target as well', () => {
+    const fr = makeNode('FR', ['speckeeper', 'requirement']);
+    const ut = makeNode('UT', ['test']);
+    const nodes = new Map<string, MermaidNode>([['FR', fr], ['UT', ut]]);
+
+    const result = generateModelFile(fr, [], [makeEdge('FR', 'UT', 'verifiedBy')], nodes);
+
+    expect(result.content).toContain('verifiedBy → UT');
+  });
+
+  it('FR-703-02 lists every check edge detected for the model', () => {
+    const fr = makeNode('FR', ['speckeeper', 'requirement']);
+    const api = makeNode('API', ['openapi']);
+    const ut = makeNode('UT', ['test']);
+    const nodes = new Map<string, MermaidNode>([['FR', fr], ['API', api], ['UT', ut]]);
+
+    const result = generateModelFile(
+      fr,
+      [],
+      [makeEdge('FR', 'API', 'implements'), makeEdge('FR', 'UT', 'verifiedBy')],
+      nodes,
+    );
+
+    expect(result.content).toContain('implements → API');
+    expect(result.content).toContain('verifiedBy → UT');
+  });
+
+  it('FR-703-02 emits no guidance when no check edge is detected', () => {
+    const fr = makeNode('FR', ['speckeeper', 'requirement']);
+    const uc = makeNode('UC', ['speckeeper', 'usecase']);
+    const nodes = new Map<string, MermaidNode>([['FR', fr], ['UC', uc]]);
+
+    const withLintEdge = generateModelFile(fr, [], [makeEdge('FR', 'UC', 'refines', 'lint')], nodes);
+    expect(withLintEdge.content).not.toContain('Checker binding');
+
+    const withNoEdge = generateModelFile(fr, [], [], nodes);
+    expect(withNoEdge.content).not.toContain('Checker binding');
+  });
+});
+
 describe('generateAllModelFiles', () => {
   it('deduplicates nodes with the same template class', () => {
     const nodes: MermaidNode[] = [

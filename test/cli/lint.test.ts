@@ -180,6 +180,97 @@ describe('lintCommand', () => {
     });
   });
 
+  describe('FR-400-01: the lint command verifies the common lint items', () => {
+    /** A config whose models declare no rules, so every issue comes from the common items */
+    function commonItemsConfig(entries: Array<{ modelId: string; data: unknown[] }>) {
+      return {
+        designDir: 'design',
+        docsDir: 'docs',
+        specsDir: 'specs',
+        models: entries.map(e => createMockModel({ id: e.modelId, name: e.modelId })),
+        specs: entries.map(e => ({
+          model: { id: e.modelId, register: vi.fn() },
+          data: e.data,
+        })),
+      };
+    }
+
+    function output(): string {
+      return logSpy.mock.calls.map(c => String(c[0])).join('\n');
+    }
+
+    it('FR-400-01 verifies ID uniqueness across models and fails the run', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        { modelId: 'requirement', data: [{ id: 'FR-001' }] },
+        { modelId: 'usecase', data: [{ id: 'FR-001' }] },
+      ]) as never);
+
+      await lintCommand({});
+
+      expect(output()).toContain('id-unique');
+      expect(output()).toContain('FR-001');
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('FR-400-01 verifies reference integrity and fails the run', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        {
+          modelId: 'requirement',
+          data: [{ id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-404' }] }],
+        },
+      ]) as never);
+
+      await lintCommand({});
+
+      expect(output()).toContain('ref-exists');
+      expect(output()).toContain('UC-404');
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('FR-400-01 verifies orphan elements and the phase gate', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        {
+          modelId: 'requirement',
+          data: [
+            { id: 'FR-001', concretizationSlots: [{ field: 'timeout', mustDecideBy: 'REQ' }] },
+          ],
+        },
+      ]) as never);
+
+      await lintCommand({ strict: true, phase: 'REQ' });
+
+      expect(output()).toContain('orphan');
+      expect(output()).toContain('phase-tbd');
+      expect(output()).toContain('timeout');
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('FR-400-01 reports no common lint issue for a consistent design', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        {
+          modelId: 'requirement',
+          data: [{ id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] }],
+        },
+        { modelId: 'usecase', data: [{ id: 'UC-001' }] },
+      ]) as never);
+
+      await lintCommand({ strict: true, phase: 'OPS' });
+
+      expect(output()).toContain('No issues found');
+      expect(exitSpy).not.toHaveBeenCalled();
+    });
+
+    it('FR-400-01 rejects a phase that is not a known phase', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        { modelId: 'requirement', data: [{ id: 'FR-001' }] },
+      ]) as never);
+
+      await lintCommand({ phase: 'NOPE' });
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('error handling', () => {
     it('propagates error when loadConfig throws', async () => {
       mockedLoadConfig.mockRejectedValue(new Error('Config not found'));

@@ -1691,17 +1691,14 @@ entries:
         category: portability
         acceptanceCriteria:
           - id: NFR-002-01
-            description: Verified on Node.js 18 LTS
+            description: Verified on Node.js 22 LTS
             verificationMethod: test
           - id: NFR-002-02
-            description: Verified on Node.js 20 LTS
-            verificationMethod: test
-          - id: NFR-002-03
-            description: Verified on Node.js 22 LTS
+            description: Verified on Node.js 24 LTS
             verificationMethod: test
       - id: NFR-003
         name: Multi-OS Support
-        description: Avoid OS dependencies and work on Linux/macOS/Windows
+        description: Avoid OS dependencies and work on Linux/macOS
         type: non-functional
         priority: must
         category: portability
@@ -1711,9 +1708,6 @@ entries:
             verificationMethod: test
           - id: NFR-003-02
             description: Verified on macOS
-            verificationMethod: test
-          - id: NFR-003-03
-            description: Verified on Windows (PowerShell)
             verificationMethod: test
           - id: NFR-003-04
             description: Eliminate OS-dependent code such as path separators

@@ -180,11 +180,11 @@ describe('FR-600, FR-601, FR-1016: runGlobalScan', () => {
       paths: ['test/core/dsl/fixtures/valid.openapi.yaml'],
       relation: 'implements',
     }];
-    const { matches, warnings } = runGlobalScan(sources, ['listUsers', 'getUser', 'nonExistent']);
+    const { matches, diagnostics } = runGlobalScan(sources, ['listUsers', 'getUser', 'nonExistent']);
     expect(matches.has('listUsers')).toBe(true);
     expect(matches.has('getUser')).toBe(true);
     expect(matches.has('nonExistent')).toBe(false);
-    expect(warnings.filter(w => w.message.includes('Failed'))).toHaveLength(0);
+    expect(diagnostics.filter(d => d.message.includes('Failed'))).toHaveLength(0);
   });
 
   it('scans DDL source and returns matches', () => {
@@ -204,8 +204,10 @@ describe('FR-600, FR-601, FR-1016: runGlobalScan', () => {
       paths: ['some/path'],
       relation: 'implements',
     }];
-    const { warnings } = runGlobalScan(sources, ['any-id']);
-    expect(warnings.some(w => w.message.includes('No scanner found'))).toBe(true);
+    const { diagnostics } = runGlobalScan(sources, ['any-id']);
+    const noScanner = diagnostics.filter(d => d.message.includes('No scanner found'));
+    expect(noScanner).toHaveLength(1);
+    expect(noScanner[0].severity).toBe('warning');
   });
 
   it('sets relation from source config on matches', () => {
@@ -218,6 +220,76 @@ describe('FR-600, FR-601, FR-1016: runGlobalScan', () => {
     const m = matches.get('listUsers');
     expect(m).toBeDefined();
     expect(m![0].relation).toBe('verifiedBy');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scan diagnostics: missing file, unparseable file, parse fallback
+// ---------------------------------------------------------------------------
+
+describe('FR-1007, FR-1008, FR-1014, FR-1015: scan diagnostics', () => {
+  function scan(type: string, path: string, specIds: string[] = ['anything']) {
+    const sources: SourceConfig[] = [{ type, paths: [path], relation: 'implements' }];
+    return runGlobalScan(sources, specIds);
+  }
+
+  it('reports an error naming the missing OpenAPI file path', () => {
+    const missing = 'test/core/dsl/fixtures/no-such-file.openapi.yaml';
+    const { diagnostics } = scan('openapi', missing);
+    const errors = diagnostics.filter(d => d.severity === 'error');
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain(missing);
+    expect(errors[0].sourceType).toBe('openapi');
+  });
+
+  it('reports an error naming the missing DDL file path', () => {
+    const missing = 'test/core/dsl/fixtures/no-such-file.schema.sql';
+    const { diagnostics } = scan('ddl', missing);
+    const errors = diagnostics.filter(d => d.severity === 'error');
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain(missing);
+    expect(errors[0].sourceType).toBe('ddl');
+  });
+
+  it('reports an error for an unparseable OpenAPI file', () => {
+    // The fixture is malformed YAML, so no document can be produced from it.
+    expect(() => parseYaml(readFileSync(fixturePath('invalid.openapi.yaml'), 'utf-8'))).toThrow();
+
+    const { diagnostics, matches } = scan('openapi', 'test/core/dsl/fixtures/invalid.openapi.yaml', ['listUsers']);
+    const errors = diagnostics.filter(d => d.severity === 'error');
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain('invalid.openapi.yaml');
+    // The unusable file must not be silently treated as a source with no matches.
+    expect(matches.size).toBe(0);
+  });
+
+  it('reports an error for an empty OpenAPI file', () => {
+    expect(readFileSync(fixturePath('empty.openapi.yaml'), 'utf-8')).toBe('');
+
+    const { diagnostics } = scan('openapi', 'test/core/dsl/fixtures/empty.openapi.yaml', ['listUsers']);
+    const errors = diagnostics.filter(d => d.severity === 'error');
+    expect(errors).toHaveLength(1);
+    // Assert the reason, not the path: the fixture name also contains "empty".
+    expect(errors[0].message).toContain('holds no OpenAPI document');
+    expect(errors[0].filePath).toBe('test/core/dsl/fixtures/empty.openapi.yaml');
+  });
+
+  it('emits a warning when DDL parsing falls back to regex', () => {
+    const { diagnostics, matches } = scan(
+      'ddl', 'test/core/dsl/fixtures/parser-fail-regex-ok.schema.sql', ['audit_log'],
+    );
+    // The fallback still finds the table — the warning reports the degradation.
+    expect(matches.has('audit_log')).toBe(true);
+    const fallback = diagnostics.filter(d => d.message.includes('fell back to regex'));
+    expect(fallback).toHaveLength(1);
+    expect(fallback[0].severity).toBe('warning');
+    expect(fallback[0].filePath).toBe('test/core/dsl/fixtures/parser-fail-regex-ok.schema.sql');
+  });
+
+  it('emits no fallback warning when the DDL parser succeeds', () => {
+    const { diagnostics, matches } = scan('ddl', 'test/core/dsl/fixtures/valid.schema.sql', ['users']);
+    expect(matches.has('users')).toBe(true);
+    expect(diagnostics.filter(d => d.message.includes('fell back to regex'))).toHaveLength(0);
   });
 });
 
@@ -357,6 +429,58 @@ describe('FR-1004, FR-1005, FR-1006: runDeepValidation (OpenAPI)', () => {
     expect(result.warnings).toHaveLength(0);
   });
 
+  it('leaves the method check off unless the mapper opts in', () => {
+    // The fixture serves /users with GET, so DELETE is a genuine mismatch.
+    const matches = getOpenAPIMatchesForSpec('listUsers');
+    const spec = { id: 'listUsers', name: 'List' };
+
+    const optedOut = runDeepValidation('listUsers', matches, {
+      openapi: { mapper: () => ({ path: '/users' }) },
+    }, spec);
+    expect(optedOut.warnings.filter(w => w.message.includes('Method mismatch'))).toHaveLength(0);
+
+    const optedIn = runDeepValidation('listUsers', matches, {
+      openapi: { mapper: () => ({ path: '/users', method: 'DELETE' }) },
+    }, spec);
+    expect(optedIn.warnings.filter(w => w.message.includes('Method mismatch'))).toHaveLength(1);
+  });
+
+  it('leaves the parameter check off unless the mapper opts in', () => {
+    // The fixture declares only the "id" path parameter, so "limit" is missing.
+    const matches = getOpenAPIMatchesForSpec('getUser');
+    const spec = { id: 'getUser', name: 'Get User' };
+
+    const optedOut = runDeepValidation('getUser', matches, {
+      openapi: { mapper: () => ({ path: '/users/{id}' }) },
+    }, spec);
+    expect(optedOut.warnings).toHaveLength(0);
+
+    const optedIn = runDeepValidation('getUser', matches, {
+      openapi: {
+        mapper: () => ({ path: '/users/{id}', parameters: [{ name: 'limit', in: 'query' }] }),
+      },
+    }, spec);
+    expect(optedIn.warnings.filter(w => w.field === 'limit')).toHaveLength(1);
+  });
+
+  it('leaves the response property check off unless the mapper opts in', () => {
+    // The fixture's User schema has no "nonexistent" property.
+    const matches = getOpenAPIMatchesForSpec('listUsers');
+    const spec = { id: 'listUsers', name: 'List Users' };
+
+    const optedOut = runDeepValidation('listUsers', matches, {
+      openapi: { mapper: () => ({ path: '/users' }) },
+    }, spec);
+    expect(optedOut.warnings).toHaveLength(0);
+
+    const optedIn = runDeepValidation('listUsers', matches, {
+      openapi: {
+        mapper: () => ({ path: '/users', responseProperties: [{ name: 'nonexistent' }] }),
+      },
+    }, spec);
+    expect(optedIn.warnings.filter(w => w.field === 'nonexistent')).toHaveLength(1);
+  });
+
   it('resolves $ref for response schema', () => {
     const matches = getOpenAPIMatchesForSpec('getItem', 'ref-resolution.openapi.yaml');
     const result = runDeepValidation('getItem', matches, {
@@ -443,6 +567,28 @@ describe('FR-1011, FR-1012, FR-1013: runDeepValidation (DDL)', () => {
       },
     }, { id: 'users', name: 'Users' });
     expect(result.warnings.some(w => w.message.includes('type mismatch'))).toBe(true);
+  });
+
+  it('skips the column check when the table is missing', () => {
+    // Same mapper, same declared columns; only the DDL differs.
+    const mapper = () => ({
+      tableName: 'orders',
+      columns: [{ name: 'no_such_column' }],
+    });
+    const spec = { id: 'orders', name: 'Orders' };
+
+    // missing-table.schema.sql declares users and products, but no orders table.
+    const withoutTable = getDDLMatchesForSpec('orders', 'missing-table.schema.sql');
+    expect(withoutTable).toHaveLength(0);
+    const skipped = runDeepValidation('orders', withoutTable, { ddl: { mapper } }, spec);
+    expect(skipped.warnings).toHaveLength(0);
+
+    // With the table present the very same mapper does produce a column warning,
+    // so the silence above comes from the missing table, not from an inert mapper.
+    const withTable = getDDLMatchesForSpec('orders');
+    expect(withTable).toHaveLength(1);
+    const checked = runDeepValidation('orders', withTable, { ddl: { mapper } }, spec);
+    expect(checked.warnings.filter(w => w.field === 'no_such_column')).toHaveLength(1);
   });
 
   it('leaves the type check off unless checkTypes opts in', () => {
