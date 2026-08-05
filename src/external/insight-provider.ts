@@ -24,6 +24,7 @@ import {
   type RelationType,
 } from '../core/relation.js';
 import { loadConfig } from '../utils/config-loader.js';
+import { toPosixPath } from '../core/paths.js';
 
 // ============================================================================
 // Types
@@ -198,7 +199,7 @@ function upsertAnchor(
   const filePaths = new Set<string>();
   if (sourceFile) filePaths.add(sourceFile);
   if (spec.source?.path) {
-    filePaths.add(relative(projectRoot, resolve(projectRoot, spec.source.path)));
+    filePaths.add(toPosixPath(relative(projectRoot, resolve(projectRoot, spec.source.path))));
   }
 
   const symbols = extractSymbolAnchors(spec, projectRoot);

@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export interface InitOptions {
@@ -33,7 +33,7 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   }
   
   // Get project name from directory
-  const projectName = cwd.split('/').pop() || 'my-project';
+  const projectName = basename(cwd) || 'my-project';
   
   // Find templates directory
   const templatesDir = join(__dirname, 'templates', 'init');

@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { glob } from 'glob';
 import { buildRegistryFromConfig, getSpecsFromConfig } from '../../src/core/model.js';
+import { toPosixPaths } from '../../src/core/paths.js';
 import design from '../../design/index.ts';
 import { REQUIREMENT_MODEL_IDS } from '../../design/_models/requirement.ts';
 import { CLICommandModel } from '../../design/_models/cli-command.ts';
@@ -90,13 +91,13 @@ export function artifactFiles(artifactId: string): string[] {
   const artifact = contracts.artifacts[artifactId];
   if (!artifact) throw new Error(`No artifact "${artifactId}" in artifact-contracts.yaml`);
 
-  return glob
-    .sync(artifact.path_patterns, {
+  return toPosixPaths(
+    glob.sync(artifact.path_patterns, {
       cwd: repoRoot,
       ignore: artifact.exclude_patterns ?? [],
       nodir: true,
-    })
-    .sort();
+    }),
+  ).sort();
 }
 
 /** The spec registry the coverage checkers consume, keyed by model id. */

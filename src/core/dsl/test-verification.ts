@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { glob } from 'glob';
+import { toPosixPaths } from '../paths.js';
 
 /** A spec ID paired with the test case name pattern that covers it */
 export interface TestCasePatternInput {
@@ -70,7 +71,7 @@ interface FrameworkResultFile {
  * Test file search: expand the declared path or glob.
  */
 export function findTestFiles(path: string, basePath: string): string[] {
-  return glob.sync(path, { cwd: basePath }).sort();
+  return toPosixPaths(glob.sync(path, { cwd: basePath })).sort();
 }
 
 /**

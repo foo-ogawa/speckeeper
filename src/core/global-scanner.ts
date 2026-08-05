@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { glob } from 'glob';
+import { toPosixPaths } from './paths.js';
 import { parse as parseYaml } from 'yaml';
 import nodeSqlParser from 'node-sql-parser';
 import type { ScanReporter, SourceConfig, SourceMatch, SourceScanner } from './config-api.js';
@@ -428,10 +429,10 @@ export function runGlobalScan(
 
     const allFiles = new Set<string>();
     for (const pattern of source.paths) {
-      const found = glob.sync(pattern, {
+      const found = toPosixPaths(glob.sync(pattern, {
         cwd,
         ignore: source.exclude ?? [],
-      });
+      }));
       if (found.length === 0) {
         diagnostics.push({
           severity: 'error',
