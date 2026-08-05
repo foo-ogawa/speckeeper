@@ -6,6 +6,7 @@
  */
 
 import { defineEmbed, type EmbedContext } from 'embedoc';
+import { getSpecsFromConfig } from '../src/core/model.ts';
 import type { Model } from '../src/core/model.ts';
 import type { RenderContext } from '../src/core/model.ts';
 
@@ -23,22 +24,30 @@ import {
   type Term,
   type UseCase,
   type Actor,
+  type Artifact,
   type Entity,
   type DirectoryEntry,
+  type CLICommand,
 } from '../design/_models/index.ts';
 
-// Data
-import {
-  allRequirements,
-  functionalRequirements,
-  nonFunctionalRequirements,
-  constraints,
-} from '../design/requirements.ts';
-import { allTerms } from '../design/glossary.ts';
-import { useCases, actors, phaseWorkflowSummaries, phaseConfig } from '../design/usecases.ts';
-import { artifacts, directoryStructure } from '../design/artifacts.ts';
-import { entities } from '../design/concept-model.ts';
-import { commands } from '../design/cli-commands.ts';
+// Data — design/index.ts loads the YAML spec files and validates them against the models
+import design from '../design/index.ts';
+
+function specsOf<T>(modelId: string): T[] {
+  return getSpecsFromConfig(design.specs, modelId) as T[];
+}
+
+const functionalRequirements = specsOf<Requirement>('functional-requirement');
+const nonFunctionalRequirements = specsOf<Requirement>('nonfunctional-requirement');
+const constraints = specsOf<Requirement>('constraint');
+const allRequirements = [...functionalRequirements, ...nonFunctionalRequirements, ...constraints];
+const allTerms = specsOf<Term>('term');
+const actors = specsOf<Actor>('actor');
+const useCases = specsOf<UseCase>('usecase');
+const artifacts = specsOf<Artifact>('artifact');
+const directoryStructure = specsOf<DirectoryEntry>('directory-entry');
+const entities = specsOf<Entity>('entity');
+const commands = specsOf<CLICommand>('cli-command');
 
 // ============================================================================
 // Model and Data Registry
@@ -124,12 +133,12 @@ export const modelData = defineEmbed({
     const { model: modelId, format = 'table', validate } = ctx.params;
     
     if (!modelId) {
-      return { content: '⚠️ `model` parameter is required' };
+      throw new Error(`model_data in ${ctx.filePath}: the \`model\` parameter is required`);
     }
-    
+
     const config = MODEL_REGISTRY[modelId];
     if (!config) {
-      return { content: `⚠️ Unknown model: ${modelId}` };
+      throw new Error(`model_data in ${ctx.filePath}: unknown model: ${modelId}`);
     }
     
     // Validation mode (for artifacts)
@@ -144,9 +153,6 @@ export const modelData = defineEmbed({
       if (format === 'spec-chapter') return { content: renderSpecChapter() };
       if (format === 'nfr-chapter') return { content: renderNfrChapter() };
       if (format === 'constraint-chapter') return { content: renderConstraintChapter() };
-    }
-    if (modelId === 'usecase' && format === 'phase-workflow') {
-      return { content: renderPhaseWorkflow() };
     }
     if (modelId === 'artifact' && format === 'directory-tree') {
       return { content: renderDirectoryTree() };
@@ -283,25 +289,6 @@ function renderConstraintChapter(): string {
     }
   }
   return lines.join('\n');
-}
-
-// ============================================================================
-// Helper Functions - Use Cases
-// ============================================================================
-
-function renderPhaseWorkflow(): string {
-  const lines: string[] = [];
-  const sortedPhases = Object.keys(phaseWorkflowSummaries).sort((a, b) => 
-    (phaseConfig[a]?.order ?? 99) - (phaseConfig[b]?.order ?? 99)
-  );
-  let phaseNumber = 1;
-  for (const phase of sortedPhases) {
-    lines.push(`${phaseNumber}. **${phaseConfig[phase]?.label || phase}**`);
-    for (const summary of phaseWorkflowSummaries[phase] || []) lines.push(`   - ${summary}`);
-    lines.push('');
-    phaseNumber++;
-  }
-  return lines.join('\n').trim();
 }
 
 // ============================================================================

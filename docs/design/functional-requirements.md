@@ -830,7 +830,7 @@ Static lint rules cannot detect semantic issues such as ambiguous wording or des
 
 - **FR-1100-01**: audit-requirements command constructs a prompt from all registered specs and sends it to configured LLM adapter [test]
 - **FR-1100-02**: Audit report includes findings with severity (error/warning/info) and affected spec IDs [test]
-- **FR-1100-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+- **FR-1100-03**: --show-prompt outputs the constructed prompt without calling LLM [test]
 - **FR-1100-04**: --fail-on controls minimum severity that causes non-zero exit [test]
 - **FR-1100-05**: Report format is selectable via --report-format (json, text, yaml) [test]
 
@@ -850,7 +850,7 @@ Manual traceability maintenance is error-prone; LLM can identify semantically re
 
 - **FR-1101-01**: propose-trace-links command analyzes all specs and proposes missing trace links [test]
 - **FR-1101-02**: Each proposed link includes source ID, target ID, relation type, confidence score, and rationale [test]
-- **FR-1101-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+- **FR-1101-03**: --show-prompt outputs the constructed prompt without calling LLM [test]
 
 ---
 
@@ -868,7 +868,7 @@ Raw impact analysis JSON is not consumable by non-technical stakeholders; LLM ca
 
 - **FR-1102-01**: explain-impact command reads impact analysis JSON from stdin [test]
 - **FR-1102-02**: Output is a human-readable explanation suitable for PM/executive audiences [review]
-- **FR-1102-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+- **FR-1102-03**: --show-prompt outputs the constructed prompt without calling LLM [test]
 
 ---
 
@@ -886,7 +886,7 @@ Writing testable acceptance criteria is time-consuming; LLM can propose initial 
 
 - **FR-1103-01**: propose-acceptance-criteria command generates criteria for specified spec IDs (or all) [test]
 - **FR-1103-02**: Proposed criteria follow Given/When/Then format [review]
-- **FR-1103-03**: --dry-run outputs the constructed prompt without calling LLM [test]
+- **FR-1103-03**: --show-prompt outputs the constructed prompt without calling LLM [test]
 
 ---
 

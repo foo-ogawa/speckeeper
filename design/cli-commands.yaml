@@ -161,6 +161,12 @@ specs:
           - json
           - diff
         default: text
+      - kind: option
+        name: fail-on-drift
+        type: boolean
+        description: Exit with code 1 if drift is detected (for CI)
+        required: false
+        default: false
     subCommands: []
     relatedRequirements:
       - FR-500
@@ -168,6 +174,7 @@ specs:
       - speckeeper drift
       - speckeeper drift --update
       - speckeeper drift --format diff
+      - speckeeper drift --fail-on-drift
     exitCodes:
       - code: 0
         description: No differences
@@ -185,9 +192,17 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: string
-        description: "Type of check: external-ssot, openapi, ddl, iac, custom, all, test"
+        type: enum
+        description: Type of check to run, filtering sources by type
         required: false
+        choices:
+          - external-ssot
+          - openapi
+          - ddl
+          - iac
+          - custom
+          - all
+          - test
       - kind: option
         name: config
         alias: c
@@ -213,122 +228,19 @@ specs:
         description: Check if all testable acceptance criteria are covered by TestRefs
         required: false
         default: false
-    subCommands:
-      - name: openapi
-        description: Check consistency with OpenAPI specification
-        parameters:
-          - kind: option
-            name: path
-            alias: p
-            type: path
-            description: OpenAPI file path
-            required: false
-            example: ./api/openapi.yaml
-        examples:
-          - speckeeper check openapi
-          - speckeeper check openapi --path ./api/spec.yaml
-      - name: ddl
-        description: Check consistency with DDL/Schema
-        parameters:
-          - kind: option
-            name: path
-            alias: p
-            type: path
-            description: Schema file path
-            required: false
-            example: ./db/schema.prisma
-          - kind: option
-            name: type
-            alias: t
-            type: enum
-            description: Schema type
-            required: false
-            choices:
-              - ddl
-              - prisma
-              - typeorm
-              - drizzle
-        examples:
-          - speckeeper check ddl
-          - speckeeper check ddl --path ./db/schema.prisma --type prisma
-      - name: iac
-        description: Check consistency with IaC (CloudFormation/Terraform)
-        parameters:
-          - kind: option
-            name: path
-            alias: p
-            type: path
-            description: IaC file path
-            required: false
-            example: ./infra/template.yaml
-          - kind: option
-            name: type
-            alias: t
-            type: enum
-            description: IaC type
-            required: false
-            choices:
-              - cloudformation
-              - cdk
-              - terraform
-        examples:
-          - speckeeper check iac
-          - speckeeper check iac --path ./infra/main.tf --type terraform
-      - name: external-ssot
-        description: Check consistency with all external SSOTs
-        parameters: []
-        examples:
-          - speckeeper check external-ssot
-      - name: test
-        description: Check consistency between test files and requirements
-        parameters:
-          - kind: option
-            name: with-results
-            type: boolean
-            description: Also validate test result JSON
-            required: false
-            default: false
-          - kind: option
-            name: requirement
-            alias: r
-            type: string
-            description: Check only specific requirement ID
-            required: false
-          - kind: option
-            name: coverage
-            type: boolean
-            description: "Verify TestRef coverage for acceptanceCriteria (verificationMethod: test)"
-            required: false
-            default: false
-        examples:
-          - speckeeper check test
-          - speckeeper check test --with-results
-          - speckeeper check test --requirement FR-101
-          - speckeeper check test --coverage
-      - name: contract
-        description: Check consistency between implementation and contract (type definitions/schema)
-        parameters:
-          - kind: option
-            name: path
-            alias: p
-            type: path
-            description: Contract package path
-            required: false
-            example: ./packages/contract
-        examples:
-          - speckeeper check contract
-          - speckeeper check contract --path ./packages/contract
+    subCommands: []
     relatedRequirements:
       - FR-600
       - FR-601
       - FR-602
       - FR-603
     examples:
+      - speckeeper check
       - speckeeper check openapi
       - speckeeper check ddl
       - speckeeper check iac
-      - speckeeper check external-ssot
-      - speckeeper check contract
+      - speckeeper check external-ssot --verbose
+      - speckeeper check test --coverage
     exitCodes:
       - code: 0
         description: Consistency OK
@@ -349,17 +261,27 @@ specs:
     parameters:
       - kind: option
         name: force
-        alias: f
+        alias: F
         type: boolean
         description: Overwrite existing files
         required: false
         default: false
+      - kind: option
+        name: format
+        type: enum
+        description: "Spec data format: ts (default) or yaml"
+        required: false
+        choices:
+          - ts
+          - yaml
+        default: ts
     subCommands: []
     relatedRequirements:
       - FR-105
     examples:
       - speckeeper init
       - speckeeper init --force
+      - speckeeper init --format yaml
     exitCodes:
       - code: 0
         description: Initialization successful
@@ -373,9 +295,18 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: string
-        description: "Type: requirement, usecase, entity, component, screen, flow, error-case, term"
+        type: enum
+        description: Element type to create
         required: true
+        choices:
+          - requirement
+          - usecase
+          - entity
+          - component
+          - screen
+          - flow
+          - error-case
+          - term
       - kind: option
         name: kind
         alias: k
@@ -400,11 +331,18 @@ specs:
         type: path
         description: Path to template file
         required: false
+      - kind: option
+        name: dry-run
+        type: boolean
+        description: Preview generated file content without writing
+        required: false
+        default: false
     subCommands: []
     relatedRequirements:
       - FR-104
     examples:
       - speckeeper new requirement --kind functional --name "User Login"
+      - speckeeper new entity --dry-run
     exitCodes:
       - code: 0
         description: Element created
@@ -421,7 +359,7 @@ specs:
         alias: s
         type: path
         description: Path to Markdown file containing mermaid flowchart
-        required: true
+        required: false
       - kind: option
         name: output
         alias: o
@@ -431,7 +369,7 @@ specs:
         default: design/
       - kind: option
         name: force
-        alias: f
+        alias: F
         type: boolean
         description: Overwrite existing files
         required: false
@@ -442,12 +380,22 @@ specs:
         description: Preview generated files without writing
         required: false
         default: false
+      - kind: option
+        name: format
+        type: enum
+        description: "Spec data format: ts (default) or yaml"
+        required: false
+        choices:
+          - ts
+          - yaml
+        default: ts
     subCommands: []
     relatedRequirements:
       - FR-106
     examples:
       - speckeeper scaffold --source requirements.md
       - speckeeper scaffold -s spec.md --dry-run
+      - speckeeper scaffold --source arch.md --format yaml
     exitCodes:
       - code: 0
         description: Scaffold successful
@@ -482,13 +430,6 @@ specs:
         description: LLM model override
         required: false
       - kind: option
-        name: dry-run
-        alias: n
-        type: boolean
-        description: Output constructed prompt without calling LLM
-        required: false
-        default: false
-      - kind: option
         name: fail-on
         type: enum
         description: Minimum severity for non-zero exit
@@ -515,6 +456,12 @@ specs:
           - yaml
         default: json
       - kind: option
+        name: log-file
+        alias: l
+        type: path
+        description: Write agent progress log to this file path
+        required: false
+      - kind: option
         name: show-prompt
         type: boolean
         description: Display constructed LLM prompt on stderr
@@ -525,7 +472,7 @@ specs:
       - FR-1100
     examples:
       - speckeeper audit-requirements
-      - speckeeper audit-requirements --adapter openai --dry-run
+      - speckeeper audit-requirements --adapter openai --show-prompt
       - speckeeper audit-requirements --report-format json --output audit.json
     exitCodes:
       - code: 0
@@ -569,13 +516,6 @@ specs:
         description: LLM model override
         required: false
       - kind: option
-        name: dry-run
-        alias: n
-        type: boolean
-        description: Output constructed prompt without calling LLM
-        required: false
-        default: false
-      - kind: option
         name: fail-on
         type: enum
         description: Minimum severity for non-zero exit
@@ -602,6 +542,12 @@ specs:
           - yaml
         default: json
       - kind: option
+        name: log-file
+        alias: l
+        type: path
+        description: Write agent progress log to this file path
+        required: false
+      - kind: option
         name: show-prompt
         type: boolean
         description: Display constructed LLM prompt on stderr
@@ -613,7 +559,7 @@ specs:
     examples:
       - speckeeper propose-trace-links
       - speckeeper propose-trace-links --adapter claude --report-format json
-      - speckeeper propose-trace-links --dry-run
+      - speckeeper propose-trace-links --show-prompt
     exitCodes:
       - code: 0
         description: No blocking findings
@@ -634,12 +580,6 @@ specs:
     globalParameters: []
     parameters:
       - kind: option
-        name: config
-        alias: c
-        type: path
-        description: Path to config file
-        required: false
-      - kind: option
         name: adapter
         alias: a
         type: enum
@@ -655,13 +595,6 @@ specs:
         type: string
         description: LLM model override
         required: false
-      - kind: option
-        name: dry-run
-        alias: n
-        type: boolean
-        description: Output constructed prompt without calling LLM
-        required: false
-        default: false
       - kind: option
         name: fail-on
         type: enum
@@ -688,6 +621,12 @@ specs:
           - text
           - yaml
         default: json
+      - kind: option
+        name: log-file
+        alias: l
+        type: path
+        description: Write agent progress log to this file path
+        required: false
       - kind: option
         name: show-prompt
         type: boolean
@@ -749,13 +688,6 @@ specs:
         description: LLM model override
         required: false
       - kind: option
-        name: dry-run
-        alias: n
-        type: boolean
-        description: Output constructed prompt without calling LLM
-        required: false
-        default: false
-      - kind: option
         name: fail-on
         type: enum
         description: Minimum severity for non-zero exit
@@ -782,6 +714,12 @@ specs:
           - yaml
         default: json
       - kind: option
+        name: log-file
+        alias: l
+        type: path
+        description: Write agent progress log to this file path
+        required: false
+      - kind: option
         name: show-prompt
         type: boolean
         description: Display constructed LLM prompt on stderr
@@ -793,7 +731,7 @@ specs:
     examples:
       - speckeeper propose-acceptance-criteria
       - speckeeper propose-acceptance-criteria FR-001 FR-002
-      - speckeeper propose-acceptance-criteria --adapter gemini --dry-run
+      - speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
     exitCodes:
       - code: 0
         description: No blocking findings
@@ -903,3 +841,120 @@ specs:
         description: Analysis successful
       - code: 1
         description: Target ID not found
+  - id: CMD-INSIGHTS
+    name: insights
+    description: Export spec relation edges as ExternalInsight JSON
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: format
+        alias: f
+        type: enum
+        description: Output format (json only)
+        required: false
+        choices:
+          - json
+        default: json
+      - kind: option
+        name: project-root
+        type: path
+        description: Project root directory containing speckeeper.config
+        required: false
+        default: .
+      - kind: option
+        name: config
+        alias: c
+        type: path
+        description: Path to config file
+        required: false
+    subCommands: []
+    relatedRequirements:
+      - FR-701
+      - FR-800
+    examples:
+      - speckeeper insights
+      - speckeeper insights --format json
+      - speckeeper insights --format json --project-root .
+    exitCodes:
+      - code: 0
+        description: ExternalInsight JSON emitted to stdout
+      - code: 1
+        description: Export failed (config error or internal error)
+  - id: CMD-AGENTS
+    name: agents
+    description: Output the full resolved agent DSL as structured data
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: format
+        alias: F
+        type: enum
+        description: Output format
+        required: false
+        choices:
+          - yaml
+          - json
+        default: yaml
+    subCommands: []
+    relatedRequirements:
+      - FR-1100
+      - FR-1101
+      - FR-1102
+      - FR-1103
+    examples:
+      - speckeeper agents
+      - speckeeper agents --format json
+    exitCodes:
+      - code: 0
+        description: Resolved DSL emitted to stdout
+      - code: 1
+        description: Failed to load embedded DSL
+  - id: CMD-EXTRACT
+    name: extract
+    description: Extract the contract specification for this CLI tool
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: argument
+        name: commands
+        type: string
+        description: Command IDs to extract, in dot notation
+        required: false
+        example: speckeeper.lint
+      - kind: option
+        name: all
+        alias: a
+        type: boolean
+        description: Extract all commands
+        required: false
+        default: false
+      - kind: option
+        name: include-meta
+        type: boolean
+        description: Include extraction metadata
+        required: false
+        default: true
+      - kind: option
+        name: format
+        alias: F
+        type: enum
+        description: Output format
+        required: false
+        choices:
+          - yaml
+          - json
+        default: yaml
+    subCommands: []
+    relatedRequirements:
+      - NFR-014
+    examples:
+      - speckeeper extract --all
+      - speckeeper extract --all --format json
+      - speckeeper extract speckeeper.lint
+    exitCodes:
+      - code: 0
+        description: Contract specification emitted to stdout
+      - code: 2
+        description: Neither command IDs nor --all was specified

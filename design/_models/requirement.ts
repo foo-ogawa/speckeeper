@@ -226,6 +226,13 @@ class ConstraintModel extends RequirementModelBase {
 
 export { RequirementModelBase as RequirementModel, FunctionalRequirementModel, NonFunctionalRequirementModel, ConstraintModel };
 
+/** Registry keys of every requirement model that carries acceptanceCriteria */
+export const REQUIREMENT_MODEL_IDS = [
+  FunctionalRequirementModel.instance.id,
+  NonFunctionalRequirementModel.instance.id,
+  ConstraintModel.instance.id,
+] as const;
+
 // ============================================================================
 // Rendering Helper Functions
 // ============================================================================

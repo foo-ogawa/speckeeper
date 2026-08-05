@@ -31,6 +31,18 @@ jobs:
         run: npx cli-contracts version-sync --check
       - name: Build
         run: npm run build
+      - name: Bundle
+        run: npm run bundle
+      - name: Design consistency
+        run: node dist/speckeeper.bundle.mjs lint
+      - name: Documentation is regenerated from the models
+        run: |
+          npm run docs
+          git diff --exit-code -- docs/
+          if grep -rn '⚠️' docs/; then
+            echo "::error::generated documentation contains an unresolved embed marker"
+            exit 1
+          fi
       - name: Test
         run: npm run test:ci
       - name: Verify package contents

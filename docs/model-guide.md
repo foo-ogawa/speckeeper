@@ -47,26 +47,162 @@ The speckeeper model system is designed with the following structure:
 
 Below are examples of models actually defined in the speckeeper project.
 
-### APIRef Model (with External SSOT Checker)
+### CLICommand Model (with External SSOT Checker)
 
-<!--@embedoc:code_snippet file="design/_models/api-ref.ts" lang="typescript" title="design/_models/api-ref.ts" no_source="true"-->
-⚠️ File not found: design/_models/api-ref.ts
+<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="300" end="419" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
+**design/_models/cli-command.ts (excerpt)**
+
+```typescript
+class CLICommandModel extends Model<typeof CLICommandSchema> {
+  readonly id = 'cli-command';
+  readonly name = 'CLICommand';
+  readonly idPrefix = 'CMD';
+  readonly schema = CLICommandSchema;
+  readonly description = 'Defines CLI command specifications';
+  protected modelLevel: ModelLevel = 'L3';
+
+  protected lintRules: LintRule<CLICommand>[] = [
+    {
+      id: 'cmd-has-description',
+      severity: 'error',
+      message: 'Command must have a description (min 5 chars)',
+      check: (spec) => !spec.description || spec.description.length < 5,
+    },
+    arrayMinLength<CLICommand>('examples', 1, 'warning'),
+    {
+      id: 'cmd-has-exit-codes',
+      severity: 'info',
+      message: 'Command should define exit codes',
+      check: (spec) => spec.exitCodes.length === 0,
+    },
+  ];
+
+  protected exporters: Exporter<CLICommand>[] = [
+    {
+      format: 'markdown',
+      index: (specs) => {
+        const lines: string[] = [];
+        lines.push('# CLI Commands');
+        lines.push('');
+        lines.push('| Command | Description |');
+        lines.push('|---------|-------------|');
+        for (const spec of specs) {
+          lines.push(`| ${spec.name} | ${spec.description} |`);
+        }
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+
+        for (const spec of specs) {
+          lines.push(`## ${spec.id}: ${spec.name}`);
+          lines.push('');
+          lines.push(spec.description);
+          lines.push('');
+
+          lines.push('### Usage');
+          lines.push('');
+          lines.push('```bash');
+          if (spec.subCommands.length > 0) {
+            lines.push(`speckeeper ${spec.name} <subcommand> [options]`);
+          } else {
+            lines.push(`speckeeper ${spec.name} [options]`);
+          }
+          lines.push('```');
+          lines.push('');
+
+          if (spec.parameters.length > 0) {
+            lines.push('### Parameters');
+            lines.push('');
+            lines.push('| Name | Kind | Type | Required | Default | Description |');
+            lines.push('|------|------|------|----------|---------|-------------|');
+            for (const p of spec.parameters) {
+              const alias = p.alias ? `-${p.alias}, ` : '';
+              const flag = p.kind === 'option' ? `${alias}--${p.name}` : `<${p.name}>`;
+              const req = p.required ? '✓' : '';
+              const def = p.default !== undefined ? String(p.default) : '-';
+              const type = p.choices?.length ? `${p.type} (${p.choices.join(', ')})` : p.type;
+              lines.push(`| ${flag} | ${p.kind} | ${type} | ${req} | ${def} | ${p.description} |`);
+            }
+            lines.push('');
+          }
+
+          if (spec.subCommands.length > 0) {
+            lines.push('### Subcommands');
+            lines.push('');
+            for (const sub of spec.subCommands) {
+              lines.push(`#### ${sub.name}`);
+              lines.push('');
+              lines.push(sub.description);
+              lines.push('');
+            }
+          }
+
+          if (spec.examples.length > 0) {
+            lines.push('### Examples');
+            lines.push('');
+            lines.push('```bash');
+            lines.push(spec.examples.join('\n'));
+            lines.push('```');
+            lines.push('');
+          }
+
+          if (spec.exitCodes.length > 0) {
+            lines.push('### Exit Codes');
+            lines.push('');
+            lines.push('| Code | Description |');
+            lines.push('|------|-------------|');
+            for (const ec of spec.exitCodes) {
+              lines.push(`| ${ec.code} | ${ec.description} |`);
+            }
+            lines.push('');
+          }
+
+          lines.push('---');
+          lines.push('');
+        }
+
+        return lines.join('\n').replace(/\n---\n\n$/s, '\n');
+      },
+      outputFile: 'design/cli-commands.md',
+    },
+  ];
+
+  protected externalChecker: ExternalChecker<CLICommand> = {
+    targetType: 'typescript',
+    sourcePath: () => PROGRAM_PATH,
+    check: (spec): CheckResult =>
+      checkCLICommand(spec, parseCommanderCLI(join(process.cwd(), PROGRAM_PATH))),
+  };
+```
 <!--@embedoc:end-->
 
 ### Model Registration (design/_models/index.ts)
 
 After adding a model, register it in the `allModels` array in `design/_models/index.ts`:
 
-<!--@embedoc:code_snippet file="design/_models/index.ts" start="77" end="127" lang="typescript" title="design/_models/index.ts (excerpt)" no_source="true"-->
+<!--@embedoc:code_snippet file="design/_models/index.ts" start="63" end="81" lang="typescript" title="design/_models/index.ts (excerpt)" no_source="true"-->
 **design/_models/index.ts (excerpt)**
 
 ```typescript
+export const allModels = [
+  FunctionalRequirementModel.instance,
+  NonFunctionalRequirementModel.instance,
+  ConstraintModel.instance,
+  UseCaseModel.instance,
+  ActorModel.instance,
+  TermModel.instance,
+  EntityModel.instance,
+  ActorComponentModel.instance,
+  ExternalSystemModel.instance,
+  ContainerModel.instance,
+  BoundaryModel.instance,
+  LayerModel.instance,
+  RelationModel.instance,
   ArtifactModel.instance,
   DirectoryEntryModel.instance,
   CLICommandModel.instance,
   TestRefModel.instance,
 ];
-
 ```
 <!--@embedoc:end-->
 
@@ -78,7 +214,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="24" end="107" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="27" end="84" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -140,89 +276,60 @@ export interface CheckResult {
     relationType: 'verifiedBy' | 'implements' | 'traces';
   }>;
 }
-
-// ============================================================================
-// Deep Validation (replaces per-model externalChecker)
-// ============================================================================
-
-/** OpenAPI deep validation mapping */
-export interface OpenAPIValidationMapping {
-  path: string;
-  method?: string;
-  parameters?: Array<{ name: string; in?: string; type?: string }>;
-  responseProperties?: Array<{ name: string; type?: string }>;
-}
-
-/** DDL deep validation mapping */
-export interface DDLValidationMapping {
-  tableName: string;
-  columns?: Array<{ name: string; type?: string }>;
-  checkTypes?: boolean;
-}
-
-/**
- * Deep validation rule for a specific source type.
- * The mapper extracts expected structure from a spec for detailed comparison
- * against the matched source object.
- */
-export interface DeepValidationRule<T, TMapping = unknown> {
 ```
 <!--@embedoc:end-->
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="109" end="156" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="228" end="272" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
-}
-
-/**
- * Deep validation configuration keyed by source type.
- * Models define this to enable Level 2/3 checks beyond existence.
- */
-export interface DeepValidationConfig<T> {
-  openapi?: DeepValidationRule<T, OpenAPIValidationMapping>;
-  ddl?: DeepValidationRule<T, DDLValidationMapping>;
-  [sourceType: string]: DeepValidationRule<T, unknown> | undefined;
-}
-
-/**
- * Lookup key configuration keyed by source type.
- * When a model's spec ID differs from the external identifier
- * (e.g. entity ID "user" vs DDL table name "users"),
- * define a mapper per source type to derive the external key.
- * If not defined for a source type, spec.id is used as-is.
- */
-export interface LookupKeyConfig<T> {
-  [sourceType: string]: ((spec: T) => string) | undefined;
-}
-
-/**
- * Coverage result
- */
-export interface CoverageResult {
-  /** Total target count */
-  total: number;
-  /** Covered count */
-  covered: number;
-  /** Uncovered count */
-  uncovered: number;
-  /** Coverage rate (%) */
-  coveragePercent: number;
-  /** Details of covered items */
-  coveredItems: { id: string; description?: string }[];
-  /** Details of uncovered items */
-  uncoveredItems: { id: string; description?: string; sourceId?: string }[];
-}
-
-/**
- * Coverage checker definition
- * 
- * Verify cross-model consistency (coverage).
- * Example: Whether TestRef covers acceptanceCriteria of Requirement
- */
-export interface CoverageChecker<T> {
+  /** Model ID ('requirement', 'usecase', etc.) */
+  abstract readonly id: string;
+  
+  /** Model name ('Requirement', 'UseCase', etc.) */
+  abstract readonly name: string;
+  
+  /** ID prefix ('REQ', 'UC', etc.) */
+  abstract readonly idPrefix: string;
+  
+  /** Zod schema */
+  abstract readonly schema: TSchema;
+  
+  /** Model description (optional) */
+  readonly description?: string;
+  
+  /** External SSOT type (optional, e.g. 'OpenAPI', 'DDL/Prisma') */
+  readonly externalSsotType?: string;
+  
+  /** Spec instance type */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected get specType(): z.infer<TSchema> { return undefined as any; }
+  
+  /** Lint rules (override in subclass) */
+  protected lintRules: LintRule<z.infer<TSchema>>[] = [];
+  
+  /** Exporters (override in subclass) */
+  protected exporters: Exporter<z.infer<TSchema>>[] = [];
+  
+  /** External checker (optional) — deprecated, use deepValidation instead */
+  protected externalChecker?: ExternalChecker<z.infer<TSchema>>;
+  
+  /** Deep validation rules keyed by source type (replaces externalChecker) */
+  protected deepValidation?: DeepValidationConfig<z.infer<TSchema>>;
+  
+  /** Lookup key overrides per source type (when spec ID differs from external identifier) */
+  protected lookupKeys?: LookupKeyConfig<z.infer<TSchema>>;
+  
+  /** Coverage checker (optional) */
+  protected coverageChecker?: CoverageChecker<z.infer<TSchema>>;
+  
+  /** Model level (set in _models/) */
+  protected modelLevel?: ModelLevel;
+  
+  /** Renderers (for embeds, override in subclass) */
+  protected renderers: Renderer<z.infer<TSchema>>[] = [];
 ```
 <!--@embedoc:end-->
 
@@ -271,6 +378,7 @@ import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ExternalChecker, CheckResult, CoverageChecker, CoverageResult, ModelLevel } from '../../src/core/model.ts';
 import { arrayMinLength, idFormat } from '../../src/core/dsl/index.ts';
+import { REQUIREMENT_MODEL_IDS } from './requirement.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { glob } from 'glob';
@@ -671,19 +779,6 @@ class TestRefModel extends Model<typeof TestRefSchema> {
     targetModel: 'requirement',
     description: 'TestRef coverage verification for acceptanceCriteria (verificationMethod: test)',
     check: (specs, registry): CoverageResult => {
-      // 1. Extract acceptanceCriteria with verificationMethod: 'test' from requirement model
-      const requirements = registry.requirements;
-      if (!requirements) {
-        return {
-          total: 0,
-          covered: 0,
-          uncovered: 0,
-          coveragePercent: 100,
-          coveredItems: [],
-          uncoveredItems: [],
-        };
-      }
-
       interface AcceptanceCriteriaSpec {
         id: string;
         description: string;
@@ -695,8 +790,22 @@ class TestRefModel extends Model<typeof TestRefSchema> {
         acceptanceCriteria?: AcceptanceCriteriaSpec[];
       }
 
+      // 1. Extract acceptanceCriteria with verificationMethod: 'test' from every
+      //    registered requirement model. A model missing from the registry is a
+      //    misconfiguration, not full coverage.
+      const requirements: RequirementSpec[] = [];
+      for (const modelId of REQUIREMENT_MODEL_IDS) {
+        const registered = registry[modelId];
+        if (!registered) {
+          throw new Error(
+            `TestRef coverage check requires the '${modelId}' model in the registry`,
+          );
+        }
+        requirements.push(...(registered.values() as IterableIterator<RequirementSpec>));
+      }
+
       const testableACs: Array<{ id: string; description: string; sourceId: string }> = [];
-      for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
+      for (const req of requirements) {
         if (!req.acceptanceCriteria) continue;
         for (const ac of req.acceptanceCriteria) {
           // design/ specific: only target verificationMethod: 'test'

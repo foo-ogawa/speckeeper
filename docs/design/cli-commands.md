@@ -15,6 +15,9 @@
 | propose-acceptance-criteria | Propose testable acceptance criteria in Given/When/Then format for specified specs |
 | convert | Convert a TS spec data file to YAML format |
 | impact | Analyze the change impact scope of a specified ID |
+| insights | Export spec relation edges as ExternalInsight JSON |
+| agents | Output the full resolved agent DSL as structured data |
+| extract | Extract the contract specification for this CLI tool |
 
 ---
 
@@ -34,7 +37,7 @@ speckeeper build [options]
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
 | -o, --output | option | path |  | . | Output directory base path |
-| -f, --format | option | enum |  | both | Output format |
+| -f, --format | option | enum (markdown, json, both) |  | both | Output format |
 | -w, --watch | option | boolean |  | false | Watch file changes and auto-regenerate |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
 
@@ -71,10 +74,10 @@ speckeeper lint [options]
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
-| -p, --phase | option | enum |  | - | Phase gate (prohibit TBD at specified phase) |
+| -p, --phase | option | enum (REQ, HLD, LLD, OPS) |  | - | Phase gate (prohibit TBD at specified phase) |
 | -s, --strict | option | boolean |  | false | Strict mode (treat warnings as errors) |
 | --fix | option | boolean |  | false | Fix auto-fixable issues |
-| -f, --format | option | enum |  | text | Output format |
+| -f, --format | option | enum (text, json, github) |  | text | Output format |
 
 ### Examples
 
@@ -111,7 +114,8 @@ speckeeper drift [options]
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
 | -u, --update | option | boolean |  | false | Auto-update if differences exist |
-| -f, --format | option | enum |  | text | Output format |
+| -f, --format | option | enum (text, json, diff) |  | text | Output format |
+| --fail-on-drift | option | boolean |  | false | Exit with code 1 if drift is detected (for CI) |
 
 ### Examples
 
@@ -119,6 +123,7 @@ speckeeper drift [options]
 speckeeper drift
 speckeeper drift --update
 speckeeper drift --format diff
+speckeeper drift --fail-on-drift
 ```
 
 ### Exit Codes
@@ -137,53 +142,28 @@ Check consistency with external SSOT (OpenAPI/DDL/IaC)
 ### Usage
 
 ```bash
-speckeeper check <subcommand> [options]
+speckeeper check [options]
 ```
 
 ### Parameters
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | string |  | - | Type of check: external-ssot, openapi, ddl, iac, custom, all, test |
+| <type> | argument | enum (external-ssot, openapi, ddl, iac, custom, all, test) |  | - | Type of check to run, filtering sources by type |
 | -c, --config | option | path |  | - | Path to config file |
 | --strict | option | boolean |  | false | Treat warnings as errors |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
 | --coverage | option | boolean |  | false | Check if all testable acceptance criteria are covered by TestRefs |
 
-### Subcommands
-
-#### openapi
-
-Check consistency with OpenAPI specification
-
-#### ddl
-
-Check consistency with DDL/Schema
-
-#### iac
-
-Check consistency with IaC (CloudFormation/Terraform)
-
-#### external-ssot
-
-Check consistency with all external SSOTs
-
-#### test
-
-Check consistency between test files and requirements
-
-#### contract
-
-Check consistency between implementation and contract (type definitions/schema)
-
 ### Examples
 
 ```bash
+speckeeper check
 speckeeper check openapi
 speckeeper check ddl
 speckeeper check iac
-speckeeper check external-ssot
-speckeeper check contract
+speckeeper check external-ssot --verbose
+speckeeper check test --coverage
 ```
 
 ### Exit Codes
@@ -210,13 +190,15 @@ speckeeper init [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| -f, --force | option | boolean |  | false | Overwrite existing files |
+| -F, --force | option | boolean |  | false | Overwrite existing files |
+| --format | option | enum (ts, yaml) |  | ts | Spec data format: ts (default) or yaml |
 
 ### Examples
 
 ```bash
 speckeeper init
 speckeeper init --force
+speckeeper init --format yaml
 ```
 
 ### Exit Codes
@@ -242,16 +224,18 @@ speckeeper new [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | string | ✓ | - | Type: requirement, usecase, entity, component, screen, flow, error-case, term |
+| <type> | argument | enum (requirement, usecase, entity, component, screen, flow, error-case, term) | ✓ | - | Element type to create |
 | -k, --kind | option | string |  | - | Sub-kind (e.g., functional, non-functional for requirements) |
 | -n, --name | option | string |  | - | Name of the element |
 | -o, --output | option | path |  | - | Output directory path |
 | -t, --template | option | path |  | - | Path to template file |
+| --dry-run | option | boolean |  | false | Preview generated file content without writing |
 
 ### Examples
 
 ```bash
 speckeeper new requirement --kind functional --name "User Login"
+speckeeper new entity --dry-run
 ```
 
 ### Exit Codes
@@ -277,16 +261,18 @@ speckeeper scaffold [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| -s, --source | option | path | ✓ | - | Path to Markdown file containing mermaid flowchart |
+| -s, --source | option | path |  | - | Path to Markdown file containing mermaid flowchart |
 | -o, --output | option | path |  | design/ | Output directory |
-| -f, --force | option | boolean |  | false | Overwrite existing files |
+| -F, --force | option | boolean |  | false | Overwrite existing files |
 | --dry-run | option | boolean |  | false | Preview generated files without writing |
+| --format | option | enum (ts, yaml) |  | ts | Spec data format: ts (default) or yaml |
 
 ### Examples
 
 ```bash
 speckeeper scaffold --source requirements.md
 speckeeper scaffold -s spec.md --dry-run
+speckeeper scaffold --source arch.md --format yaml
 ```
 
 ### Exit Codes
@@ -313,19 +299,19 @@ speckeeper audit-requirements [options]
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
-| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| -a, --adapter | option | enum (claude, openai, gemini, mock) |  | - | SDK adapter for LLM execution |
 | --model | option | string |  | - | LLM model override |
-| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
-| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| --fail-on | option | enum (warning, error, critical) |  | error | Minimum severity for non-zero exit |
 | -o, --output | option | path |  | - | Write result to file instead of stdout |
-| --report-format | option | enum |  | json | Output format for audit report |
+| --report-format | option | enum (json, text, yaml) |  | json | Output format for audit report |
+| -l, --log-file | option | path |  | - | Write agent progress log to this file path |
 | --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
 
 ### Examples
 
 ```bash
 speckeeper audit-requirements
-speckeeper audit-requirements --adapter openai --dry-run
+speckeeper audit-requirements --adapter openai --show-prompt
 speckeeper audit-requirements --report-format json --output audit.json
 ```
 
@@ -357,12 +343,12 @@ speckeeper propose-trace-links [options]
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
-| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| -a, --adapter | option | enum (claude, openai, gemini, mock) |  | - | SDK adapter for LLM execution |
 | --model | option | string |  | - | LLM model override |
-| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
-| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| --fail-on | option | enum (warning, error, critical) |  | error | Minimum severity for non-zero exit |
 | -o, --output | option | path |  | - | Write result to file instead of stdout |
-| --report-format | option | enum |  | json | Output format for report |
+| --report-format | option | enum (json, text, yaml) |  | json | Output format for report |
+| -l, --log-file | option | path |  | - | Write agent progress log to this file path |
 | --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
 
 ### Examples
@@ -370,7 +356,7 @@ speckeeper propose-trace-links [options]
 ```bash
 speckeeper propose-trace-links
 speckeeper propose-trace-links --adapter claude --report-format json
-speckeeper propose-trace-links --dry-run
+speckeeper propose-trace-links --show-prompt
 ```
 
 ### Exit Codes
@@ -400,13 +386,12 @@ speckeeper explain-impact [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| -c, --config | option | path |  | - | Path to config file |
-| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| -a, --adapter | option | enum (claude, openai, gemini, mock) |  | - | SDK adapter for LLM execution |
 | --model | option | string |  | - | LLM model override |
-| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
-| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| --fail-on | option | enum (warning, error, critical) |  | error | Minimum severity for non-zero exit |
 | -o, --output | option | path |  | - | Write result to file instead of stdout |
-| --report-format | option | enum |  | json | Output format for report |
+| --report-format | option | enum (json, text, yaml) |  | json | Output format for report |
+| -l, --log-file | option | path |  | - | Write agent progress log to this file path |
 | --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
 
 ### Examples
@@ -446,12 +431,12 @@ speckeeper propose-acceptance-criteria [options]
 |------|------|------|----------|---------|-------------|
 | <specIds> | argument | string |  | - | Spec IDs to propose criteria for (defaults to all) |
 | -c, --config | option | path |  | - | Path to config file |
-| -a, --adapter | option | enum |  | - | SDK adapter for LLM execution |
+| -a, --adapter | option | enum (claude, openai, gemini, mock) |  | - | SDK adapter for LLM execution |
 | --model | option | string |  | - | LLM model override |
-| -n, --dry-run | option | boolean |  | false | Output constructed prompt without calling LLM |
-| --fail-on | option | enum |  | error | Minimum severity for non-zero exit |
+| --fail-on | option | enum (warning, error, critical) |  | error | Minimum severity for non-zero exit |
 | -o, --output | option | path |  | - | Write result to file instead of stdout |
-| --report-format | option | enum |  | json | Output format for report |
+| --report-format | option | enum (json, text, yaml) |  | json | Output format for report |
+| -l, --log-file | option | path |  | - | Write agent progress log to this file path |
 | --show-prompt | option | boolean |  | false | Display constructed LLM prompt on stderr |
 
 ### Examples
@@ -459,7 +444,7 @@ speckeeper propose-acceptance-criteria [options]
 ```bash
 speckeeper propose-acceptance-criteria
 speckeeper propose-acceptance-criteria FR-001 FR-002
-speckeeper propose-acceptance-criteria --adapter gemini --dry-run
+speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 ```
 
 ### Exit Codes
@@ -527,8 +512,8 @@ speckeeper impact [options]
 | <id> | argument | string | ✓ | - | ID to analyze |
 | -c, --config | option | path |  | - | Path to config file |
 | -d, --depth | option | number |  | 3 | Analysis depth (reference tracking level) |
-| --direction | option | enum |  | both | Analysis direction |
-| -f, --format | option | enum |  | text | Output format |
+| --direction | option | enum (upstream, downstream, both) |  | both | Analysis direction |
+| -f, --format | option | enum (text, json, mermaid) |  | text | Output format |
 
 ### Examples
 
@@ -545,5 +530,108 @@ speckeeper impact UC-001 --format mermaid
 |------|-------------|
 | 0 | Analysis successful |
 | 1 | Target ID not found |
+
+---
+
+## CMD-INSIGHTS: insights
+
+Export spec relation edges as ExternalInsight JSON
+
+### Usage
+
+```bash
+speckeeper insights [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -f, --format | option | enum (json) |  | json | Output format (json only) |
+| --project-root | option | path |  | . | Project root directory containing speckeeper.config |
+| -c, --config | option | path |  | - | Path to config file |
+
+### Examples
+
+```bash
+speckeeper insights
+speckeeper insights --format json
+speckeeper insights --format json --project-root .
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | ExternalInsight JSON emitted to stdout |
+| 1 | Export failed (config error or internal error) |
+
+---
+
+## CMD-AGENTS: agents
+
+Output the full resolved agent DSL as structured data
+
+### Usage
+
+```bash
+speckeeper agents [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -F, --format | option | enum (yaml, json) |  | yaml | Output format |
+
+### Examples
+
+```bash
+speckeeper agents
+speckeeper agents --format json
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Resolved DSL emitted to stdout |
+| 1 | Failed to load embedded DSL |
+
+---
+
+## CMD-EXTRACT: extract
+
+Extract the contract specification for this CLI tool
+
+### Usage
+
+```bash
+speckeeper extract [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| <commands> | argument | string |  | - | Command IDs to extract, in dot notation |
+| -a, --all | option | boolean |  | false | Extract all commands |
+| --include-meta | option | boolean |  | true | Include extraction metadata |
+| -F, --format | option | enum (yaml, json) |  | yaml | Output format |
+
+### Examples
+
+```bash
+speckeeper extract --all
+speckeeper extract --all --format json
+speckeeper extract speckeeper.lint
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Contract specification emitted to stdout |
+| 2 | Neither command IDs nor --all was specified |
 
 ---

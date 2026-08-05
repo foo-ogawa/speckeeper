@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ExternalChecker, CheckResult, CoverageChecker, CoverageResult, ModelLevel } from '../../src/core/model.ts';
 import { arrayMinLength, idFormat } from '../../src/core/dsl/index.ts';
+import { REQUIREMENT_MODEL_IDS } from './requirement.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { glob } from 'glob';
@@ -408,19 +409,6 @@ class TestRefModel extends Model<typeof TestRefSchema> {
     targetModel: 'requirement',
     description: 'TestRef coverage verification for acceptanceCriteria (verificationMethod: test)',
     check: (specs, registry): CoverageResult => {
-      // 1. Extract acceptanceCriteria with verificationMethod: 'test' from requirement model
-      const requirements = registry.requirements;
-      if (!requirements) {
-        return {
-          total: 0,
-          covered: 0,
-          uncovered: 0,
-          coveragePercent: 100,
-          coveredItems: [],
-          uncoveredItems: [],
-        };
-      }
-
       interface AcceptanceCriteriaSpec {
         id: string;
         description: string;
@@ -432,8 +420,22 @@ class TestRefModel extends Model<typeof TestRefSchema> {
         acceptanceCriteria?: AcceptanceCriteriaSpec[];
       }
 
+      // 1. Extract acceptanceCriteria with verificationMethod: 'test' from every
+      //    registered requirement model. A model missing from the registry is a
+      //    misconfiguration, not full coverage.
+      const requirements: RequirementSpec[] = [];
+      for (const modelId of REQUIREMENT_MODEL_IDS) {
+        const registered = registry[modelId];
+        if (!registered) {
+          throw new Error(
+            `TestRef coverage check requires the '${modelId}' model in the registry`,
+          );
+        }
+        requirements.push(...(registered.values() as IterableIterator<RequirementSpec>));
+      }
+
       const testableACs: Array<{ id: string; description: string; sourceId: string }> = [];
-      for (const req of requirements.values() as IterableIterator<RequirementSpec>) {
+      for (const req of requirements) {
         if (!req.acceptanceCriteria) continue;
         for (const ac of req.acceptanceCriteria) {
           // design/ specific: only target verificationMethod: 'test'

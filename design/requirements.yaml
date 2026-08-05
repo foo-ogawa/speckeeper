@@ -754,18 +754,30 @@ entries:
         examples:
           - language: typescript
             code: |-
-              // design/_models/api-ref.ts
-              externalChecker: ExternalChecker<APIRef> = {
+              // design/_models/test-ref.ts
+              protected externalChecker: ExternalChecker<TestRef> = {
+                targetType: 'test',
                 sourcePath: (spec) => spec.source.path,
-                check: (spec, openApiDoc) => {
-                  const errors: string[] = [];
-                  const warnings: string[] = [];
-                  
-                  // operationId existence check
-                  if (!findOperationId(openApiDoc, spec.operationId)) {
-                    errors.push(`operationId '${spec.operationId}' not found`);
+                check: (spec): CheckResult => {
+                  const errors: CheckResult['errors'] = [];
+                  const warnings: CheckResult['warnings'] = [];
+                  const basePath = process.cwd();
+
+                  // 1. Check test file existence
+                  const pattern = spec.source.path;
+                  const testFiles = glob.sync(pattern, { cwd: basePath });
+
+                  if (testFiles.length === 0) {
+                    errors.push({
+                      message: `Test file(s) not found: ${pattern}`,
+                      specId: spec.id,
+                      field: 'source.path',
+                    });
+                    return { success: false, errors, warnings };
                   }
-                  
+
+                  // ... requirement mention, test case pattern and test result checks
+
                   return {
                     success: errors.length === 0,
                     errors,
@@ -1549,7 +1561,7 @@ entries:
             description: Audit report includes findings with severity (error/warning/info) and affected spec IDs
             verificationMethod: test
           - id: FR-1100-03
-            description: --dry-run outputs the constructed prompt without calling LLM
+            description: --show-prompt outputs the constructed prompt without calling LLM
             verificationMethod: test
           - id: FR-1100-04
             description: --fail-on controls minimum severity that causes non-zero exit
@@ -1577,7 +1589,7 @@ entries:
             description: Each proposed link includes source ID, target ID, relation type, confidence score, and rationale
             verificationMethod: test
           - id: FR-1101-03
-            description: --dry-run outputs the constructed prompt without calling LLM
+            description: --show-prompt outputs the constructed prompt without calling LLM
             verificationMethod: test
         relations:
           - type: satisfies
@@ -1599,7 +1611,7 @@ entries:
             description: Output is a human-readable explanation suitable for PM/executive audiences
             verificationMethod: review
           - id: FR-1102-03
-            description: --dry-run outputs the constructed prompt without calling LLM
+            description: --show-prompt outputs the constructed prompt without calling LLM
             verificationMethod: test
         relations:
           - type: refines
@@ -1620,7 +1632,7 @@ entries:
             description: Proposed criteria follow Given/When/Then format
             verificationMethod: review
           - id: FR-1103-03
-            description: --dry-run outputs the constructed prompt without calling LLM
+            description: --show-prompt outputs the constructed prompt without calling LLM
             verificationMethod: test
         relations:
           - type: satisfies
@@ -1852,7 +1864,7 @@ entries:
             description: Satisfies design consistency check use case
       - id: NFR-013
         name: Test-Specification Traceability
-        description: TestRef definitions in design/test-refs.ts provide bidirectional traceability between tests and specifications
+        description: TestRef definitions in design/test-refs.yaml provide bidirectional traceability between tests and specifications
         type: non-functional
         priority: must
         category: testability
@@ -1860,7 +1872,7 @@ entries:
         rationale: To ensure all acceptance criteria are covered by test cases and maintain spec-test traceability
         acceptanceCriteria:
           - id: NFR-013-01
-            description: TestRef definitions (TEST-020~025) exist in design/test-refs.ts for each CLI test file
+            description: TestRef definitions (TEST-020~025) exist in design/test-refs.yaml for each CLI test file
             verificationMethod: test
           - id: NFR-013-02
             description: TestRefs are linked to corresponding command IDs via implementsCommand
@@ -1877,7 +1889,7 @@ entries:
             description: Refines coverage verification for CLI tests
       - id: NFR-014
         name: CLI Definition-Implementation Consistency
-        description: CLI command definitions in design/cli-commands.ts match cli-contract.yaml and generated code in src/generated/
+        description: CLI command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code in src/generated/
         type: non-functional
         priority: must
         category: testability
@@ -1885,8 +1897,8 @@ entries:
         rationale: To ensure specification, DSL contract, and generated implementation stay synchronized
         acceptanceCriteria:
           - id: NFR-014-01
-            description: All command definitions in design/cli-commands.ts match cli-contract.yaml and generated code (parameters,
-              subcommands, exit codes)
+            description: All command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code
+              (parameters, subcommands, exit codes)
             verificationMethod: test
         relations:
           - type: satisfies

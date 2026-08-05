@@ -195,7 +195,7 @@ To prevent regression bugs in CLI commands that directly affect all users and CI
 
 **Type**: non-functional | **Priority**: must | **Category**: testability
 
-TestRef definitions in design/test-refs.ts provide bidirectional traceability between tests and specifications
+TestRef definitions in design/test-refs.yaml provide bidirectional traceability between tests and specifications
 
 ### Rationale
 
@@ -203,7 +203,7 @@ To ensure all acceptance criteria are covered by test cases and maintain spec-te
 
 ### Acceptance Criteria
 
-- **NFR-013-01**: TestRef definitions (TEST-020~025) exist in design/test-refs.ts for each CLI test file [test]
+- **NFR-013-01**: TestRef definitions (TEST-020~025) exist in design/test-refs.yaml for each CLI test file [test]
 - **NFR-013-02**: TestRefs are linked to corresponding command IDs via implementsCommand [test]
 - **NFR-013-03**: speckeeper check test succeeds for all TestRefs [test]
 - **NFR-013-04**: speckeeper check test --coverage achieves 100% for target acceptance criteria [test]
@@ -214,7 +214,7 @@ To ensure all acceptance criteria are covered by test cases and maintain spec-te
 
 **Type**: non-functional | **Priority**: must | **Category**: testability
 
-CLI command definitions in design/cli-commands.ts match cli-contract.yaml and generated code in src/generated/
+CLI command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code in src/generated/
 
 ### Rationale
 
@@ -222,7 +222,7 @@ To ensure specification, DSL contract, and generated implementation stay synchro
 
 ### Acceptance Criteria
 
-- **NFR-014-01**: All command definitions in design/cli-commands.ts match cli-contract.yaml and generated code (parameters, subcommands, exit codes) [test]
+- **NFR-014-01**: All command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code (parameters, subcommands, exit codes) [test]
 
 ---
 

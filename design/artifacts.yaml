@@ -31,7 +31,7 @@ entries:
     specs:
       - id: DIR-001
         path: design/
-        description: TypeScript (source of truth) = upstream SSOT (requirement/design models)
+        description: YAML spec data and TypeScript models (source of truth) = upstream SSOT
         artifactId: ART-001
         children:
           - id: DIR-001-01
@@ -39,53 +39,67 @@ entries:
             description: Model definitions (schemas, lint rules, exporters)
             filePattern: "*.ts"
           - id: DIR-001-02
-            path: requirements.ts
+            path: requirements.yaml
             description: Requirement definitions
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-03
-            path: usecases.ts
+            path: usecases.yaml
             description: Use case and actor definitions
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-04
-            path: architecture.ts
+            path: architecture.yaml
             description: Logical architecture (C4 System/Container)
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-05
-            path: concept-model.ts
+            path: concept-model.yaml
             description: Concept model (Entity/Relation)
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-06
-            path: glossary.ts
+            path: glossary.yaml
             description: Glossary
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-07
-            path: artifacts.ts
+            path: artifacts.yaml
             description: Artifact and directory structure definitions
-            filePattern: "*.ts"
+            filePattern: "*.yaml"
           - id: DIR-001-08
-            path: cli-commands.ts
+            path: cli-commands.yaml
             description: CLI command specifications
+            filePattern: "*.yaml"
+          - id: DIR-001-09
+            path: test-refs.yaml
+            description: Test definitions and requirement linkage
+            filePattern: "*.yaml"
+          - id: DIR-001-10
+            path: index.ts
+            description: Design entry point (model and spec registration)
             filePattern: "*.ts"
       - id: DIR-002
         path: docs/
-        description: Human-readable documents (auto-updated via embedoc)
+        description: Human-readable documents (generated; embedoc updates marker sections)
         artifactId: ART-002
         children:
           - id: DIR-002-01
             path: framework_requirements_spec.md
             description: Framework requirements specification (sections auto-updated via embedoc)
           - id: DIR-002-02
-            path: model-design.md
-            description: Model design guide
-          - id: DIR-002-03
             path: model-guide.md
             description: Model definition guide
-          - id: DIR-002-04
+          - id: DIR-002-03
             path: model_entity_catalog.md
             description: Model and entity catalog
+          - id: DIR-002-04
+            path: scaffold-mermaid-spec.md
+            description: Mermaid-driven model scaffolding specification
           - id: DIR-002-05
-            path: framework_evaluation.md
-            description: Framework evaluation
+            path: cli-reference.md
+            description: CLI reference (generated from cli-contract.yaml)
+          - id: DIR-002-06
+            path: directory-entries.md
+            description: Directory structure
+          - id: DIR-002-07
+            path: design/
+            description: Per-model specification documents
       - id: DIR-003
         path: specs/
         description: Machine-readable artifacts (JSON Schema for consistency checking)

@@ -82,16 +82,17 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1) SSOT (design/ TypeScript models)                              │
-│    - requirements.ts  : Requirements (requests/acceptance criteria/TBD slots) │
-│    - architecture.ts  : Logical architecture (component/boundary/layer) │
-│    - concept-model.ts : Conceptual model (entity/relation + rules) │
-│    - usecases.ts      : Use cases/actors                         │
-│    - glossary.ts      : Glossary/abbreviations                   │
-│    - artifacts.ts     : Artifacts/directory structure            │
-│    - cli-commands.ts  : CLI command specifications               │
-│    - test-refs.ts     : Test definitions/requirement linkage     │
-│    - _models/         : Model definitions (schema/Lint/output)   │
+│ 1) SSOT (design/ YAML spec data + TypeScript models)             │
+│    - requirements.yaml  : Requirements (requests/acceptance criteria/TBD slots) │
+│    - architecture.yaml  : Logical architecture (component/boundary/layer) │
+│    - concept-model.yaml : Conceptual model (entity/relation + rules) │
+│    - usecases.yaml      : Use cases/actors                       │
+│    - glossary.yaml      : Glossary/abbreviations                 │
+│    - artifacts.yaml     : Artifacts/directory structure          │
+│    - cli-commands.yaml  : CLI command specifications             │
+│    - test-refs.yaml     : Test definitions/requirement linkage   │
+│    - index.ts           : Model and spec registration            │
+│    - _models/           : Model definitions (schema/Lint/output) │
 └─────────────────────────────────────────────────────────────────┘
                               ↓ npm run ci
 ┌─────────────────────────────────────────────────────────────────┐
@@ -103,7 +104,7 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 │   ③ eslint design/      : Design file quality                    │
 │   ④ tsup                : Build (dist/ generation)               │
 │   ⑤ speckeeper lint        : Model consistency (references/ID/phase gates) │
-│   ⑥ vitest run          : Unit tests (288 cases)                 │
+│   ⑥ vitest run          : Unit tests                             │
 ├─────────────────────────────────────────────────────────────────┤
 │ Phase 2: ci:generate (Generation)                                │
 │   ⑦ embedoc build       : docs/ marker update                    │
@@ -136,34 +137,22 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 ### 6.2 Phase-based Work
 
 <!--@embedoc:model_data model="usecase" format="phase-workflow"-->
-1. **REQ Phase**
-   - Write requirements in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Verify requirement consistency, required fields, reference integrity, and phase gate via `lint`
+1. **REQ**
+   - **UC-001** Define Requirements: Requirements engineer defines requirements using TypeScript DSL
 
-2. **HLD Phase**
-   - Write logical architecture (`design/architecture.ts`) in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Verify architecture consistency (layer violations, boundary crossings, etc.) via `lint`
-   - Write screen specifications (`design/screens.ts`) in TypeScript
-   - Verify screen consistency via `lint`
+2. **HLD**
+   - **UC-002** Define Architecture: Design engineer defines components, boundaries, and layers
 
-3. **LLD Phase**
-   - Write concept model (`design/concept-model.ts`) in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Write form details (`design/screens/forms/`) in TypeScript
+3. **LLD**
+   - **UC-004** Define Concept Model: Design engineer defines entities, relations, and business rules
 
-4. **Implementation Phase**
-   - Verify requirement-external SSOT consistency via `check external-ssot`
-   - Check change impact scope via `impact`
+4. **IMPL**
+   - **UC-006** Check External SSOT Consistency: Implementation engineer verifies consistency between TS models and external SSOT (OpenAPI/DDL)
 
-5. **OPS Phase**
-   - Finalize runbook URLs, etc. and pass the final gate
-
-6. **CI (Always)**
-   - Verify ID uniqueness, reference integrity, and layer dependency direction via `lint`
-   - Detect manual edits to artifacts via `drift`
-   - Verify implementation-contract consistency via `check contract`
+5. **CI**
+   - **UC-010** Check Design Consistency: CI/CD system verifies model consistency
+   - **UC-011** Detect Drift: CI/CD system detects manual edits to generated artifacts
+   - **UC-012** Check Contract Consistency: CI/CD system verifies consistency between implementation and contract
 <!--@embedoc:end-->
 
 ---
@@ -174,22 +163,26 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 
 <!--@embedoc:model_data model="artifact" format="directory-tree"-->
 ```
-design/  # TypeScript (source of truth) = upstream SSOT (requirement/design models)
+design/  # YAML spec data and TypeScript models (source of truth) = upstream SSOT
 ├── _models/  # Model definitions (schemas, lint rules, exporters)
-├── requirements.ts  # Requirement definitions
-├── usecases.ts  # Use case and actor definitions
-├── architecture.ts  # Logical architecture (C4 System/Container)
-├── concept-model.ts  # Concept model (Entity/Relation)
-├── glossary.ts  # Glossary
-├── artifacts.ts  # Artifact and directory structure definitions
-└── cli-commands.ts  # CLI command specifications
+├── requirements.yaml  # Requirement definitions
+├── usecases.yaml  # Use case and actor definitions
+├── architecture.yaml  # Logical architecture (C4 System/Container)
+├── concept-model.yaml  # Concept model (Entity/Relation)
+├── glossary.yaml  # Glossary
+├── artifacts.yaml  # Artifact and directory structure definitions
+├── cli-commands.yaml  # CLI command specifications
+├── test-refs.yaml  # Test definitions and requirement linkage
+└── index.ts  # Design entry point (model and spec registration)
 
-docs/  # Human-readable documents (auto-updated via embedoc)
+docs/  # Human-readable documents (generated; embedoc updates marker sections)
 ├── framework_requirements_spec.md  # Framework requirements specification (sections auto-updated via embedoc)
-├── model-design.md  # Model design guide
 ├── model-guide.md  # Model definition guide
 ├── model_entity_catalog.md  # Model and entity catalog
-└── framework_evaluation.md  # Framework evaluation
+├── scaffold-mermaid-spec.md  # Mermaid-driven model scaffolding specification
+├── cli-reference.md  # CLI reference (generated from cli-contract.yaml)
+├── directory-entries.md  # Directory structure
+└── design/  # Per-model specification documents
 
 specs/  # Machine-readable artifacts (JSON Schema for consistency checking)
 ├── schemas/  # JSON Schema
@@ -560,8 +553,8 @@ All external SSOT consistency checks are uniformly composed of existence, type, 
 Provide CLI command to execute external SSOT consistency check
 
 - **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: speckeeper check --model <model-name> checks only specific model [test]
-- **FR-602-03**: Model name is the model ID defined in design/_models/ [review]
+- **FR-602-02**: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract) [test]
+- **FR-602-03**: Type argument corresponds to check categories, not model IDs [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
 **Check command examples**
@@ -570,14 +563,12 @@ Provide CLI command to execute external SSOT consistency check
 # External SSOT consistency check for all models
 speckeeper check
 
-# Check specific model only
-speckeeper check --model api-ref      # APIRef consistency only
-speckeeper check --model table-ref    # TableRef consistency only
-speckeeper check --model iac-ref      # IaCRef consistency only
-speckeeper check --model batch-ref    # BatchRef consistency only
-
-# Specify multiple models
-speckeeper check --model api-ref --model table-ref
+# Check specific type only
+speckeeper check external-ssot   # All external SSOT checks
+speckeeper check openapi         # OpenAPI consistency only
+speckeeper check ddl             # DDL consistency only
+speckeeper check test            # Test reference consistency
+speckeeper check contract        # Contract consistency
 ```
 
 #### FR-603: External Checker
@@ -599,18 +590,30 @@ Each model can define externalChecker to implement consistency check with extern
 **External checker definition example**
 
 ```typescript
-// design/_models/api-ref.ts
-externalChecker: ExternalChecker<APIRef> = {
+// design/_models/test-ref.ts
+protected externalChecker: ExternalChecker<TestRef> = {
+  targetType: 'test',
   sourcePath: (spec) => spec.source.path,
-  check: (spec, openApiDoc) => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    
-    // operationId existence check
-    if (!findOperationId(openApiDoc, spec.operationId)) {
-      errors.push(`operationId '${spec.operationId}' not found`);
+  check: (spec): CheckResult => {
+    const errors: CheckResult['errors'] = [];
+    const warnings: CheckResult['warnings'] = [];
+    const basePath = process.cwd();
+
+    // 1. Check test file existence
+    const pattern = spec.source.path;
+    const testFiles = glob.sync(pattern, { cwd: basePath });
+
+    if (testFiles.length === 0) {
+      errors.push({
+        message: `Test file(s) not found: ${pattern}`,
+        specId: spec.id,
+        field: 'source.path',
+      });
+      return { success: false, errors, warnings };
     }
-    
+
+    // ... requirement mention, test case pattern and test result checks
+
     return {
       success: errors.length === 0,
       errors,
