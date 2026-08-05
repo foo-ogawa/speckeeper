@@ -781,6 +781,26 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-060",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-061",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-062",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-063",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-064",
+      "model": "test-ref"
+    },
+    {
       "id": "TEST-070",
       "model": "test-ref"
     },
@@ -1978,6 +1998,61 @@
       "from": "TEST-051",
       "type": "verifies",
       "to": "FR-1013"
+    },
+    {
+      "from": "TEST-060",
+      "type": "verifies",
+      "to": "FR-1017"
+    },
+    {
+      "from": "TEST-060",
+      "type": "verifies",
+      "to": "FR-605"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-012"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-013"
+    },
+    {
+      "from": "TEST-061",
+      "type": "verifies",
+      "to": "NFR-014"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "FR-605"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-008"
+    },
+    {
+      "from": "TEST-062",
+      "type": "verifies",
+      "to": "NFR-015"
+    },
+    {
+      "from": "TEST-063",
+      "type": "verifies",
+      "to": "FR-701"
+    },
+    {
+      "from": "TEST-063",
+      "type": "verifies",
+      "to": "FR-800"
+    },
+    {
+      "from": "TEST-064",
+      "type": "verifies",
+      "to": "FR-500"
     },
     {
       "from": "TEST-070",

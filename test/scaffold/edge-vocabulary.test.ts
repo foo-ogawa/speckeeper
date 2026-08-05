@@ -191,6 +191,45 @@ describe('resolveEdges', () => {
     const targetWarning = diagnostics.find(d => d.message.includes('does not appear to be a test node'));
     expect(targetWarning).toBeUndefined();
   });
+
+  it('FR-702-04 resolves both an implements and a verifiedBy edge of one source node', () => {
+    const nodes = new Map<string, MermaidNode>();
+    nodes.set('FR', makeNode('FR', ['speckeeper']));
+    nodes.set('API', makeNode('API', ['openapi'], 'OpenAPI spec'));
+    nodes.set('UT', makeNode('UT', ['test'], 'Unit Tests'));
+
+    const edges: MermaidEdge[] = [
+      makeEdge('FR', 'API', 'implements'),
+      makeEdge('FR', 'UT', 'verifiedBy'),
+    ];
+    const { resolved, diagnostics } = resolveEdges(edges, nodes, 'speckeeper');
+
+    expect(resolved.map(e => [e.sourceId, e.targetId, e.normalizedLabel])).toEqual([
+      ['FR', 'API', 'implements'],
+      ['FR', 'UT', 'verifiedBy'],
+    ]);
+    expect(resolved.map(e => e.vocabulary.relationType)).toEqual(['implements', 'verifiedBy']);
+    expect(diagnostics).toEqual([]);
+  });
+
+  it('FR-702-04 flags only the offending edge when one of the two is invalid', () => {
+    const nodes = new Map<string, MermaidNode>();
+    nodes.set('FR', makeNode('FR', ['speckeeper']));
+    // speckeeper → speckeeper makes the implements edge invalid; the verifiedBy edge stays valid.
+    nodes.set('SR', makeNode('SR', ['speckeeper']));
+    nodes.set('UT', makeNode('UT', ['test'], 'Unit Tests'));
+
+    const edges: MermaidEdge[] = [
+      makeEdge('FR', 'SR', 'implements'),
+      makeEdge('FR', 'UT', 'verifiedBy'),
+    ];
+    const { resolved, diagnostics } = resolveEdges(edges, nodes, 'speckeeper');
+
+    // Both edges are still resolved: the diagnostic on one does not drop the other.
+    expect(resolved.map(e => e.normalizedLabel)).toEqual(['implements', 'verifiedBy']);
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].context).toBe('FR → SR');
+  });
 });
 
 // ---------------------------------------------------------------------------
