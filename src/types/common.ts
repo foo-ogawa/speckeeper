@@ -4,8 +4,23 @@ import { z } from 'zod';
 // Phase definitions
 // ============================================================================
 
+/**
+ * Development phase vocabulary.
+ *
+ * The declaration order is the phase order: an earlier option is an earlier
+ * phase. `REQ`, `HLD`, `LLD` and `OPS` are the phases a phase gate runs against.
+ */
 export const PhaseSchema = z.enum(['REQ', 'HLD', 'LLD', 'IMPL', 'OPS', 'CI']);
 export type Phase = z.infer<typeof PhaseSchema>;
+
+/**
+ * Position of a phase in the phase order.
+ * A lower index is an earlier phase, so `getPhaseIndex(a) <= getPhaseIndex(b)`
+ * reads "a is at or before b".
+ */
+export function getPhaseIndex(phase: Phase): number {
+  return PhaseSchema.options.indexOf(phase);
+}
 
 export const PrioritySchema = z.enum(['must', 'should', 'could', 'wont']);
 export type Priority = z.infer<typeof PrioritySchema>;
@@ -105,6 +120,24 @@ export const ConcretizationSlotSchema = z.object({
 });
 
 export type ConcretizationSlot = z.infer<typeof ConcretizationSlotSchema>;
+
+/**
+ * Concretization slot field to add to model schemas.
+ * Usage: `schema.extend({ concretizationSlots: ConcretizationSlotsFieldSchema })`
+ */
+export const ConcretizationSlotsFieldSchema = z.array(ConcretizationSlotSchema).optional();
+
+/**
+ * Whether a slot still holds a TBD.
+ * A slot is resolved once it carries a decided value; a missing, null, blank or
+ * literal `TBD` value all mean the decision has not been made yet.
+ */
+export function isSlotUnresolved(slot: ConcretizationSlot): boolean {
+  const value = slot.value;
+  if (value === undefined || value === null) return true;
+  const trimmed = value.trim();
+  return trimmed === '' || trimmed.toUpperCase() === 'TBD';
+}
 
 // ============================================================================
 // Link types

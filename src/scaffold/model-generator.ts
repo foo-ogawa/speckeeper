@@ -11,6 +11,8 @@ import type {
 } from './types.js';
 import { resolveModelTemplate } from './template-registry.js';
 import { MODEL_TEMPLATE_FUNCTIONS } from './templates/index.js';
+import type { CheckerBinding } from './templates/types.js';
+import { isCheckEdge } from './edge-vocabulary.js';
 
 export { ARTIFACT_CLASS_DEFAULTS } from './artifact-defaults.js';
 
@@ -19,13 +21,32 @@ export { ARTIFACT_CLASS_DEFAULTS } from './artifact-defaults.js';
 // ---------------------------------------------------------------------------
 
 /**
+ * Checker-triggering edges leaving this model, as binding guidance.
+ *
+ * `implements` and `verifiedBy` are the check-category labels, so they are the
+ * edges that tell the author which external SSOT to bind a checker against.
+ */
+function collectCheckerBindings(
+  outgoingEdges: ResolvedEdge[],
+  allNodes?: Map<string, MermaidNode>,
+): CheckerBinding[] {
+  return outgoingEdges
+    .filter(edge => isCheckEdge(edge.vocabulary))
+    .map(edge => ({
+      relation: edge.normalizedLabel,
+      targetId: edge.targetId,
+      targetLabel: allNodes?.get(edge.targetId)?.label,
+    }));
+}
+
+/**
  * Generate _models/*.ts file for a single speckeeper-managed node.
  */
 export function generateModelFile(
   node: MermaidNode,
   _incomingEdges: ResolvedEdge[],
-  _outgoingEdges: ResolvedEdge[],
-  _allNodes?: Map<string, MermaidNode>,
+  outgoingEdges: ResolvedEdge[],
+  allNodes?: Map<string, MermaidNode>,
 ): GeneratedFile {
   const templateInfo = resolveModelTemplate(node.id, node.classes, node.subgraph);
   const templateFn = MODEL_TEMPLATE_FUNCTIONS[templateInfo.templateName];
@@ -36,6 +57,7 @@ export function generateModelFile(
     idPrefix: templateInfo.defaultIdPrefix,
     level: templateInfo.defaultLevel,
     description: node.label ?? node.id,
+    checkerBindings: collectCheckerBindings(outgoingEdges, allNodes),
   };
 
   const content =

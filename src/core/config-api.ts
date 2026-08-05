@@ -15,6 +15,7 @@ import type {
   ExternalChecker,
   ReferenceDefinition,
 } from '../types/meta-model.js';
+import type { Phase } from '../types/common.js';
 import { registerModelDefinitions } from './model-registry.js';
 
 // ============================================================================
@@ -68,12 +69,21 @@ export interface SourceScanner {
   findSpecIds(content: unknown, specIds: string[], filePath: string, report?: ScanReporter): SourceMatch[];
 }
 
+/**
+ * External SSOT file paths — the glob patterns locating an external SSOT
+ * (OpenAPI documents, DDL, test code, ...) on disk.
+ *
+ * These belong in speckeeper.config.ts: a mermaid flowchart is a scaffold-only
+ * artifact and carries no runtime configuration.
+ */
+export type ExternalSsotPaths = string[];
+
 /** Source configuration for global scan */
 export interface SourceConfig {
   /** Source type identifier. Built-in: 'openapi', 'ddl', 'annotation' */
   type: string;
-  /** File path glob patterns to scan */
-  paths: string[];
+  /** External SSOT file paths to scan */
+  paths: ExternalSsotPaths;
   /** Exclusion patterns */
   exclude?: string[];
   /** Relation type: how matches relate to specs */
@@ -103,25 +113,6 @@ export interface SpeckeeperConfigInput {
   models?: any[];
   /** Spec data entries from design/index.ts via mergeSpecs() */
   specs?: import('../core/model.js').SpecEntry[];
-  /** External SSOT configuration */
-  externalSsot?: {
-    openapi?: {
-      enabled: boolean;
-      paths: string[];
-    };
-    ddl?: {
-      enabled: boolean;
-      type: 'ddl' | 'prisma' | 'typeorm' | 'drizzle';
-      path: string;
-    };
-    iac?: {
-      enabled: boolean;
-      type: 'cloudformation' | 'cdk' | 'terraform';
-      path: string;
-    };
-  };
-  /** External SSOT file paths — maps node IDs to file paths/globs */
-  externalPaths?: Record<string, string>;
   /** Lint configuration */
   lint?: {
     /** Strict mode */
@@ -217,8 +208,8 @@ export interface ModelDefinitionInput<T extends z.ZodTypeAny> {
   references?: ReferenceDefinition[];
   /** DSL function name */
   dslName?: string;
-  /** Phase */
-  phase?: 'REQ' | 'HLD' | 'LLD' | 'OPS';
+  /** Phase this model's elements belong to */
+  phase?: Phase;
 }
 
 /**

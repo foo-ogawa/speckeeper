@@ -773,6 +773,34 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-050",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-051",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-070",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-071",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-072",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-073",
+      "model": "test-ref"
+    },
+    {
+      "id": "TEST-074",
+      "model": "test-ref"
+    },
+    {
       "id": "UC-001",
       "model": "usecase"
     },
@@ -1544,6 +1572,11 @@
     {
       "from": "TEST-020",
       "type": "verifies",
+      "to": "FR-400"
+    },
+    {
+      "from": "TEST-020",
+      "type": "verifies",
       "to": "FR-401"
     },
     {
@@ -1817,6 +1850,11 @@
       "to": "FR-605"
     },
     {
+      "from": "TEST-036",
+      "type": "verifies",
+      "to": "FR-703"
+    },
+    {
       "from": "TEST-037",
       "type": "verifies",
       "to": "FR-1100"
@@ -1890,6 +1928,96 @@
       "from": "TEST-045",
       "type": "verifies",
       "to": "FR-602"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1004"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1005"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1007"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1008"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1011"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1014"
+    },
+    {
+      "from": "TEST-050",
+      "type": "verifies",
+      "to": "FR-1015"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1003"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1010"
+    },
+    {
+      "from": "TEST-051",
+      "type": "verifies",
+      "to": "FR-1013"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-101"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-102"
+    },
+    {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-401"
+    },
+    {
+      "from": "TEST-071",
+      "type": "verifies",
+      "to": "FR-107"
+    },
+    {
+      "from": "TEST-072",
+      "type": "verifies",
+      "to": "FR-200"
+    },
+    {
+      "from": "TEST-073",
+      "type": "verifies",
+      "to": "FR-600"
+    },
+    {
+      "from": "TEST-073",
+      "type": "verifies",
+      "to": "FR-601"
+    },
+    {
+      "from": "TEST-074",
+      "type": "verifies",
+      "to": "FR-201"
     },
     {
       "from": "UC-001",

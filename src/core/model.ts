@@ -105,12 +105,35 @@ export interface DDLValidationMapping {
 }
 
 /**
+ * A non-functional requirement or guardrail the external SSOT must satisfy
+ * (encryption required, PII classification, ...).
+ *
+ * `holds` reads the matched external object, so a constraint declared for a
+ * source type whose match carries no object is reported as a failure rather
+ * than passed over.
+ */
+export interface ExternalConstraint<T, TContext = unknown> {
+  /** Identifier of the constraint, reported with the violation */
+  id: string;
+  /** What the constraint requires */
+  description: string;
+  /** Severity of a violation; a guardrail fails the check unless declared otherwise */
+  severity?: 'error' | 'warning';
+  /** True when the constraint is satisfied */
+  holds: (spec: T, context: TContext) => boolean;
+}
+
+/**
  * Deep validation rule for a specific source type.
+ *
  * The mapper extracts expected structure from a spec for detailed comparison
- * against the matched source object.
+ * against the matched source object (type category); the constraints assert
+ * non-functional properties of that object (constraint category). A rule must
+ * declare at least one of the two.
  */
 export interface DeepValidationRule<T, TMapping = unknown> {
-  mapper: (spec: T) => TMapping;
+  mapper?: (spec: T) => TMapping;
+  constraints?: ExternalConstraint<T>[];
 }
 
 /**

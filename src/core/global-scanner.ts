@@ -11,7 +11,13 @@ import { glob } from 'glob';
 import { parse as parseYaml } from 'yaml';
 import nodeSqlParser from 'node-sql-parser';
 import type { ScanReporter, SourceConfig, SourceMatch, SourceScanner } from './config-api.js';
-import type { CheckResult, DeepValidationConfig, OpenAPIValidationMapping, DDLValidationMapping } from './model.js';
+import type {
+  CheckResult,
+  DeepValidationConfig,
+  ExternalConstraint,
+  OpenAPIValidationMapping,
+  DDLValidationMapping,
+} from './model.js';
 import { isTypeContainedBy } from './dsl/type-compat.js';
 
 // ============================================================================
@@ -519,6 +525,16 @@ export function runDeepValidation(
     const rule = deepValidation[match.sourceType];
     if (!rule) continue;
 
+    if (!rule.mapper && !rule.constraints) {
+      throw new Error(
+        `Deep validation rule for source type "${match.sourceType}" declares neither a mapper nor constraints`,
+      );
+    }
+
+    validateConstraints(specId, match, rule.constraints, spec, errors, warnings);
+
+    if (!rule.mapper) continue;
+
     if (match.sourceType === 'openapi') {
       const mapping = rule.mapper(spec) as OpenAPIValidationMapping;
       const ctx = match.context as { doc: unknown; match: { pathKey: string; operation?: unknown; method?: string } } | undefined;
@@ -539,6 +555,44 @@ export function runDeepValidation(
     errors,
     warnings,
   };
+}
+
+/**
+ * Constraint category: assert the declared non-functional requirements and
+ * guardrails hold for the matched external object.
+ *
+ * A constraint with no matched object to read is reported as a failure — a
+ * guardrail that could not be evaluated has not been satisfied.
+ */
+function validateConstraints(
+  specId: string,
+  match: GlobalScanMatch,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constraints: ExternalConstraint<any>[] | undefined,
+  spec: unknown,
+  errors: CheckResult['errors'],
+  warnings: CheckResult['warnings'],
+): void {
+  for (const constraint of constraints ?? []) {
+    const target = constraint.severity === 'warning' ? warnings : errors;
+
+    if (match.context === undefined) {
+      errors.push({
+        message: `Constraint "${constraint.id}" for "${specId}" cannot be evaluated: the ${match.sourceType} match at ${match.location} carries no object`,
+        specId,
+        field: constraint.id,
+      });
+      continue;
+    }
+
+    if (!constraint.holds(spec, match.context)) {
+      target.push({
+        message: `Constraint "${constraint.id}" violated for "${specId}" at ${match.location}: ${constraint.description}`,
+        specId,
+        field: constraint.id,
+      });
+    }
+  }
 }
 
 function validateOpenAPIDeep(

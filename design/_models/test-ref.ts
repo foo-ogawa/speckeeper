@@ -7,11 +7,8 @@
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.ts';
 import type { LintRule, Exporter, ExternalChecker, CheckResult, CoverageChecker, CoverageResult, ModelLevel } from '../../src/core/model.ts';
-import { arrayMinLength, idFormat } from '../../src/core/dsl/index.ts';
+import { arrayMinLength, idFormat, verifyTests } from '../../src/core/dsl/index.ts';
 import { REQUIREMENT_MODEL_IDS } from './requirement.ts';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { glob } from 'glob';
 
 // ============================================================================
 // Schema Definition
@@ -68,135 +65,6 @@ export const TestRefSchema = z.object({
 export type TestCasePattern = z.infer<typeof TestCasePatternSchema>;
 export type TestSource = z.infer<typeof TestSourceSchema>;
 export type TestRef = z.input<typeof TestRefSchema>;
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Check requirement ID mentions in test file content
- */
-function checkRequirementMentions(
-  filePath: string,
-  requirementIds: string[],
-): { found: string[]; missing: string[] } {
-  const found: string[] = [];
-  const missing: string[] = [];
-
-  try {
-    const content = readFileSync(filePath, 'utf-8');
-    for (const reqId of requirementIds) {
-      // Check if requirement ID is mentioned in describe, it, or test
-      const patterns = [
-        new RegExp(`describe\\s*\\(\\s*['"\`].*${reqId}`, 'm'),
-        new RegExp(`it\\s*\\(\\s*['"\`].*${reqId}`, 'm'),
-        new RegExp(`test\\s*\\(\\s*['"\`].*${reqId}`, 'm'),
-      ];
-      const mentioned = patterns.some((p) => p.test(content));
-      if (mentioned) {
-        found.push(reqId);
-      } else {
-        missing.push(reqId);
-      }
-    }
-  } catch {
-    // Treat all file read errors as missing
-    missing.push(...requirementIds);
-  }
-
-  return { found, missing };
-}
-
-/**
- * Check test case pattern matches
- */
-function checkTestCasePatterns(
-  filePath: string,
-  patterns: TestCasePattern[],
-): { matched: TestCasePattern[]; unmatched: TestCasePattern[] } {
-  const matched: TestCasePattern[] = [];
-  const unmatched: TestCasePattern[] = [];
-
-  try {
-    const content = readFileSync(filePath, 'utf-8');
-    for (const p of patterns) {
-      const regex = new RegExp(p.pattern, 'm');
-      if (regex.test(content)) {
-        matched.push(p);
-      } else {
-        unmatched.push(p);
-      }
-    }
-  } catch {
-    unmatched.push(...patterns);
-  }
-
-  return { matched, unmatched };
-}
-
-/**
- * Load and validate test result JSON
- */
-interface VitestResult {
-  success: boolean;
-  testResults: Array<{
-    name: string;
-    status: 'passed' | 'failed' | 'skipped';
-    assertionResults: Array<{
-      fullName: string;
-      status: 'passed' | 'failed' | 'skipped';
-    }>;
-  }>;
-}
-
-function checkTestResults(
-  resultPath: string,
-  requirementIds: string[],
-): { passed: string[]; failed: string[]; notFound: string[] } {
-  const passed: string[] = [];
-  const failed: string[] = [];
-  const notFound: string[] = [];
-
-  try {
-    const content = readFileSync(resultPath, 'utf-8');
-    const results: VitestResult = JSON.parse(content);
-
-    for (const reqId of requirementIds) {
-      let foundTest = false;
-      let allPassed = true;
-
-      for (const testResult of results.testResults) {
-        // Check if requirement ID is in test name or assertion name
-        if (testResult.name.includes(reqId)) {
-          foundTest = true;
-          if (testResult.status !== 'passed') {
-            allPassed = false;
-          }
-        }
-        for (const assertion of testResult.assertionResults) {
-          if (assertion.fullName.includes(reqId)) {
-            foundTest = true;
-            if (assertion.status !== 'passed') {
-              allPassed = false;
-            }
-          }
-        }
-      }
-
-      if (!foundTest) {
-        notFound.push(reqId);
-      } else if (allPassed) {
-        passed.push(reqId);
-      } else {
-        failed.push(reqId);
-      }
-    }
-  } catch {
-    notFound.push(...requirementIds);
-  }
-
-  return { passed, failed, notFound };
-}
 
 // ============================================================================
 // Model Class
@@ -299,92 +167,58 @@ class TestRefModel extends Model<typeof TestRefSchema> {
     check: (spec): CheckResult => {
       const errors: CheckResult['errors'] = [];
       const warnings: CheckResult['warnings'] = [];
-      const basePath = process.cwd();
 
-      // 1. Check test file existence
-      const pattern = spec.source.path;
-      const testFiles = glob.sync(pattern, { cwd: basePath });
+      const verified = verifyTests({
+        path: spec.source.path,
+        specIds: spec.verifiesRequirements,
+        testCasePatterns: spec.testCasePatterns,
+        resultPath: spec.source.resultPath,
+      });
 
-      if (testFiles.length === 0) {
+      if (verified.files.length === 0) {
         errors.push({
-          message: `Test file(s) not found: ${pattern}`,
+          message: `Test file(s) not found: ${spec.source.path}`,
           specId: spec.id,
           field: 'source.path',
         });
         return { success: false, errors, warnings };
       }
 
-      // 2. Check requirement ID mentions in each test file
-      const allMissing = new Set<string>(spec.verifiesRequirements);
-
-      for (const testFile of testFiles) {
-        const fullPath = join(basePath, testFile);
-        const { found } = checkRequirementMentions(fullPath, spec.verifiesRequirements);
-        for (const id of found) {
-          allMissing.delete(id);
-        }
+      for (const reqId of verified.unmentionedSpecIds) {
+        warnings.push({
+          message: `Requirement '${reqId}' not mentioned in test file(s)`,
+          specId: spec.id,
+          field: 'verifiesRequirements',
+        });
       }
 
-      if (allMissing.size > 0) {
-        for (const reqId of allMissing) {
-          warnings.push({
-            message: `Requirement '${reqId}' not mentioned in test file(s)`,
+      for (const pattern of verified.unmatchedPatterns) {
+        errors.push({
+          message: `Test case pattern not matched for '${pattern.acceptanceCriteriaId}': ${pattern.pattern}`,
+          specId: spec.id,
+          field: 'testCasePatterns',
+        });
+      }
+
+      if (verified.results && !verified.results.found) {
+        warnings.push({
+          message: `Test result file not readable: ${spec.source.resultPath}`,
+          specId: spec.id,
+          field: 'source.resultPath',
+        });
+      } else if (verified.results) {
+        for (const reqId of verified.results.failed) {
+          errors.push({
+            message: `Test for requirement '${reqId}' failed`,
             specId: spec.id,
             field: 'verifiesRequirements',
           });
         }
-      }
-
-      // 3. Check test case pattern matches
-      if (spec.testCasePatterns && spec.testCasePatterns.length > 0) {
-        const allUnmatched = new Map<string, TestCasePattern>();
-        for (const p of spec.testCasePatterns) {
-          allUnmatched.set(p.acceptanceCriteriaId, p);
-        }
-
-        for (const testFile of testFiles) {
-          const fullPath = join(basePath, testFile);
-          const { matched } = checkTestCasePatterns(fullPath, spec.testCasePatterns);
-          for (const p of matched) {
-            allUnmatched.delete(p.acceptanceCriteriaId);
-          }
-        }
-
-        for (const [, pattern] of allUnmatched) {
-          errors.push({
-            message: `Test case pattern not matched for '${pattern.acceptanceCriteriaId}': ${pattern.pattern}`,
-            specId: spec.id,
-            field: 'testCasePatterns',
-          });
-        }
-      }
-
-      // 4. Check test results (when resultPath is specified)
-      if (spec.source.resultPath) {
-        const resultFullPath = join(basePath, spec.source.resultPath);
-        if (existsSync(resultFullPath)) {
-          const { failed, notFound } = checkTestResults(resultFullPath, spec.verifiesRequirements);
-
-          for (const reqId of failed) {
-            errors.push({
-              message: `Test for requirement '${reqId}' failed`,
-              specId: spec.id,
-              field: 'verifiesRequirements',
-            });
-          }
-
-          for (const reqId of notFound) {
-            warnings.push({
-              message: `No test result found for requirement '${reqId}'`,
-              specId: spec.id,
-              field: 'verifiesRequirements',
-            });
-          }
-        } else {
+        for (const reqId of verified.results.notFound) {
           warnings.push({
-            message: `Test result file not found: ${spec.source.resultPath}`,
+            message: `No test result found for requirement '${reqId}'`,
             specId: spec.id,
-            field: 'source.resultPath',
+            field: 'verifiesRequirements',
           });
         }
       }
