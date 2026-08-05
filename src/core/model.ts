@@ -921,6 +921,100 @@ export function getExporterIndexPath(exporter: ExporterLocation, roots: Exporter
 }
 
 // ============================================================================
+// Build Output Plan
+// ============================================================================
+
+/** One artifact file, with the content derived from the specs */
+export interface PlannedOutputFile {
+  /** Absolute path of the file */
+  path: string;
+  /** Content derived from the specs */
+  content: string;
+}
+
+/** Why a model produces no artifact file */
+export type ModelOutputSkipReason = 'no-exporters' | 'no-specs';
+
+/** What one model produces */
+export interface PlannedModelOutput {
+  /** Display name of the model */
+  name: string;
+  /** Reason the model produces no file, or null when it produces some */
+  skipped: ModelOutputSkipReason | null;
+}
+
+/** Every artifact file the specs produce */
+export interface BuildOutputPlan {
+  /** Every file, in write order */
+  files: PlannedOutputFile[];
+  /** Per-model outcome, in registration order */
+  models: PlannedModelOutput[];
+}
+
+/** The model surface an artifact plan reads */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BuildableModel = Pick<Model<any>, 'id' | 'name' | 'getExporters' | 'getFilename'>;
+
+/**
+ * Derive every artifact file the specs produce: the output of each model
+ * exporter plus the cross-model reference graph. `build` writes this set and
+ * `drift` compares it against the files on disk, so both see the same files.
+ */
+export function planBuildOutputs(
+  models: BuildableModel[],
+  specs: SpecEntry[] | undefined,
+  roots: ExporterOutputRoots,
+): BuildOutputPlan {
+  const files: PlannedOutputFile[] = [];
+  const modelOutputs: PlannedModelOutput[] = [];
+
+  for (const model of models) {
+    const exporters = model.getExporters();
+    if (exporters.length === 0) {
+      modelOutputs.push({ name: model.name, skipped: 'no-exporters' });
+      continue;
+    }
+
+    const modelSpecs = getSpecsFromConfig(specs, model.id);
+    if (modelSpecs.length === 0) {
+      modelOutputs.push({ name: model.name, skipped: 'no-specs' });
+      continue;
+    }
+
+    for (const exporter of exporters) {
+      if (exporter.single) {
+        for (const spec of modelSpecs) {
+          const filename = model.getFilename(spec, exporter.format) || (spec as { id: string }).id;
+          files.push({
+            path: getExporterSinglePath(exporter, roots, filename),
+            content: exporter.single(spec),
+          });
+        }
+      }
+
+      if (exporter.index) {
+        files.push({
+          path: getExporterIndexPath(exporter, roots),
+          content: exporter.index(modelSpecs),
+        });
+      }
+    }
+
+    modelOutputs.push({ name: model.name, skipped: null });
+  }
+
+  const referenceGraph = buildReferenceGraph(specs);
+  if (referenceGraph.nodes.length > 0) {
+    files.push({
+      path: join(roots.specs, 'index.json'),
+      content: JSON.stringify(referenceGraph, null, 2) + '\n',
+    });
+  }
+
+  return { files, models: modelOutputs };
+}
+
+// ============================================================================
 // YAML / JSON Spec Loader
 // ============================================================================
 

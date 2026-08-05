@@ -9,10 +9,8 @@ import { join } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles } from '../utils/file-writer.js';
 import {
-  buildReferenceGraph,
-  getExporterIndexPath,
-  getExporterSinglePath,
-  getSpecsFromConfig,
+  planBuildOutputs,
+  type BuildableModel,
   type ExporterOutputRoots,
 } from '../core/model.js';
 
@@ -45,73 +43,30 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log('');
   
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const models = (config.models || []) as any[];
+    const models = (config.models ?? []) as BuildableModel[];
     const specs = config.specs;
-    
+
     const roots: ExporterOutputRoots = {
       docs: join(cwd, config.docsDir),
       specs: join(cwd, config.specsDir),
     };
 
-    const files: Array<{ path: string; content: string }> = [];
-    
     if (models.length === 0) {
       console.log(chalk.yellow('  No models registered. Add models to speckeeper.config.ts.'));
       return;
     }
-    
+
     console.log(chalk.blue(`  Processing ${models.length} model types...`));
-    
-    for (const model of models) {
-      const exporters = model.getExporters();
-      
-      if (exporters.length === 0) {
-        if (options.verbose) {
-          console.log(chalk.gray(`    ${model.name}: no exporters defined`));
-        }
-        continue;
+
+    const { files, models: modelOutputs } = planBuildOutputs(models, specs, roots);
+
+    for (const modelOutput of modelOutputs) {
+      if (modelOutput.skipped === null) {
+        console.log(chalk.green(`    ✓ ${modelOutput.name}`));
+      } else if (options.verbose) {
+        const reason = modelOutput.skipped === 'no-exporters' ? 'no exporters defined' : 'no specs found';
+        console.log(chalk.gray(`    ${modelOutput.name}: ${reason}`));
       }
-      
-      const modelSpecs = getSpecsFromConfig(specs, model.id);
-      
-      if (modelSpecs.length === 0) {
-        if (options.verbose) {
-          console.log(chalk.gray(`    ${model.name}: no specs found`));
-        }
-        continue;
-      }
-      
-      for (const exporter of exporters) {
-        if (exporter.single) {
-          for (const spec of modelSpecs) {
-            const content = exporter.single(spec);
-            const filename = model.getFilename(spec, exporter.format) || (spec as { id: string }).id;
-            files.push({
-              path: getExporterSinglePath(exporter, roots, filename),
-              content,
-            });
-          }
-        }
-
-        if (exporter.index) {
-          files.push({
-            path: getExporterIndexPath(exporter, roots),
-            content: exporter.index(modelSpecs),
-          });
-        }
-      }
-
-      console.log(chalk.green(`    ✓ ${model.name}`));
-    }
-
-    const referenceGraph = buildReferenceGraph(specs);
-
-    if (referenceGraph.nodes.length > 0) {
-      files.push({
-        path: join(roots.specs, 'index.json'),
-        content: JSON.stringify(referenceGraph, null, 2) + '\n',
-      });
     }
 
     if (files.length > 0) {

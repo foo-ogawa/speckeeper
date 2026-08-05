@@ -121,10 +121,10 @@ describe('lintCommand', () => {
   });
 
   describe('--format json', () => {
-    it('outputs JSON format when --format json specified', async () => {
+    it('FR-402-03 outputs JSON carrying the rule ID, message, and target ID of each lint result', async () => {
       const model = createMockModel({
         lintResults: [
-          { ruleId: 'test-rule', severity: 'warning', message: 'Test warning' },
+          { ruleId: 'test-rule', severity: 'warning', message: 'Test warning', specId: 'SPEC-001' },
         ],
       });
       mockedLoadConfig.mockResolvedValue(createMockConfig({ models: [model] }) as never);
@@ -140,6 +140,13 @@ describe('lintCommand', () => {
       expect(parsed).toHaveProperty('issues');
       expect(parsed).toHaveProperty('errors');
       expect(parsed).toHaveProperty('warnings');
+      expect(parsed.issues[0]).toEqual({
+        rule: 'test-rule',
+        severity: 'warning',
+        message: 'Test warning',
+        specId: 'SPEC-001',
+        modelType: 'TestModel',
+      });
     });
   });
 

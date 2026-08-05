@@ -117,6 +117,9 @@ specs:
       - acceptanceCriteriaId: FR-402-01
         pattern: FR-402-01.*lintAll.*outputs warning
         description: Warnings output without exit
+      - acceptanceCriteriaId: FR-402-03
+        pattern: FR-402-03.*rule ID, message, and target ID
+        description: Lint output carries the rule ID, message, and target ID
     relations:
       - type: verifies
         target: FR-401
@@ -217,6 +220,9 @@ specs:
       - acceptanceCriteriaId: FR-700-03
         pattern: FR-700-03.*depth value.*--depth
         description: Outputs depth from --depth option
+      - acceptanceCriteriaId: FR-700-04
+        pattern: FR-700-04.*impacted specs, components, and documents
+        description: Output lists the impacted specs with their model type and depth
     relations:
       - type: verifies
         target: FR-700
@@ -239,6 +245,9 @@ specs:
       - acceptanceCriteriaId: FR-500-02
         pattern: FR-500-02.*exits.*code 1.*failOnDrift
         description: Exits with code 1 on failOnDrift
+      - acceptanceCriteriaId: FR-500-03
+        pattern: FR-500-03.*prompting to regenerate and commit
+        description: Drift output prompts to regenerate and commit
     relations:
       - type: verifies
         target: FR-500
@@ -560,6 +569,9 @@ specs:
       - acceptanceCriteriaId: NFR-007-01
         pattern: throws on schema validation failure with helpful message
         description: Error message carries the spec ID
+      - acceptanceCriteriaId: NFR-007-02
+        pattern: NFR-007-02.*file path and the line number
+        description: Parse error message carries the file path and the line number
       - acceptanceCriteriaId: NFR-007-03
         pattern: throws on schema validation failure with helpful message
         description: Error message carries the offending field name
@@ -875,3 +887,33 @@ specs:
       - type: verifies
         target: FR-800
         description: Verifies acceptance criteria for FR-800
+  - id: TEST-044
+    description: Model-declared lint rule verification test
+    source:
+      path: test/core/model-lint.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-104
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-104-03
+        pattern: FR-104-03 runs the declared rules and reports the violated ones only
+        description: Rules declared in the model definition run against the specs
+    relations:
+      - type: verifies
+        target: FR-104
+        description: Verifies acceptance criteria for FR-104
+  - id: TEST-045
+    description: Check command source filtering verification test
+    source:
+      path: test/cli/check-sources.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-602
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-602-02
+        pattern: FR-602-02 scans only the OpenAPI source when the type is openapi
+        description: The type argument narrows the scanned sources to that type
+    relations:
+      - type: verifies
+        target: FR-602
+        description: Verifies acceptance criteria for FR-602

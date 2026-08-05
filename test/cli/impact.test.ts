@@ -62,6 +62,43 @@ describe('impactCommand', () => {
     });
   });
 
+  describe('FR-700-04 orchestration: the impacted elements are listed in the output', () => {
+    it('FR-700-04 displays impacted specs, components, and documents with their model type and depth', async () => {
+      const requirement = createMockModel({ id: 'requirement' });
+      const component = createMockModel({ id: 'component' });
+      const document = createMockModel({ id: 'document' });
+      mockedLoadConfig.mockResolvedValue({
+        designDir: 'design',
+        docsDir: 'docs',
+        specsDir: 'specs',
+        models: [requirement, component, document],
+        specs: [
+          {
+            model: { id: 'requirement', register: requirement.register },
+            data: [{ id: 'FR-001' }],
+          },
+          {
+            model: { id: 'component', register: component.register },
+            data: [{ id: 'CMP-001', relations: [{ type: 'implements', target: 'FR-001' }] }],
+          },
+          {
+            model: { id: 'document', register: document.register },
+            data: [{ id: 'DOC-001', relations: [{ type: 'describes', target: 'CMP-001' }] }],
+          },
+        ],
+      } as never);
+
+      await impactCommand('FR-001', {});
+
+      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(output).toContain('Direct impact (1)');
+      expect(output).toContain('CMP-001 (component)');
+      expect(output).toContain('Indirect impact (1)');
+      expect(output).toContain('DOC-001 (document, depth: 2)');
+      expect(output).toContain('Total: 2 impacted elements');
+    });
+  });
+
   describe('FR-700-03 orchestration: depth option is parsed and passed', () => {
     it('FR-700-03 outputs depth value from --depth option', async () => {
       const model = createMockModel();
