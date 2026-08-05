@@ -57,16 +57,29 @@ Below are examples of models actually defined in the speckeeper project.
 
 After adding a model, register it in the `allModels` array in `design/_models/index.ts`:
 
-<!--@embedoc:code_snippet file="design/_models/index.ts" start="77" end="127" lang="typescript" title="design/_models/index.ts (excerpt)" no_source="true"-->
+<!--@embedoc:code_snippet file="design/_models/index.ts" start="63" end="81" lang="typescript" title="design/_models/index.ts (excerpt)" no_source="true"-->
 **design/_models/index.ts (excerpt)**
 
 ```typescript
+export const allModels = [
+  FunctionalRequirementModel.instance,
+  NonFunctionalRequirementModel.instance,
+  ConstraintModel.instance,
+  UseCaseModel.instance,
+  ActorModel.instance,
+  TermModel.instance,
+  EntityModel.instance,
+  ActorComponentModel.instance,
+  ExternalSystemModel.instance,
+  ContainerModel.instance,
+  BoundaryModel.instance,
+  LayerModel.instance,
+  RelationModel.instance,
   ArtifactModel.instance,
   DirectoryEntryModel.instance,
   CLICommandModel.instance,
   TestRefModel.instance,
 ];
-
 ```
 <!--@embedoc:end-->
 
@@ -78,7 +91,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="24" end="107" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="27" end="84" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -140,89 +153,60 @@ export interface CheckResult {
     relationType: 'verifiedBy' | 'implements' | 'traces';
   }>;
 }
-
-// ============================================================================
-// Deep Validation (replaces per-model externalChecker)
-// ============================================================================
-
-/** OpenAPI deep validation mapping */
-export interface OpenAPIValidationMapping {
-  path: string;
-  method?: string;
-  parameters?: Array<{ name: string; in?: string; type?: string }>;
-  responseProperties?: Array<{ name: string; type?: string }>;
-}
-
-/** DDL deep validation mapping */
-export interface DDLValidationMapping {
-  tableName: string;
-  columns?: Array<{ name: string; type?: string }>;
-  checkTypes?: boolean;
-}
-
-/**
- * Deep validation rule for a specific source type.
- * The mapper extracts expected structure from a spec for detailed comparison
- * against the matched source object.
- */
-export interface DeepValidationRule<T, TMapping = unknown> {
 ```
 <!--@embedoc:end-->
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="109" end="156" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="228" end="272" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
-}
-
-/**
- * Deep validation configuration keyed by source type.
- * Models define this to enable Level 2/3 checks beyond existence.
- */
-export interface DeepValidationConfig<T> {
-  openapi?: DeepValidationRule<T, OpenAPIValidationMapping>;
-  ddl?: DeepValidationRule<T, DDLValidationMapping>;
-  [sourceType: string]: DeepValidationRule<T, unknown> | undefined;
-}
-
-/**
- * Lookup key configuration keyed by source type.
- * When a model's spec ID differs from the external identifier
- * (e.g. entity ID "user" vs DDL table name "users"),
- * define a mapper per source type to derive the external key.
- * If not defined for a source type, spec.id is used as-is.
- */
-export interface LookupKeyConfig<T> {
-  [sourceType: string]: ((spec: T) => string) | undefined;
-}
-
-/**
- * Coverage result
- */
-export interface CoverageResult {
-  /** Total target count */
-  total: number;
-  /** Covered count */
-  covered: number;
-  /** Uncovered count */
-  uncovered: number;
-  /** Coverage rate (%) */
-  coveragePercent: number;
-  /** Details of covered items */
-  coveredItems: { id: string; description?: string }[];
-  /** Details of uncovered items */
-  uncoveredItems: { id: string; description?: string; sourceId?: string }[];
-}
-
-/**
- * Coverage checker definition
- * 
- * Verify cross-model consistency (coverage).
- * Example: Whether TestRef covers acceptanceCriteria of Requirement
- */
-export interface CoverageChecker<T> {
+  /** Model ID ('requirement', 'usecase', etc.) */
+  abstract readonly id: string;
+  
+  /** Model name ('Requirement', 'UseCase', etc.) */
+  abstract readonly name: string;
+  
+  /** ID prefix ('REQ', 'UC', etc.) */
+  abstract readonly idPrefix: string;
+  
+  /** Zod schema */
+  abstract readonly schema: TSchema;
+  
+  /** Model description (optional) */
+  readonly description?: string;
+  
+  /** External SSOT type (optional, e.g. 'OpenAPI', 'DDL/Prisma') */
+  readonly externalSsotType?: string;
+  
+  /** Spec instance type */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected get specType(): z.infer<TSchema> { return undefined as any; }
+  
+  /** Lint rules (override in subclass) */
+  protected lintRules: LintRule<z.infer<TSchema>>[] = [];
+  
+  /** Exporters (override in subclass) */
+  protected exporters: Exporter<z.infer<TSchema>>[] = [];
+  
+  /** External checker (optional) — deprecated, use deepValidation instead */
+  protected externalChecker?: ExternalChecker<z.infer<TSchema>>;
+  
+  /** Deep validation rules keyed by source type (replaces externalChecker) */
+  protected deepValidation?: DeepValidationConfig<z.infer<TSchema>>;
+  
+  /** Lookup key overrides per source type (when spec ID differs from external identifier) */
+  protected lookupKeys?: LookupKeyConfig<z.infer<TSchema>>;
+  
+  /** Coverage checker (optional) */
+  protected coverageChecker?: CoverageChecker<z.infer<TSchema>>;
+  
+  /** Model level (set in _models/) */
+  protected modelLevel?: ModelLevel;
+  
+  /** Renderers (for embeds, override in subclass) */
+  protected renderers: Renderer<z.infer<TSchema>>[] = [];
 ```
 <!--@embedoc:end-->
 

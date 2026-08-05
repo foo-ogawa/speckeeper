@@ -29,6 +29,6 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "design/**/*"],
+  "include": ["src/**/*", "design/**/*", "embeds/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
 }

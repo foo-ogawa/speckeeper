@@ -136,34 +136,22 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 ### 6.2 Phase-based Work
 
 <!--@embedoc:model_data model="usecase" format="phase-workflow"-->
-1. **REQ Phase**
-   - Write requirements in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Verify requirement consistency, required fields, reference integrity, and phase gate via `lint`
+1. **REQ**
+   - **UC-001** Define Requirements: Requirements engineer defines requirements using TypeScript DSL
 
-2. **HLD Phase**
-   - Write logical architecture (`design/architecture.ts`) in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Verify architecture consistency (layer violations, boundary crossings, etc.) via `lint`
-   - Write screen specifications (`design/screens.ts`) in TypeScript
-   - Verify screen consistency via `lint`
+2. **HLD**
+   - **UC-002** Define Architecture: Design engineer defines components, boundaries, and layers
 
-3. **LLD Phase**
-   - Write concept model (`design/concept-model.ts`) in TypeScript
-   - Generate Markdown/Mermaid via `build` (review on PR by viewing docs/)
-   - Write form details (`design/screens/forms/`) in TypeScript
+3. **LLD**
+   - **UC-004** Define Concept Model: Design engineer defines entities, relations, and business rules
 
-4. **Implementation Phase**
-   - Verify requirement-external SSOT consistency via `check external-ssot`
-   - Check change impact scope via `impact`
+4. **IMPL**
+   - **UC-006** Check External SSOT Consistency: Implementation engineer verifies consistency between TS models and external SSOT (OpenAPI/DDL)
 
-5. **OPS Phase**
-   - Finalize runbook URLs, etc. and pass the final gate
-
-6. **CI (Always)**
-   - Verify ID uniqueness, reference integrity, and layer dependency direction via `lint`
-   - Detect manual edits to artifacts via `drift`
-   - Verify implementation-contract consistency via `check contract`
+5. **CI**
+   - **UC-010** Check Design Consistency: CI/CD system verifies model consistency
+   - **UC-011** Detect Drift: CI/CD system detects manual edits to generated artifacts
+   - **UC-012** Check Contract Consistency: CI/CD system verifies consistency between implementation and contract
 <!--@embedoc:end-->
 
 ---
@@ -560,8 +548,8 @@ All external SSOT consistency checks are uniformly composed of existence, type, 
 Provide CLI command to execute external SSOT consistency check
 
 - **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: speckeeper check --model <model-name> checks only specific model [test]
-- **FR-602-03**: Model name is the model ID defined in design/_models/ [review]
+- **FR-602-02**: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract) [test]
+- **FR-602-03**: Type argument corresponds to check categories, not model IDs [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
 **Check command examples**
@@ -570,14 +558,12 @@ Provide CLI command to execute external SSOT consistency check
 # External SSOT consistency check for all models
 speckeeper check
 
-# Check specific model only
-speckeeper check --model api-ref      # APIRef consistency only
-speckeeper check --model table-ref    # TableRef consistency only
-speckeeper check --model iac-ref      # IaCRef consistency only
-speckeeper check --model batch-ref    # BatchRef consistency only
-
-# Specify multiple models
-speckeeper check --model api-ref --model table-ref
+# Check specific type only
+speckeeper check external-ssot   # All external SSOT checks
+speckeeper check openapi         # OpenAPI consistency only
+speckeeper check ddl             # DDL consistency only
+speckeeper check test            # Test reference consistency
+speckeeper check contract        # Contract consistency
 ```
 
 #### FR-603: External Checker

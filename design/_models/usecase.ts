@@ -206,6 +206,10 @@ class UseCaseModel extends Model<typeof UseCaseFlowSchema> {
       format: 'list',
       render: (specs, _ctx) => renderUseCaseList(specs),
     },
+    {
+      format: 'phase-workflow',
+      render: (specs, _ctx) => renderPhaseWorkflow(specs),
+    },
   ];
 }
 
@@ -273,4 +277,26 @@ function renderUseCaseList(useCases: UseCase[]): string {
     return `- **${uc.id}** ${phase}: ${uc.name}`;
   });
   return lines.join('\n');
+}
+
+/**
+ * Use cases grouped by phase, in the order declared by PhaseSchema
+ */
+function renderPhaseWorkflow(useCases: UseCase[]): string {
+  const lines: string[] = [];
+  let position = 1;
+
+  for (const phase of PhaseSchema.options) {
+    const phaseUseCases = useCases.filter(uc => uc.phase === phase);
+    if (phaseUseCases.length === 0) continue;
+
+    lines.push(`${position}. **${phase}**`);
+    for (const uc of phaseUseCases) {
+      lines.push(`   - **${uc.id}** ${uc.name}: ${uc.description}`);
+    }
+    lines.push('');
+    position++;
+  }
+
+  return lines.join('\n').trim();
 }

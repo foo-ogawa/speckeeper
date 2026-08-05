@@ -60,6 +60,11 @@ jobs:
       - name: Design consistency
         if: steps.tag.outcome == 'failure'
         run: node dist/speckeeper.bundle.mjs lint
+      - name: Documentation is regenerated from the models
+        if: steps.tag.outcome == 'failure'
+        run: |
+          npm run docs
+          git diff --exit-code -- docs/
       - name: Test
         if: steps.tag.outcome == 'failure'
         run: npm run test:ci
