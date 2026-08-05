@@ -657,6 +657,9 @@ specs:
       - acceptanceCriteriaId: FR-702-03
         pattern: warns when verifiedBy is speckeeper
         description: speckeeper to speckeeper verifiedBy warns
+      - acceptanceCriteriaId: FR-702-04
+        pattern: FR-702-04 resolves both an implements and a verifiedBy edge of one source node
+        description: One source node carries both edges and each is resolved on its own
       - acceptanceCriteriaId: FR-702-05
         pattern: contains verifies as external category
         description: verifies is traceability only, not a checker target
@@ -868,9 +871,13 @@ specs:
       path: test/cli/build-specs.test.ts
       framework: vitest
     verifiesRequirements:
+      - FR-300
       - FR-302
       - FR-800
     testCasePatterns:
+      - acceptanceCriteriaId: FR-300-02
+        pattern: FR-300-02 writes every file under specsDir as machine-readable JSON
+        description: Every artifact the build writes under specsDir parses as JSON
       - acceptanceCriteriaId: FR-302-01
         pattern: FR-302-01.*maps entity attributes.*JSON Schema properties
         description: Entity attributes become JSON Schema properties under specs/schemas/entities/
@@ -917,3 +924,138 @@ specs:
       - type: verifies
         target: FR-602
         description: Verifies acceptance criteria for FR-602
+  - id: TEST-060
+    description: Model-integrated external SSOT check verification test (declared checkers and source path resolution)
+    source:
+      path: test/cli/check-external-ssot.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-605
+      - FR-1017
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-605-02
+        pattern: FR-605-02 the registered models declare the verification logic themselves
+        description: The registered models carry the verification logic in their own definitions
+      - acceptanceCriteriaId: FR-605-03
+        pattern: FR-605-03 check external-ssot reports exactly what the declared checkers report
+        description: The check command reports only what the model-declared checkers produce
+      - acceptanceCriteriaId: FR-1017-01
+        pattern: FR-1017-01 uses the path each spec configures
+        description: A configured source path is the path the checker resolves
+      - acceptanceCriteriaId: FR-1017-02
+        pattern: FR-1017-02 falls back to a hardcoded default when the spec configures no path
+        description: Without a configured path the checker uses its hardcoded default
+    relations:
+      - type: verifies
+        target: FR-605
+        description: Verifies acceptance criteria for FR-605
+      - type: verifies
+        target: FR-1017
+        description: Verifies acceptance criteria for FR-1017
+  - id: TEST-061
+    description: CLI test traceability verification test (command coverage, TestRef linkage, definition consistency)
+    source:
+      path: test/design/traceability.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - NFR-012
+      - NFR-013
+      - NFR-014
+    testCasePatterns:
+      - acceptanceCriteriaId: NFR-012-01
+        pattern: NFR-012-01 each CLI command the requirement names has a test file in test/cli/
+        description: Every scoped CLI command has a test file under test/cli/
+      - acceptanceCriteriaId: NFR-012-02
+        pattern: NFR-012-02 describe/it names in test/cli/ mention the requirements the TestRef declares
+        description: CLI test suites name the requirements their TestRef declares
+      - acceptanceCriteriaId: NFR-012-03
+        pattern: NFR-012-03 statement coverage of the CLI command modules reaches the required percentage
+        description: Measured statement coverage of the CLI command modules meets the threshold
+      - acceptanceCriteriaId: NFR-013-01
+        pattern: NFR-013-01 every test file in test/cli/ is declared by a TestRef
+        description: No CLI test file is left undeclared in design/test-refs.yaml
+      - acceptanceCriteriaId: NFR-013-02
+        pattern: NFR-013-02 TestRefs link to command IDs via implementsCommand
+        description: TestRef linkage to command IDs resolves and covers every commands test file
+      - acceptanceCriteriaId: NFR-013-03
+        pattern: NFR-013-03 the declared TestRef check succeeds for every TestRef
+        description: The TestRef checker reports no error for any declared TestRef
+      - acceptanceCriteriaId: NFR-014-01
+        pattern: NFR-014-01 every command definition matches the contract and the generated program
+        description: Command definitions agree with cli-contract.yaml and the generated program
+    relations:
+      - type: verifies
+        target: NFR-012
+        description: Verifies acceptance criteria for NFR-012
+      - type: verifies
+        target: NFR-013
+        description: Verifies acceptance criteria for NFR-013
+      - type: verifies
+        target: NFR-014
+        description: Verifies acceptance criteria for NFR-014
+  - id: TEST-062
+    description: Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring)
+    source:
+      path: test/design/repo-invariants.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-605
+      - NFR-008
+      - NFR-015
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-605-04
+        pattern: FR-605-04 no speckeeper source file references the retired checker directory
+        description: No source file mentions the retired checker directory
+      - acceptanceCriteriaId: FR-605-05
+        pattern: FR-605-05 the checker template directory is removed and the core DSL holds the logic
+        description: The checker template directory is gone and the core DSL directory exists
+      - acceptanceCriteriaId: NFR-008-01
+        pattern: NFR-008-01 the project compiles on the required TypeScript version
+        description: The installed compiler meets the required version and the project compiles
+      - acceptanceCriteriaId: NFR-008-02
+        pattern: NFR-008-02 the compilation the check runs is a strict-mode compilation
+        description: The compiler settings the check uses enable strict mode
+      - acceptanceCriteriaId: NFR-015-01
+        pattern: NFR-015-01 every test file on disk is collected by exactly one configured suite
+        description: No existing test file drops out of the configured suites
+    relations:
+      - type: verifies
+        target: FR-605
+        description: Verifies acceptance criteria for FR-605
+      - type: verifies
+        target: NFR-008
+        description: Verifies acceptance criteria for NFR-008
+      - type: verifies
+        target: NFR-015
+        description: Verifies acceptance criteria for NFR-015
+  - id: TEST-063
+    description: Insights command verification test (ExternalInsight JSON export)
+    source:
+      path: test/cli/insights.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-701
+      - FR-800
+    implementsCommand: CMD-INSIGHTS
+    relations:
+      - type: verifies
+        target: FR-701
+        description: Verifies acceptance criteria for FR-701
+      - type: verifies
+        target: FR-800
+        description: Verifies acceptance criteria for FR-800
+  - id: TEST-064
+    description: Drift verification test over the machine-readable artifacts (specs/)
+    source:
+      path: test/cli/drift-specs.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-500
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-500-01
+        pattern: FR-500-01 detects a hand-edited entity JSON Schema under specs/
+        description: A hand-edited machine-readable artifact is detected as drift
+    relations:
+      - type: verifies
+        target: FR-500
+        description: Verifies acceptance criteria for FR-500

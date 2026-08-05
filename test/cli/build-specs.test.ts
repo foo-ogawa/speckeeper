@@ -99,6 +99,17 @@ function configWith(entities: unknown[], probes: unknown[] = probeSpecs) {
   };
 }
 
+/** Absolute paths of every file below dir, recursively. */
+function collectFiles(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...collectFiles(full));
+    else found.push(full);
+  }
+  return found;
+}
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -203,6 +214,22 @@ describe('FR-302, FR-800: build writes machine-readable artifacts to specs/', ()
 
     expect(second).toBe(first);
     expect(first.endsWith('\n')).toBe(true);
+  });
+
+  it('FR-300-02 writes every file under specsDir as machine-readable JSON', async () => {
+    mockedLoadConfig.mockResolvedValue(configWith([everyTypeEntity, plainEntity]) as never);
+
+    await buildCommand({});
+
+    const specsDir = join(tempDir, 'specs');
+    const written = collectFiles(specsDir).sort();
+
+    // The build must produce a machine-readable tree, and every file in it must parse.
+    expect(written.length).toBeGreaterThan(0);
+    for (const file of written) {
+      const content = readFileSync(file, 'utf-8');
+      expect(() => JSON.parse(content), file).not.toThrow();
+    }
   });
 
   it('FR-302-01 fails the build when an enum attribute declares no values', async () => {
