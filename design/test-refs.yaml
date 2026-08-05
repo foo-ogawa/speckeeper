@@ -664,6 +664,9 @@ specs:
       - acceptanceCriteriaId: FR-702-03
         pattern: warns when verifiedBy is speckeeper
         description: speckeeper to speckeeper verifiedBy warns
+      - acceptanceCriteriaId: FR-702-02
+        pattern: FR-702-02 resolves verifies from test code to implementation code
+        description: verifies carries the test to implementation direction
       - acceptanceCriteriaId: FR-702-04
         pattern: FR-702-04 resolves both an implements and a verifiedBy edge of one source node
         description: One source node carries both edges and each is resolved on its own
@@ -1282,3 +1285,50 @@ specs:
       - type: verifies
         target: FR-500
         description: Verifies acceptance criteria for FR-500
+  - id: TEST-080
+    description: LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema)
+    source:
+      path: test/cli/llm-commands.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - FR-1100
+      - FR-1101
+      - FR-1103
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1100-01
+        pattern: FR-1100-01 builds the prompt from every registered spec
+        description: The prompt carries every registered spec
+      - acceptanceCriteriaId: FR-1100-03
+        pattern: FR-1100-03 audit-requirements --show-prompt prints the prompt and calls no LLM
+        description: show-prompt returns the prompt and reaches no runtime
+      - acceptanceCriteriaId: FR-1100-05
+        pattern: FR-1100-05 renders a distinct report for each --report-format value
+        description: Each report format renders its own output
+      - acceptanceCriteriaId: FR-1101-01
+        pattern: FR-1101-01 analyses every declared spec and lists the relations already present
+        description: Trace link analysis spans every declared spec
+      - acceptanceCriteriaId: FR-1101-02
+        pattern: FR-1101-02 requires source, target, relation type and confidence on every proposed link
+        description: The proposed link schema requires the four fields
+      - acceptanceCriteriaId: FR-1101-03
+        pattern: FR-1101-03 propose-trace-links --show-prompt prints the prompt and calls no LLM
+        description: show-prompt returns the prompt and reaches no runtime
+      - acceptanceCriteriaId: FR-1102-03
+        pattern: FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM
+        description: show-prompt returns the prompt and reaches no runtime
+      - acceptanceCriteriaId: FR-1103-01
+        pattern: FR-1103-01 narrows the prompt to the specs named on the command line
+        description: Only the named specs reach the prompt
+      - acceptanceCriteriaId: FR-1103-03
+        pattern: FR-1103-03 propose-acceptance-criteria --show-prompt prints the prompt and calls no LLM
+        description: show-prompt returns the prompt and reaches no runtime
+    relations:
+      - type: verifies
+        target: FR-1100
+        description: Verifies acceptance criteria for FR-1100
+      - type: verifies
+        target: FR-1101
+        description: Verifies acceptance criteria for FR-1101
+      - type: verifies
+        target: FR-1103
+        description: Verifies acceptance criteria for FR-1103

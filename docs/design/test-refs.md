@@ -44,6 +44,7 @@
 | TEST-062 | Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring) | vitest | 3 |
 | TEST-063 | Insights command verification test (ExternalInsight JSON export) | vitest | 2 |
 | TEST-064 | Drift verification test over the machine-readable artifacts (specs/) | vitest | 1 |
+| TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 3 |
 
 ---
 
@@ -546,6 +547,7 @@
 |------------------------|---------|-------------|
 | FR-702-01 | `contains verifiedBy as check category` | verifiedBy is a check-category relation type |
 | FR-702-03 | `warns when verifiedBy is speckeeper` | speckeeper to speckeeper verifiedBy warns |
+| FR-702-02 | `FR-702-02 resolves verifies from test code to implementation code` | verifies carries the test to implementation direction |
 | FR-702-04 | `FR-702-04 resolves both an implements and a verifiedBy edge of one source node` | One source node carries both edges and each is resolved on its own |
 | FR-702-05 | `contains verifies as external category` | verifies is traceability only, not a checker target |
 
@@ -1067,5 +1069,34 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-500-01 | `FR-500-01 detects a hand-edited entity JSON Schema under specs/` | A hand-edited machine-readable artifact is detected as drift |
+
+---
+
+## TEST-080: LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema)
+
+### Test Source
+
+- **Path**: `test/cli/llm-commands.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1100
+- FR-1101
+- FR-1103
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1100-01 | `FR-1100-01 builds the prompt from every registered spec` | The prompt carries every registered spec |
+| FR-1100-03 | `FR-1100-03 audit-requirements --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1100-05 | `FR-1100-05 renders a distinct report for each --report-format value` | Each report format renders its own output |
+| FR-1101-01 | `FR-1101-01 analyses every declared spec and lists the relations already present` | Trace link analysis spans every declared spec |
+| FR-1101-02 | `FR-1101-02 requires source, target, relation type and confidence on every proposed link` | The proposed link schema requires the four fields |
+| FR-1101-03 | `FR-1101-03 propose-trace-links --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1102-03 | `FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1103-01 | `FR-1103-01 narrows the prompt to the specs named on the command line` | Only the named specs reach the prompt |
+| FR-1103-03 | `FR-1103-03 propose-acceptance-criteria --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
 
 ---

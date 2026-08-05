@@ -212,6 +212,29 @@ describe('resolveEdges', () => {
     expect(diagnostics).toEqual([]);
   });
 
+  it('FR-702-02 resolves verifies from test code to implementation code', () => {
+    const nodes = new Map<string, MermaidNode>();
+    nodes.set('UT', makeNode('UT', ['test'], 'Unit Tests'));
+    nodes.set('IMPL', makeNode('IMPL', ['code'], 'Implementation'));
+
+    // The direction the label now carries: the test is the source, the code under
+    // test is the target. Neither end is a speckeeper node.
+    expect(isTestLikeNode(nodes.get('UT'))).toBe(true);
+    expect(isTestLikeNode(nodes.get('IMPL'))).toBe(false);
+
+    const { resolved, diagnostics } = resolveEdges(
+      [makeEdge('UT', 'IMPL', 'verifies')],
+      nodes,
+      'speckeeper',
+    );
+
+    expect(resolved.map(e => [e.sourceId, e.targetId, e.normalizedLabel])).toEqual([
+      ['UT', 'IMPL', 'verifies'],
+    ]);
+    expect(resolved[0].vocabulary.relationType).toBe('verifies');
+    expect(diagnostics).toEqual([]);
+  });
+
   it('FR-702-04 flags only the offending edge when one of the two is invalid', () => {
     const nodes = new Map<string, MermaidNode>();
     nodes.set('FR', makeNode('FR', ['speckeeper']));

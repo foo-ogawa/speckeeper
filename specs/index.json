@@ -821,6 +821,10 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-080",
+      "model": "test-ref"
+    },
+    {
       "id": "UC-001",
       "model": "usecase"
     },
@@ -2093,6 +2097,21 @@
       "from": "TEST-074",
       "type": "verifies",
       "to": "FR-201"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1100"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1101"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1103"
     },
     {
       "from": "UC-001",
