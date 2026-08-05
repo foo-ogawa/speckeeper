@@ -32,6 +32,8 @@
 | TEST-043 | Machine-readable build artifact verification test (Entity JSON Schema, reference resolution graph) | vitest | 2 |
 | TEST-044 | Model-declared lint rule verification test | vitest | 1 |
 | TEST-045 | Check command source filtering verification test | vitest | 1 |
+| TEST-050 | Scan diagnostic severity and opt-in deep validation verification test | vitest | 7 |
+| TEST-051 | Absent spec ID warning verification test | vitest | 3 |
 
 ---
 
@@ -772,5 +774,61 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-602-02 | `FR-602-02 scans only the OpenAPI source when the type is openapi` | The type argument narrows the scanned sources to that type |
+
+---
+
+## TEST-050: Scan diagnostic severity and opt-in deep validation verification test
+
+### Test Source
+
+- **Path**: `test/core/dsl/checkers.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1004
+- FR-1005
+- FR-1007
+- FR-1008
+- FR-1011
+- FR-1014
+- FR-1015
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1004-01 | `leaves the method check off unless the mapper opts in` | A mapper without a method declaration runs no method check |
+| FR-1005-01 | `leaves the parameter check off unless the mapper opts in` | A mapper without parameters runs no parameter check |
+| FR-1005-02 | `leaves the response property check off unless the mapper opts in` | A mapper without response properties runs no property check |
+| FR-1007-01 | `reports an error naming the missing OpenAPI file path` | A missing OpenAPI file is an error carrying the path |
+| FR-1008-01 | `reports an error for an unparseable OpenAPI file` | Malformed OpenAPI YAML is an error |
+| FR-1008-02 | `reports an error for an empty OpenAPI file` | An empty OpenAPI file is an error |
+| FR-1011-02 | `skips the column check when the table is missing` | A missing table suppresses per-column warnings |
+| FR-1014-01 | `reports an error naming the missing DDL file path` | A missing DDL file is an error carrying the path |
+| FR-1015-02 | `emits a warning when DDL parsing falls back to regex` | The regex fallback reports the degradation as a warning |
+
+---
+
+## TEST-051: Absent spec ID warning verification test
+
+### Test Source
+
+- **Path**: `test/cli/check-sources.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1003
+- FR-1010
+- FR-1013
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1003-01 | `FR-1003-01 warns about an operation absent from the OpenAPI document` | A spec ID missing from the OpenAPI document warns by default |
+| FR-1010-01 | `FR-1010-01, FR-1013-01 warns about a table absent from the DDL` | A spec-referenced table missing from the DDL warns by default |
+| FR-1013-01 | `FR-1010-01, FR-1013-01 warns about a table absent from the DDL` | The missing table is reported as a warning |
 
 ---

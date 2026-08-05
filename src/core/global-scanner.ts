@@ -5,12 +5,12 @@
  * Built-in scanners: openapi, ddl, annotation.
  * Custom scanners can be plugged in via SourceConfig.scanner.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { glob } from 'glob';
 import { parse as parseYaml } from 'yaml';
 import nodeSqlParser from 'node-sql-parser';
-import type { SourceConfig, SourceMatch, SourceScanner } from './config-api.js';
+import type { ScanReporter, SourceConfig, SourceMatch, SourceScanner } from './config-api.js';
 import type { CheckResult, DeepValidationConfig, OpenAPIValidationMapping, DDLValidationMapping } from './model.js';
 import { isTypeContainedBy } from './dsl/type-compat.js';
 
@@ -129,6 +129,11 @@ function stripSchemaPrefix(name: string): string {
   return dotIndex >= 0 ? name.substring(dotIndex + 1) : name;
 }
 
+/**
+ * Parse DDL with node-sql-parser.
+ * Returns null when the parser rejects the content, an array otherwise
+ * (an empty array means the content parsed but declared no tables).
+ */
 function parseDDLWithParser(content: string): TableDefinition[] | null {
   const parser = new nodeSqlParser.Parser();
   const tables: TableDefinition[] = [];
@@ -168,7 +173,7 @@ function parseDDLWithParser(content: string): TableDefinition[] | null {
       }
     }
 
-    return tables.length > 0 ? tables : null;
+    return tables;
   } catch {
     return null;
   }
@@ -203,12 +208,19 @@ function parseDDLWithRegex(content: string): TableDefinition[] {
 }
 
 export const ddlScanner: SourceScanner = {
-  findSpecIds(content: unknown, specIds: string[], filePath: string): SourceMatch[] {
+  findSpecIds(content: unknown, specIds: string[], filePath: string, report?: ScanReporter): SourceMatch[] {
     if (typeof content !== 'string') return [];
 
-    let tables = parseDDLWithParser(content);
-    if (!tables) {
+    const parsed = parseDDLWithParser(content);
+    let tables = parsed ?? [];
+    if (tables.length === 0) {
       tables = parseDDLWithRegex(content);
+      if (parsed === null) {
+        report?.({
+          severity: 'warning',
+          message: `Could not parse DDL ${filePath}; fell back to regex table extraction`,
+        });
+      }
     }
 
     const matches: SourceMatch[] = [];
@@ -324,25 +336,33 @@ function getScannerForSource(source: SourceConfig): SourceScanner | null {
 // File Loading
 // ============================================================================
 
+/**
+ * Read a source file and turn it into the content its scanner expects.
+ * Throws when the file cannot yield a usable document; the caller reports it.
+ */
 function loadFileContent(filePath: string, sourceType: string): unknown {
   const content = readFileSync(filePath, 'utf-8');
-  if (!content || content.length === 0) return null;
 
-  if (sourceType === 'openapi') {
-    if (filePath.endsWith('.json')) {
-      return JSON.parse(content);
-    }
-    return parseYaml(content);
+  // Annotation and DDL sources treat the file as a haystack: an empty one simply
+  // holds no spec IDs. An OpenAPI source *is* the document, so it must parse.
+  if (sourceType !== 'openapi') return content;
+
+  // An empty, blank or comment-only file yields no document; JSON.parse throws
+  // outright. Either way the file cannot be checked against.
+  const doc = filePath.endsWith('.json') ? JSON.parse(content) : parseYaml(content);
+  if (doc == null) {
+    throw new Error('file holds no OpenAPI document');
   }
-
-  return content;
+  return doc;
 }
 
 // ============================================================================
 // Global Scan Orchestrator
 // ============================================================================
 
-export interface ScanWarning {
+/** A problem found while scanning a source, carrying its own severity. */
+export interface ScanDiagnostic {
+  severity: 'error' | 'warning';
   message: string;
   sourceType: string;
   filePath?: string;
@@ -350,7 +370,7 @@ export interface ScanWarning {
 
 export interface GlobalScanOutput {
   matches: GlobalScanResult;
-  warnings: ScanWarning[];
+  diagnostics: ScanDiagnostic[];
 }
 
 /**
@@ -378,12 +398,13 @@ export function runGlobalScan(
 ): GlobalScanOutput {
   const cwd = basePath ?? process.cwd();
   const result: GlobalScanResult = new Map();
-  const warnings: ScanWarning[] = [];
+  const diagnostics: ScanDiagnostic[] = [];
 
   for (const source of sources) {
     const scanner = getScannerForSource(source);
     if (!scanner) {
-      warnings.push({
+      diagnostics.push({
+        severity: 'warning',
         message: `No scanner found for source type "${source.type}". Provide a custom scanner.`,
         sourceType: source.type,
       });
@@ -405,6 +426,15 @@ export function runGlobalScan(
         cwd,
         ignore: source.exclude ?? [],
       });
+      if (found.length === 0) {
+        diagnostics.push({
+          severity: 'error',
+          message: `Source file not found: ${pattern}`,
+          sourceType: source.type,
+          filePath: pattern,
+        });
+        continue;
+      }
       for (const f of found) {
         allFiles.add(f);
       }
@@ -412,14 +442,14 @@ export function runGlobalScan(
 
     for (const relPath of allFiles) {
       const fullPath = isAbsolute(relPath) ? relPath : join(cwd, relPath);
-      if (!existsSync(fullPath)) continue;
 
       let content: unknown;
       try {
         content = loadFileContent(fullPath, source.type);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        warnings.push({
+        diagnostics.push({
+          severity: 'error',
           message: `Failed to load ${relPath}: ${msg}`,
           sourceType: source.type,
           filePath: relPath,
@@ -427,14 +457,15 @@ export function runGlobalScan(
         continue;
       }
 
-      if (content == null) continue;
-
       let matches: SourceMatch[];
       try {
-        matches = scanner.findSpecIds(content, keysToSearch, relPath);
+        matches = scanner.findSpecIds(content, keysToSearch, relPath, (d) => {
+          diagnostics.push({ ...d, sourceType: source.type, filePath: relPath });
+        });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        warnings.push({
+        diagnostics.push({
+          severity: 'error',
           message: `Scanner error for ${relPath}: ${msg}`,
           sourceType: source.type,
           filePath: relPath,
@@ -463,7 +494,7 @@ export function runGlobalScan(
     }
   }
 
-  return { matches: result, warnings };
+  return { matches: result, diagnostics };
 }
 
 // ============================================================================

@@ -46,6 +46,12 @@ export interface SourceMatch {
 }
 
 /**
+ * Sink a scanner uses to report a diagnostic about the file it is scanning.
+ * The scan orchestrator supplies the source type and file path.
+ */
+export type ScanReporter = (diagnostic: { severity: 'error' | 'warning'; message: string }) => void;
+
+/**
  * Source scanner plugin interface.
  * Built-in scanners exist for 'openapi', 'ddl', and 'annotation'.
  * Users can provide custom scanners for additional file types.
@@ -56,9 +62,10 @@ export interface SourceScanner {
    * @param content - Parsed document (object for openapi/ddl) or raw string
    * @param specIds - Set of all known spec IDs to search for
    * @param filePath - Path to the source file being scanned
+   * @param report - Sink for diagnostics raised while interpreting the content
    * @returns Array of matches found
    */
-  findSpecIds(content: unknown, specIds: string[], filePath: string): SourceMatch[];
+  findSpecIds(content: unknown, specIds: string[], filePath: string, report?: ScanReporter): SourceMatch[];
 }
 
 /** Source configuration for global scan */
