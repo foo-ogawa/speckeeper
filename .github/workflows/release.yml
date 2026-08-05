@@ -54,6 +54,12 @@ jobs:
       - name: Build
         if: steps.tag.outcome == 'failure'
         run: npm run build
+      - name: Bundle
+        if: steps.tag.outcome == 'failure'
+        run: npm run bundle
+      - name: Design consistency
+        if: steps.tag.outcome == 'failure'
+        run: node dist/speckeeper.bundle.mjs lint
       - name: Test
         if: steps.tag.outcome == 'failure'
         run: npm run test:ci
