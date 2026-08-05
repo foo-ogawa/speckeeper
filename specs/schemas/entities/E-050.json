@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "E-050.json",
+  "title": "Artifact",
+  "description": "Artifact classification. Manages human-readable/machine-readable artifacts generated from SSOT",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Artifact name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ssot",
+        "human-readable",
+        "machine-readable",
+        "implementation"
+      ],
+      "description": "Classification (SSOT/human-readable/machine-readable/implementation code)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Directory path (design/, docs/, specs/, src/)"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Purpose"
+    },
+    "driftTarget": {
+      "type": "boolean",
+      "description": "Whether drift detection target"
+    },
+    "generatedFrom": {
+      "type": "string",
+      "description": "Source (SSOT ID)"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "category",
+    "location",
+    "purpose"
+  ]
+}

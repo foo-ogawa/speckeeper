@@ -60,9 +60,10 @@ jobs:
       - name: Design consistency
         if: steps.tag.outcome == 'failure'
         run: node dist/speckeeper.bundle.mjs lint
-      - name: Documentation is regenerated from the models
+      - name: Generated artifacts match the models
         if: steps.tag.outcome == 'failure'
         run: |
+          node dist/speckeeper.bundle.mjs drift --fail-on-drift
           npm run docs
           git diff --exit-code -- docs/
           if grep -rn '⚠️' docs/; then

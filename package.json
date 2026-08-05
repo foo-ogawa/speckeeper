@@ -34,6 +34,7 @@
     "dist/speckeeper.bundle.mjs.map",
     "dist",
     "docs",
+    "specs",
     "cli-contract.yaml"
   ],
   "scripts": {

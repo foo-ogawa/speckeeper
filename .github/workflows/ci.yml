@@ -35,9 +35,9 @@ jobs:
         run: npm run bundle
       - name: Design consistency
         run: node dist/speckeeper.bundle.mjs lint
-      - name: Documentation is regenerated from the models
+      - name: Generated artifacts match the models
         run: |
-          node dist/speckeeper.bundle.mjs build
+          node dist/speckeeper.bundle.mjs drift --fail-on-drift
           npm run docs
           git diff --exit-code -- docs/
           if grep -rn '⚠️' docs/; then

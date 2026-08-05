@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "E-012.json",
+  "title": "Layer",
+  "description": "Architecture layer (presentation, business, data, etc.)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Layer name"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Layer order (higher is more upper)"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "order"
+  ]
+}

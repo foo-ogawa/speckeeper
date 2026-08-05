@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "E-040.json",
+  "title": "APIRef",
+  "description": "Reference to external API (OpenAPI)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID"
+    },
+    "specPath": {
+      "type": "string",
+      "description": "OpenAPI file path"
+    },
+    "operationId": {
+      "type": "string",
+      "description": "Operation ID"
+    },
+    "componentId": {
+      "type": "string",
+      "description": "Related component ID"
+    }
+  },
+  "required": [
+    "id",
+    "specPath",
+    "operationId"
+  ]
+}
