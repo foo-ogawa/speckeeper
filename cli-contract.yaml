@@ -3,7 +3,7 @@ cli_contracts: 0.1.0
 
 info:
   title: speckeeper CLI
-  version: 0.16.22
+  version: 0.16.23
   description: >-
     TypeScript-first specification validation framework — validate design
     consistency, external SSOT integrity, and traceability with type-safe
