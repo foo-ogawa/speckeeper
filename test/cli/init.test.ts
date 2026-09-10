@@ -7,10 +7,32 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'node:path';
 import { mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 
 const testDir = join(process.cwd(), '.test-init');
 const speckeeperCmd = join(process.cwd(), 'bin/speckeeper.js');
+
+/**
+ * Install this repository's speckeeper into the generated project the way a
+ * registry install behaves: a real copy whose own dependencies are resolved
+ * into the generated project's tree.
+ *
+ * `npm install <dir>` symlinks instead. Module resolution inside a symlinked
+ * package walks up from this repository's real path, so the generated project
+ * ends up holding two nominally distinct copies of zod - the one it installed
+ * itself, and `<repo>/node_modules/zod`. TypeScript then rejects every model
+ * definition with `The types of '_zod.version.minor' are incompatible`, which
+ * ties the generated project's typecheck to this repository's lockfile pinning
+ * the exact zod release the registry currently serves as latest.
+ * `--install-links` leaves the generated project resolving a single zod, which
+ * is what a consumer installing from the registry gets.
+ */
+function installLocalSpeckeeper(): void {
+  execSync(`npm install ${JSON.stringify(process.cwd())} --save --install-links`, {
+    cwd: testDir,
+    stdio: 'pipe',
+  });
+}
 
 describe('FR-105: Project Initialization', () => {
   beforeEach(() => {
@@ -183,7 +205,7 @@ describe('FR-105: Project Initialization', () => {
       execSync(`node ${speckeeperCmd} init`, { cwd: testDir });
       
       // Install dependencies (using local speckeeper package)
-      execSync(`npm install ${process.cwd()} --save`, { cwd: testDir });
+      installLocalSpeckeeper();
       
       // Run speckeeper lint
       const result = execSync(`node ${speckeeperCmd} lint`, { 
@@ -201,12 +223,16 @@ describe('FR-105: Project Initialization', () => {
       
       // Install dependencies
       execSync(`npm install`, { cwd: testDir, stdio: 'pipe' });
-      execSync(`npm install ${process.cwd()} --save`, { cwd: testDir });
+      installLocalSpeckeeper();
       
-      // Run typecheck
-      expect(() => {
-        execSync('npx tsc --noEmit', { cwd: testDir });
-      }).not.toThrow();
+      // Run typecheck. The diagnostics are the assertion subject so a failure
+      // reports what tsc rejected instead of "Command failed".
+      const typecheck = spawnSync('npx', ['tsc', '--noEmit'], {
+        cwd: testDir,
+        encoding: 'utf-8',
+      });
+      expect(`${typecheck.stdout}${typecheck.stderr}`.trim()).toBe('');
+      expect(typecheck.status).toBe(0);
     });
   });
 
