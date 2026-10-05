@@ -64,6 +64,7 @@ export interface SpeckeeperConfig {
   // Coverage configuration
   coverage?: {
     transitiveRelations?: string[];
+    threshold?: number;
   };
 }
 

@@ -194,3 +194,73 @@ describe('FR-1003, FR-1010, FR-1013: check warns about spec IDs absent from a so
     expect(exitSpy).not.toHaveBeenCalled();
   });
 });
+
+describe('FR-604: check --coverage fails when it measures nothing or too little', () => {
+  let tempDir: string;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tempDir = mkdtempSync(join(tmpdir(), 'speckeeper-coverage-'));
+    mkdirSync(join(tempDir, 'api'));
+    writeFileSync(join(tempDir, 'api', 'orders.yaml'), OPENAPI_DOC);
+
+    vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  function output(): string {
+    return logSpy.mock.calls.map(c => String(c[0])).join('\n');
+  }
+
+  /** One OpenAPI source; API-001 is in the document, the other IDs are not. */
+  function useConfig(specIds: string[], threshold?: number): void {
+    // No per-model coverage checker: the transitive coverage alone decides.
+    const model = { ...createMockModel(), getCoverageChecker: vi.fn().mockReturnValue(undefined) };
+    mockedLoadConfig.mockResolvedValue({
+      designDir: 'design',
+      docsDir: 'docs',
+      specsDir: 'specs',
+      models: [model],
+      specs: [{ model: { id: model.id, register: model.register }, data: specIds.map(id => ({ id })) }],
+      sources: [{ type: 'openapi', paths: ['api/*.yaml'], relation: 'implements' }],
+      coverage: { transitiveRelations: ['satisfies'], ...(threshold === undefined ? {} : { threshold }) },
+    } as never);
+  }
+
+  it('fails when no configured source has the requested type', async () => {
+    useConfig([OPENAPI_SPEC_ID]);
+
+    await checkCommand('test', { coverage: true });
+
+    expect(output()).toContain('No source of type "test" is configured');
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('fails when transitive coverage is below the default 80% threshold', async () => {
+    useConfig([OPENAPI_SPEC_ID, 'API-002', 'API-003']);
+
+    await checkCommand('openapi', { coverage: true });
+
+    expect(output()).toContain('Transitive coverage 33% is below the 80% threshold (1/3)');
+    expect(output()).not.toContain('All coverage checks passed');
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('passes when transitive coverage meets the configured threshold', async () => {
+    useConfig([OPENAPI_SPEC_ID, 'API-002', 'API-003'], 33);
+
+    await checkCommand('openapi', { coverage: true });
+
+    expect(output()).toContain('All coverage checks passed (≥33%)');
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+});

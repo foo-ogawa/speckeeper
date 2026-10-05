@@ -128,6 +128,8 @@ export interface SpeckeeperConfigInput {
   coverage?: {
     /** Relation types that enable transitive coverage (e.g. ['satisfies']) */
     transitiveRelations?: string[];
+    /** Minimum coverage percent for `check --coverage` to pass (default 80) */
+    threshold?: number;
   };
 }
 
