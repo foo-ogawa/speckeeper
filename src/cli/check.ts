@@ -218,6 +218,9 @@ export async function checkCommand(
         }
       }
 
+      const percents = coverageResults.map(c => c.result.coveragePercent);
+      let transitiveFailure: string | undefined;
+
       // Transitive coverage report
       if (transitiveCoverageData && transitiveRelations.length > 0) {
         const total = allSpecIds.length;
@@ -226,6 +229,11 @@ export async function checkCommand(
         const covered = directCount + transitiveCount;
         const uncovered = total - covered;
         const coveragePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
+        percents.push(coveragePercent);
+        if (coveragePercent < threshold) {
+          transitiveFailure = `Transitive coverage ${coveragePercent}% is below the ${threshold}% threshold (${covered}/${total})`;
+          results.push({ type: 'coverage-transitive', success: false, issues: [{ severity: 'error', message: transitiveFailure }] });
+        }
 
         console.log('');
         console.log(chalk.blue(`  Transitive coverage (via ${transitiveRelations.join(', ')})`));
@@ -254,17 +262,8 @@ export async function checkCommand(
 
       console.log('');
       console.log(chalk.gray('  ─────────────────────────────────────'));
-      const percents = coverageResults.map(c => c.result.coveragePercent);
-      if (transitiveCoverageData && transitiveRelations.length > 0) {
-        const total = allSpecIds.length;
-        const covered = transitiveCoverageData.directCount + transitiveCoverageData.transitiveCount;
-        const transitivePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
-        percents.push(transitivePercent);
-        if (transitivePercent < threshold) {
-          const message = `Transitive coverage ${transitivePercent}% is below the ${threshold}% threshold (${covered}/${total})`;
-          console.log(chalk.red(`  ✗ ${message}`));
-          results.push({ type: 'coverage-transitive', success: false, issues: [{ severity: 'error', message }] });
-        }
+      if (transitiveFailure) {
+        console.log(chalk.red(`  ✗ ${transitiveFailure}`));
       }
       const failedCount = percents.filter(p => p < threshold).length;
       if (percents.length === 0) {
