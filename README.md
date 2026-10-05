@@ -409,6 +409,7 @@ export default defineConfig({
   sources: [/* ... */],
   coverage: {
     transitiveRelations: ['satisfies'],
+    threshold: 80, // default; check --coverage exits 1 below it
   },
 });
 ```
@@ -420,6 +421,9 @@ When `speckeeper check --coverage` runs:
 3. A spec is **transitively covered** if ALL specs that relate to it via a transitive relation are themselves covered (directly or transitively)
 
 No per-model code is needed. Coverage is computed purely from relation data and config.
+The check exits 1 when the transitive coverage, or any per-model coverage checker, is below
+`coverage.threshold`, and when `check <type>` names a source type that no configured source has
+(it would otherwise measure nothing and pass).
 
 ```bash
 $ npx speckeeper check test --coverage

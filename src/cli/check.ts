@@ -69,6 +69,7 @@ export async function checkCommand(
 
     const results: CheckResult[] = [];
     const transitiveRelations = config.coverage?.transitiveRelations ?? [];
+    const threshold = config.coverage?.threshold ?? 80;
     let transitiveCoverageData: TransitiveCoverageResult | undefined;
 
     // Collect all spec IDs and build lookup key map
@@ -102,6 +103,16 @@ export async function checkCommand(
       const filteredSources = checkType === 'all'
         ? sources
         : sources.filter(s => s.type === checkType);
+      if (filteredSources.length === 0) {
+        results.push({
+          type: checkType,
+          success: false,
+          issues: [{
+            severity: 'error',
+            message: `No source of type "${checkType}" is configured, so nothing would be checked (configured: ${[...new Set(sources.map(s => s.type))].join(', ')})`,
+          }],
+        });
+      }
 
       // Run global scan (with lookup key overrides)
       const { matches, diagnostics: scanDiagnostics } = runGlobalScan(
@@ -196,7 +207,7 @@ export async function checkCommand(
           if (check.result.uncoveredItems.length > 0) {
             results.push({
               type: `coverage-${check.modelId}`,
-              success: check.result.coveragePercent >= 80,
+              success: check.result.coveragePercent >= threshold,
               issues: check.result.uncoveredItems.slice(0, 10).map(item => ({
                 severity: 'warning' as const,
                 message: `[${check.modelName}→${check.targetModel}] '${item.id}'${item.sourceId ? ` (${item.sourceId})` : ''} not covered`,
@@ -222,7 +233,7 @@ export async function checkCommand(
         console.log(chalk.gray(`  Total:     ${total}`));
         console.log(chalk.green(`  Covered:   ${covered}  (${directCount} direct + ${transitiveCount} transitive)`));
         console.log(chalk.yellow(`  Uncovered: ${uncovered}`));
-        const color = coveragePercent >= 80 ? chalk.green :
+        const color = coveragePercent >= threshold ? chalk.green :
                       coveragePercent >= 50 ? chalk.yellow : chalk.red;
         console.log(color(`  Coverage:  ${coveragePercent}%`));
 
@@ -243,15 +254,25 @@ export async function checkCommand(
 
       console.log('');
       console.log(chalk.gray('  ─────────────────────────────────────'));
-      const allCoverageResults = [...coverageResults];
-      const allPassed = allCoverageResults.every(c => c.result.coveragePercent >= 80);
-      if (coverageResults.length === 0 && !transitiveCoverageData) {
+      const percents = coverageResults.map(c => c.result.coveragePercent);
+      if (transitiveCoverageData && transitiveRelations.length > 0) {
+        const total = allSpecIds.length;
+        const covered = transitiveCoverageData.directCount + transitiveCoverageData.transitiveCount;
+        const transitivePercent = total > 0 ? Math.round((covered / total) * 100) : 100;
+        percents.push(transitivePercent);
+        if (transitivePercent < threshold) {
+          const message = `Transitive coverage ${transitivePercent}% is below the ${threshold}% threshold (${covered}/${total})`;
+          console.log(chalk.red(`  ✗ ${message}`));
+          results.push({ type: 'coverage-transitive', success: false, issues: [{ severity: 'error', message }] });
+        }
+      }
+      const failedCount = percents.filter(p => p < threshold).length;
+      if (percents.length === 0) {
         console.log(chalk.gray('  No coverage checker found'));
-      } else if (allPassed) {
-        console.log(chalk.green('  ✓ All coverage checks passed (≥80%)'));
+      } else if (failedCount === 0) {
+        console.log(chalk.green(`  ✓ All coverage checks passed (≥${threshold}%)`));
       } else {
-        const failed = allCoverageResults.filter(c => c.result.coveragePercent < 80);
-        console.log(chalk.yellow(`  ⚠ ${failed.length} coverage check(s) below 80%`));
+        console.log(chalk.red(`  ✗ ${failedCount} coverage check(s) below ${threshold}%`));
       }
     }
 
