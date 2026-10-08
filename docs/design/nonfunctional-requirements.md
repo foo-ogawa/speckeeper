@@ -19,6 +19,8 @@
 | NFR-013 | Test-Specification Traceability | must | testability |
 | NFR-014 | CLI Definition-Implementation Consistency | must | testability |
 | NFR-015 | CLI Backward Compatibility | must | testability |
+| NFR-016 | Lint Without Network or LLM Credentials | must | reliability |
+| NFR-017 | Deterministic Review Packets | must | reliability |
 
 ---
 
@@ -238,3 +240,35 @@ To ensure test strengthening does not introduce regressions
 
 - **NFR-015-01**: All existing tests continue to pass (no regression) [test]
 - **NFR-015-02**: No changes to existing public API or CLI behavior [review]
+
+---
+
+## NFR-016: Lint Without Network or LLM Credentials
+
+**Type**: non-functional | **Priority**: must | **Category**: reliability
+
+lint uses no network access and no LLM credentials, including the review gate
+
+### Rationale
+
+The review gate runs in CI, where LLM credentials are not expected
+
+### Acceptance Criteria
+
+- **NFR-016-01**: lint evaluates REVIEW-001 to REVIEW-004 from records and packets only, with credential variables unset [test]
+
+---
+
+## NFR-017: Deterministic Review Packets
+
+**Type**: non-functional | **Priority**: must | **Category**: reliability
+
+Packets built from the same specs and config hash identically regardless of OS, time, and concurrency
+
+### Rationale
+
+A record is current only while its packet hash matches; a hash that varied by environment would make records stale for no reason
+
+### Acceptance Criteria
+
+- **NFR-017-01**: Building a packet twice, in a different order, and from CRLF prompt files gives the same hash [test]

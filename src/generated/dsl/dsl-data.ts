@@ -1306,5 +1306,23 @@ export const resolvedDsl: Record<string, unknown> = {
         }
       ]
     }
+  },
+  "_guardrailRules": {
+    "commandRules": [],
+    "fileRules": [
+      {
+        "guardrail_id": "no-spec-modification",
+        "pattern": "design/**/*.yaml",
+        "action": "block",
+        "message": "Modifying spec definition files is forbidden. spec-quality-reviewer operates in read-only analysis mode."
+      },
+      {
+        "guardrail_id": "no-spec-modification",
+        "pattern": "specs/**/*.yaml",
+        "action": "block",
+        "message": "Modifying spec definition files is forbidden. spec-quality-reviewer operates in read-only analysis mode."
+      }
+    ],
+    "contentRules": []
   }
 } as const;

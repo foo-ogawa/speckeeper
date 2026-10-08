@@ -105,6 +105,18 @@
       "model": "cli-command"
     },
     {
+      "id": "CMD-REVIEW",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-REVIEW-INGEST",
+      "model": "cli-command"
+    },
+    {
+      "id": "CMD-REVIEW-REBASELINE",
+      "model": "cli-command"
+    },
+    {
       "id": "CMD-SCAFFOLD",
       "model": "cli-command"
     },
@@ -138,6 +150,14 @@
     },
     {
       "id": "CONT-008",
+      "model": "container"
+    },
+    {
+      "id": "CONT-009",
+      "model": "container"
+    },
+    {
+      "id": "CONT-010",
       "model": "container"
     },
     {
@@ -353,6 +373,58 @@
       "model": "functional-requirement"
     },
     {
+      "id": "FR-1200",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1201",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1202",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1203",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1204",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1205",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1206",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1207",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1208",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1209",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1210",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1211",
+      "model": "functional-requirement"
+    },
+    {
+      "id": "FR-1212",
+      "model": "functional-requirement"
+    },
+    {
       "id": "FR-200",
       "model": "functional-requirement"
     },
@@ -506,6 +578,14 @@
     },
     {
       "id": "NFR-015",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-016",
+      "model": "nonfunctional-requirement"
+    },
+    {
+      "id": "NFR-017",
       "model": "nonfunctional-requirement"
     },
     {
@@ -829,6 +909,10 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-082",
+      "model": "test-ref"
+    },
+    {
       "id": "UC-001",
       "model": "usecase"
     },
@@ -885,282 +969,452 @@
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-105"
+      "to": "FR-105",
+      "description": "Implements init command for project initialization"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-300"
+      "to": "FR-300",
+      "description": "Implements build command"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-400"
+      "to": "FR-400",
+      "description": "Implements lint command"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Implements drift command"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Implements check command"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-602"
+      "to": "FR-602",
+      "description": "Implements check command invocation"
     },
     {
       "from": "CONT-001",
       "type": "implements",
-      "to": "FR-700"
+      "to": "FR-700",
+      "description": "Implements impact command"
     },
     {
       "from": "CONT-002",
       "type": "implements",
-      "to": "FR-100"
+      "to": "FR-100",
+      "description": "Implements common model structure definitions"
     },
     {
       "from": "CONT-002",
       "type": "implements",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Implements model definition requirement"
     },
     {
       "from": "CONT-003",
       "type": "dependsOn",
-      "to": "CONT-002"
+      "to": "CONT-002",
+      "description": "Depends on type definitions"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Implements external checker validation logic"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1001"
+      "to": "FR-1001",
+      "description": "Implements OpenAPI YAML/JSON parsing"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1002"
+      "to": "FR-1002",
+      "description": "Implements OpenAPI spec ID verification"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1003"
+      "to": "FR-1003",
+      "description": "Implements OpenAPI missing spec ID warning"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1004"
+      "to": "FR-1004",
+      "description": "Implements OpenAPI method check"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1005"
+      "to": "FR-1005",
+      "description": "Implements OpenAPI parameter/response check"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1006"
+      "to": "FR-1006",
+      "description": "Implements OpenAPI mismatch warnings"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1007"
+      "to": "FR-1007",
+      "description": "Implements OpenAPI file not found error"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1008"
+      "to": "FR-1008",
+      "description": "Implements OpenAPI parse failure error"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1009"
+      "to": "FR-1009",
+      "description": "Implements SQL DDL parsing"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1010"
+      "to": "FR-1010",
+      "description": "Implements SQL table existence check"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1011"
+      "to": "FR-1011",
+      "description": "Implements SQL column existence check"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1012"
+      "to": "FR-1012",
+      "description": "Implements SQL type consistency check"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1013"
+      "to": "FR-1013",
+      "description": "Implements SQL checker warnings"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1014"
+      "to": "FR-1014",
+      "description": "Implements SQL file not found error"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1015"
+      "to": "FR-1015",
+      "description": "Implements SQL parse failure graceful degradation"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1016"
+      "to": "FR-1016",
+      "description": "Implements checker pattern consistency"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1017"
+      "to": "FR-1017",
+      "description": "Implements source path fallback"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-1018"
+      "to": "FR-1018",
+      "description": "Implements minimal new dependencies constraint"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Implements model definition requirement"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Implements core-provided model factories (lint, exporter, schema, checker)"
     },
     {
       "from": "CONT-003",
       "type": "implements",
-      "to": "FR-703"
+      "to": "FR-703",
+      "description": "Implements edge type-specific relation schemas"
     },
     {
       "from": "CONT-004",
       "type": "dependsOn",
-      "to": "CONT-002"
+      "to": "CONT-002",
+      "description": "Depends on type definitions"
     },
     {
       "from": "CONT-004",
       "type": "implements",
-      "to": "FR-300"
+      "to": "FR-300",
+      "description": "Implements build functionality"
     },
     {
       "from": "CONT-004",
       "type": "implements",
-      "to": "FR-301"
+      "to": "FR-301",
+      "description": "Implements Markdown rendering"
     },
     {
       "from": "CONT-004",
       "type": "implements",
-      "to": "FR-302"
+      "to": "FR-302",
+      "description": "Implements machine-readable artifact generation"
     },
     {
       "from": "CONT-004",
       "type": "implements",
-      "to": "FR-800"
+      "to": "FR-800",
+      "description": "Implements artifact export functionality"
     },
     {
       "from": "CONT-005",
       "type": "dependsOn",
-      "to": "CONT-002"
+      "to": "CONT-002",
+      "description": "Depends on type definitions"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-102"
+      "to": "FR-102",
+      "description": "Implements phase gate validation"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-400"
+      "to": "FR-400",
+      "description": "Implements lint functionality"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-401"
+      "to": "FR-401",
+      "description": "Implements common lint items"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-402"
+      "to": "FR-402",
+      "description": "Implements custom lint rule support"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Implements relation validation"
     },
     {
       "from": "CONT-005",
       "type": "implements",
-      "to": "FR-702"
+      "to": "FR-702",
+      "description": "Implements verifiedBy/verifies relation types"
     },
     {
       "from": "CONT-006",
       "type": "dependsOn",
-      "to": "CONT-007"
+      "to": "CONT-007",
+      "description": "Depends on utilities"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-1019"
+      "to": "FR-1019",
+      "description": "Implements checker documentation accuracy"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Implements external SSOT reference validation"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Implements external SSOT consistency check"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-601"
+      "to": "FR-601",
+      "description": "Implements three-category check classification"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-603"
+      "to": "FR-603",
+      "description": "Implements external checker functionality"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-604"
+      "to": "FR-604",
+      "description": "Implements coverage verification"
     },
     {
       "from": "CONT-006",
       "type": "implements",
-      "to": "FR-605"
+      "to": "FR-605",
+      "description": "Implements model-integrated check architecture"
     },
     {
       "from": "CONT-007",
       "type": "implements",
-      "to": "FR-101"
+      "to": "FR-101",
+      "description": "Implements ID management utilities"
     },
     {
       "from": "CONT-007",
       "type": "implements",
-      "to": "FR-201"
+      "to": "FR-201",
+      "description": "Implements external SSOT path configuration"
     },
     {
       "from": "CONT-008",
       "type": "dependsOn",
-      "to": "CONT-002"
+      "to": "CONT-002",
+      "description": "Depends on type definitions for generated models"
     },
     {
       "from": "CONT-008",
       "type": "implements",
-      "to": "FR-106"
+      "to": "FR-106",
+      "description": "Implements artifact class-based scaffold generation from mermaid flowcharts"
+    },
+    {
+      "from": "CONT-009",
+      "type": "dependsOn",
+      "to": "CONT-005",
+      "description": "Adds the review gate to the common lint items"
+    },
+    {
+      "from": "CONT-009",
+      "type": "dependsOn",
+      "to": "CONT-010",
+      "description": "Judges packets through the LLM runtime"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1200",
+      "description": "Implements review check declaration"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1201",
+      "description": "Implements context providers"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1202",
+      "description": "Implements packet hashing"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1203",
+      "description": "Implements judging through the LLM runtime"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1204",
+      "description": "Implements the credential policy"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1205",
+      "description": "Implements the review output schema"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1206",
+      "description": "Implements incremental target selection"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1207",
+      "description": "Implements the finding verifier"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1208",
+      "description": "Implements the judgment record store"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1209",
+      "description": "Implements the review gate"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1210",
+      "description": "Implements packet emit and result ingest"
+    },
+    {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1212",
+      "description": "Implements record rebaseline"
+    },
+    {
+      "from": "CONT-010",
+      "type": "implements",
+      "to": "FR-1100",
+      "description": "Implements LLM requirement audit"
+    },
+    {
+      "from": "CONT-010",
+      "type": "implements",
+      "to": "FR-1101",
+      "description": "Implements LLM trace link proposal"
+    },
+    {
+      "from": "CONT-010",
+      "type": "implements",
+      "to": "FR-1102",
+      "description": "Implements LLM impact explanation"
+    },
+    {
+      "from": "CONT-010",
+      "type": "implements",
+      "to": "FR-1103",
+      "description": "Implements LLM acceptance criteria proposal"
+    },
+    {
+      "from": "CONT-010",
+      "type": "implements",
+      "to": "FR-1211",
+      "description": "Implements the single LLM runtime"
     },
     {
       "from": "E-001",
@@ -1170,7 +1424,8 @@
     {
       "from": "E-001",
       "type": "refines",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Refines model definition requirement"
     },
     {
       "from": "E-010",
@@ -1180,7 +1435,8 @@
     {
       "from": "E-010",
       "type": "refines",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Refines model definition requirement"
     },
     {
       "from": "E-011",
@@ -1205,7 +1461,8 @@
     {
       "from": "E-040",
       "type": "implements",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Implements external SSOT reference requirement"
     },
     {
       "from": "E-040",
@@ -1215,12 +1472,14 @@
     {
       "from": "E-041",
       "type": "dependsOn",
-      "to": "E-020"
+      "to": "E-020",
+      "description": "Depends on Entity"
     },
     {
       "from": "E-041",
       "type": "implements",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Implements external SSOT reference requirement"
     },
     {
       "from": "E-041",
@@ -1235,957 +1494,1340 @@
     {
       "from": "FR-100",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-100",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-1000",
       "type": "refines",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Implements external SSOT consistency checks"
     },
     {
       "from": "FR-1001",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "OpenAPI parsing capability"
     },
     {
       "from": "FR-1002",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Spec ID lookup strategy"
     },
     {
       "from": "FR-1003",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Missing spec ID detection"
     },
     {
       "from": "FR-1004",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Optional method verification"
     },
     {
       "from": "FR-1005",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Optional parameter/response verification"
     },
     {
       "from": "FR-1006",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Mismatch reporting"
     },
     {
       "from": "FR-1007",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "File not found handling"
     },
     {
       "from": "FR-1008",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Parse failure handling"
     },
     {
       "from": "FR-1009",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "DDL parsing capability"
     },
     {
       "from": "FR-101",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-1010",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Table existence verification"
     },
     {
       "from": "FR-1011",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Column existence verification"
     },
     {
       "from": "FR-1012",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Type containment verification"
     },
     {
       "from": "FR-1013",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "SQL checker warning reporting"
     },
     {
       "from": "FR-1014",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "DDL file not found handling"
     },
     {
       "from": "FR-1015",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Graceful parse degradation"
     },
     {
       "from": "FR-1016",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Pattern consistency"
     },
     {
       "from": "FR-1017",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Path resolution fallback"
     },
     {
       "from": "FR-1018",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Dependency constraint"
     },
     {
       "from": "FR-1019",
       "type": "refines",
-      "to": "FR-1000"
+      "to": "FR-1000",
+      "description": "Documentation accuracy"
     },
     {
       "from": "FR-102",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-104",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-104",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-104",
       "type": "satisfies",
-      "to": "UC-004"
+      "to": "UC-004",
+      "description": "Satisfies concept model definition use case"
     },
     {
       "from": "FR-105",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-106",
       "type": "refines",
-      "to": "FR-105"
+      "to": "FR-105",
+      "description": "Refines scaffold generation mechanism"
     },
     {
       "from": "FR-107",
       "type": "refines",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Refines model definition by providing reusable factories"
     },
     {
       "from": "FR-1100",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case via LLM"
     },
     {
       "from": "FR-1101",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Supports design consistency via automated traceability"
     },
     {
       "from": "FR-1102",
       "type": "refines",
-      "to": "FR-700"
+      "to": "FR-700",
+      "description": "Refines change impact analysis with human-readable output"
     },
     {
       "from": "FR-1103",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Assists requirement definition with automated criteria proposals"
     },
     {
       "from": "FR-1104",
       "type": "refines",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Extends model definition with format conversion"
+    },
+    {
+      "from": "FR-1200",
+      "type": "satisfies",
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case via per-target LLM review"
+    },
+    {
+      "from": "FR-1201",
+      "type": "dependsOn",
+      "to": "FR-700",
+      "description": "Follows relations with the impact traversal"
+    },
+    {
+      "from": "FR-1201",
+      "type": "refines",
+      "to": "FR-1200",
+      "description": "Refines the check's context"
+    },
+    {
+      "from": "FR-1202",
+      "type": "refines",
+      "to": "FR-1200",
+      "description": "Refines what a judgment is about"
+    },
+    {
+      "from": "FR-1203",
+      "type": "refines",
+      "to": "FR-1200",
+      "description": "Refines how a check is judged"
+    },
+    {
+      "from": "FR-1204",
+      "type": "refines",
+      "to": "FR-1203",
+      "description": "Refines when the judge may run"
+    },
+    {
+      "from": "FR-1205",
+      "type": "refines",
+      "to": "FR-1200",
+      "description": "Refines the check's output"
+    },
+    {
+      "from": "FR-1206",
+      "type": "refines",
+      "to": "FR-1203",
+      "description": "Refines which targets are judged"
+    },
+    {
+      "from": "FR-1207",
+      "type": "refines",
+      "to": "FR-1203",
+      "description": "Refines the judgment with a second opinion per finding"
+    },
+    {
+      "from": "FR-1208",
+      "type": "refines",
+      "to": "FR-1200",
+      "description": "Refines where judgments are kept"
+    },
+    {
+      "from": "FR-1209",
+      "type": "refines",
+      "to": "FR-400",
+      "description": "Adds the review gate to the common lint items"
+    },
+    {
+      "from": "FR-1210",
+      "type": "refines",
+      "to": "FR-1203",
+      "description": "Refines judging outside the SDK"
+    },
+    {
+      "from": "FR-1211",
+      "type": "refines",
+      "to": "FR-1100",
+      "description": "Changes the runtime the LLM commands run on"
+    },
+    {
+      "from": "FR-1212",
+      "type": "refines",
+      "to": "FR-1206",
+      "description": "Refines how a stale record becomes current"
     },
     {
       "from": "FR-200",
       "type": "satisfies",
-      "to": "UC-006"
+      "to": "UC-006",
+      "description": "Satisfies external SSOT consistency check use case"
     },
     {
       "from": "FR-201",
       "type": "refines",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Refines external SSOT reference path management"
     },
     {
       "from": "FR-300",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-301",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-302",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-400",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "FR-401",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "FR-402",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "FR-500",
       "type": "satisfies",
-      "to": "UC-011"
+      "to": "UC-011",
+      "description": "Satisfies drift detection use case"
     },
     {
       "from": "FR-600",
       "type": "satisfies",
-      "to": "UC-006"
+      "to": "UC-006",
+      "description": "Satisfies external SSOT consistency check use case"
     },
     {
       "from": "FR-600",
       "type": "satisfies",
-      "to": "UC-012"
+      "to": "UC-012",
+      "description": "Satisfies contract consistency check use case"
     },
     {
       "from": "FR-601",
       "type": "satisfies",
-      "to": "UC-006"
+      "to": "UC-006",
+      "description": "Satisfies external SSOT consistency check use case"
     },
     {
       "from": "FR-602",
       "type": "satisfies",
-      "to": "UC-006"
+      "to": "UC-006",
+      "description": "Satisfies external SSOT consistency check use case"
     },
     {
       "from": "FR-603",
       "type": "satisfies",
-      "to": "UC-006"
+      "to": "UC-006",
+      "description": "Satisfies external SSOT consistency check use case"
     },
     {
       "from": "FR-604",
       "type": "refines",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Concretization of external SSOT consistency check (coverage)"
     },
     {
       "from": "FR-605",
       "type": "refines",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Refines check architecture by integrating into models"
     },
     {
       "from": "FR-605",
       "type": "refines",
-      "to": "FR-603"
+      "to": "FR-603",
+      "description": "Refines external checker by model integration"
     },
     {
       "from": "FR-700",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "FR-701",
       "type": "satisfies",
-      "to": "UC-001"
+      "to": "UC-001",
+      "description": "Satisfies requirement definition use case"
     },
     {
       "from": "FR-701",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "FR-702",
       "type": "refines",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Refines inter-model relation types with verifiedBy/verifies"
     },
     {
       "from": "FR-703",
       "type": "refines",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Refines relation schema with edge-type-specific structures"
     },
     {
       "from": "FR-800",
       "type": "satisfies",
-      "to": "UC-002"
+      "to": "UC-002",
+      "description": "Satisfies architecture definition use case"
     },
     {
       "from": "NFR-011",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "NFR-012",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "NFR-013",
       "type": "refines",
-      "to": "FR-604"
+      "to": "FR-604",
+      "description": "Refines coverage verification for CLI tests"
     },
     {
       "from": "NFR-014",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "NFR-015",
       "type": "satisfies",
-      "to": "UC-010"
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
+    },
+    {
+      "from": "NFR-016",
+      "type": "satisfies",
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
+    },
+    {
+      "from": "NFR-017",
+      "type": "satisfies",
+      "to": "UC-010",
+      "description": "Satisfies design consistency check use case"
     },
     {
       "from": "TERM-001",
       "type": "traces",
-      "to": "FR-100"
+      "to": "FR-100",
+      "description": "Concept referenced in common requirements"
     },
     {
       "from": "TERM-002",
       "type": "traces",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Concept used in external SSOT reference requirement"
     },
     {
       "from": "TERM-002",
       "type": "traces",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Concept used in external SSOT consistency check requirement"
     },
     {
       "from": "TERM-003",
       "type": "traces",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Concept defined in external SSOT reference requirement"
     },
     {
       "from": "TEST-003",
       "type": "verifies",
-      "to": "CR-002"
+      "to": "CR-002",
+      "description": "Verifies acceptance criteria for CR-002"
     },
     {
       "from": "TEST-004",
       "type": "verifies",
-      "to": "FR-300"
+      "to": "FR-300",
+      "description": "Verifies acceptance criteria for FR-300"
     },
     {
       "from": "TEST-018",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-019",
       "type": "verifies",
-      "to": "CMD-INIT"
+      "to": "CMD-INIT",
+      "description": "Verifies CMD-INIT"
     },
     {
       "from": "TEST-019",
       "type": "verifies",
-      "to": "FR-105"
+      "to": "FR-105",
+      "description": "Verifies acceptance criteria for FR-105"
     },
     {
       "from": "TEST-020",
       "type": "verifies",
-      "to": "CMD-LINT"
+      "to": "CMD-LINT",
+      "description": "Verifies CMD-LINT"
     },
     {
       "from": "TEST-020",
       "type": "verifies",
-      "to": "FR-400"
+      "to": "FR-400",
+      "description": "Verifies acceptance criteria for FR-400"
     },
     {
       "from": "TEST-020",
       "type": "verifies",
-      "to": "FR-401"
+      "to": "FR-401",
+      "description": "Verifies acceptance criteria for FR-401"
     },
     {
       "from": "TEST-020",
       "type": "verifies",
-      "to": "FR-402"
+      "to": "FR-402",
+      "description": "Verifies acceptance criteria for FR-402"
     },
     {
       "from": "TEST-021",
       "type": "verifies",
-      "to": "CMD-CHECK"
+      "to": "CMD-CHECK",
+      "description": "Verifies CMD-CHECK"
     },
     {
       "from": "TEST-021",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-021",
       "type": "verifies",
-      "to": "FR-602"
+      "to": "FR-602",
+      "description": "Verifies acceptance criteria for FR-602"
     },
     {
       "from": "TEST-021",
       "type": "verifies",
-      "to": "FR-603"
+      "to": "FR-603",
+      "description": "Verifies acceptance criteria for FR-603"
     },
     {
       "from": "TEST-021",
       "type": "verifies",
-      "to": "FR-604"
+      "to": "FR-604",
+      "description": "Verifies acceptance criteria for FR-604"
     },
     {
       "from": "TEST-022",
       "type": "verifies",
-      "to": "CMD-BUILD"
+      "to": "CMD-BUILD",
+      "description": "Verifies CMD-BUILD"
     },
     {
       "from": "TEST-022",
       "type": "verifies",
-      "to": "FR-300"
+      "to": "FR-300",
+      "description": "Verifies acceptance criteria for FR-300"
     },
     {
       "from": "TEST-022",
       "type": "verifies",
-      "to": "FR-301"
+      "to": "FR-301",
+      "description": "Verifies acceptance criteria for FR-301"
     },
     {
       "from": "TEST-023",
       "type": "verifies",
-      "to": "CMD-IMPACT"
+      "to": "CMD-IMPACT",
+      "description": "Verifies CMD-IMPACT"
     },
     {
       "from": "TEST-023",
       "type": "verifies",
-      "to": "FR-700"
+      "to": "FR-700",
+      "description": "Verifies acceptance criteria for FR-700"
     },
     {
       "from": "TEST-024",
       "type": "verifies",
-      "to": "CMD-DRIFT"
+      "to": "CMD-DRIFT",
+      "description": "Verifies CMD-DRIFT"
     },
     {
       "from": "TEST-024",
       "type": "verifies",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Verifies acceptance criteria for FR-500"
     },
     {
       "from": "TEST-025",
       "type": "verifies",
-      "to": "CMD-NEW"
+      "to": "CMD-NEW",
+      "description": "Verifies CMD-NEW"
     },
     {
       "from": "TEST-025",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-026",
       "type": "verifies",
-      "to": "CMD-SCAFFOLD"
+      "to": "CMD-SCAFFOLD",
+      "description": "Verifies CMD-SCAFFOLD"
     },
     {
       "from": "TEST-026",
       "type": "verifies",
-      "to": "FR-106"
+      "to": "FR-106",
+      "description": "Verifies acceptance criteria for FR-106"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1001"
+      "to": "FR-1001",
+      "description": "Verifies acceptance criteria for FR-1001"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1002"
+      "to": "FR-1002",
+      "description": "Verifies acceptance criteria for FR-1002"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1004"
+      "to": "FR-1004",
+      "description": "Verifies acceptance criteria for FR-1004"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1005"
+      "to": "FR-1005",
+      "description": "Verifies acceptance criteria for FR-1005"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1006"
+      "to": "FR-1006",
+      "description": "Verifies acceptance criteria for FR-1006"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1009"
+      "to": "FR-1009",
+      "description": "Verifies acceptance criteria for FR-1009"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1011"
+      "to": "FR-1011",
+      "description": "Verifies acceptance criteria for FR-1011"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1012"
+      "to": "FR-1012",
+      "description": "Verifies acceptance criteria for FR-1012"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1013"
+      "to": "FR-1013",
+      "description": "Verifies acceptance criteria for FR-1013"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1015"
+      "to": "FR-1015",
+      "description": "Verifies acceptance criteria for FR-1015"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-1016"
+      "to": "FR-1016",
+      "description": "Verifies acceptance criteria for FR-1016"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Verifies acceptance criteria for FR-107"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Verifies acceptance criteria for FR-600"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-601"
+      "to": "FR-601",
+      "description": "Verifies acceptance criteria for FR-601"
     },
     {
       "from": "TEST-027",
       "type": "verifies",
-      "to": "FR-604"
+      "to": "FR-604",
+      "description": "Verifies acceptance criteria for FR-604"
     },
     {
       "from": "TEST-028",
       "type": "verifies",
-      "to": "FR-101"
+      "to": "FR-101",
+      "description": "Verifies acceptance criteria for FR-101"
     },
     {
       "from": "TEST-028",
       "type": "verifies",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Verifies acceptance criteria for FR-107"
     },
     {
       "from": "TEST-028",
       "type": "verifies",
-      "to": "FR-400"
+      "to": "FR-400",
+      "description": "Verifies acceptance criteria for FR-400"
     },
     {
       "from": "TEST-028",
       "type": "verifies",
-      "to": "FR-401"
+      "to": "FR-401",
+      "description": "Verifies acceptance criteria for FR-401"
     },
     {
       "from": "TEST-028",
       "type": "verifies",
-      "to": "FR-402"
+      "to": "FR-402",
+      "description": "Verifies acceptance criteria for FR-402"
     },
     {
       "from": "TEST-029",
       "type": "verifies",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Verifies acceptance criteria for FR-107"
     },
     {
       "from": "TEST-030",
       "type": "verifies",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Verifies acceptance criteria for FR-107"
     },
     {
       "from": "TEST-030",
       "type": "verifies",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Verifies acceptance criteria for FR-701"
     },
     {
       "from": "TEST-030",
       "type": "verifies",
-      "to": "FR-703"
+      "to": "FR-703",
+      "description": "Verifies acceptance criteria for FR-703"
     },
     {
       "from": "TEST-031",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-031",
       "type": "verifies",
-      "to": "NFR-004"
+      "to": "NFR-004",
+      "description": "Verifies acceptance criteria for NFR-004"
     },
     {
       "from": "TEST-031",
       "type": "verifies",
-      "to": "NFR-007"
+      "to": "NFR-007",
+      "description": "Verifies acceptance criteria for NFR-007"
     },
     {
       "from": "TEST-032",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-032",
       "type": "verifies",
-      "to": "NFR-004"
+      "to": "NFR-004",
+      "description": "Verifies acceptance criteria for NFR-004"
     },
     {
       "from": "TEST-032",
       "type": "verifies",
-      "to": "NFR-005"
+      "to": "NFR-005",
+      "description": "Verifies acceptance criteria for NFR-005"
     },
     {
       "from": "TEST-032",
       "type": "verifies",
-      "to": "NFR-009"
+      "to": "NFR-009",
+      "description": "Verifies acceptance criteria for NFR-009"
     },
     {
       "from": "TEST-033",
       "type": "verifies",
-      "to": "FR-700"
+      "to": "FR-700",
+      "description": "Verifies acceptance criteria for FR-700"
     },
     {
       "from": "TEST-033",
       "type": "verifies",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Verifies acceptance criteria for FR-701"
     },
     {
       "from": "TEST-034",
       "type": "verifies",
-      "to": "FR-702"
+      "to": "FR-702",
+      "description": "Verifies acceptance criteria for FR-702"
     },
     {
       "from": "TEST-035",
       "type": "verifies",
-      "to": "FR-106"
+      "to": "FR-106",
+      "description": "Verifies acceptance criteria for FR-106"
     },
     {
       "from": "TEST-036",
       "type": "verifies",
-      "to": "FR-106"
+      "to": "FR-106",
+      "description": "Verifies acceptance criteria for FR-106"
     },
     {
       "from": "TEST-036",
       "type": "verifies",
-      "to": "FR-605"
+      "to": "FR-605",
+      "description": "Verifies acceptance criteria for FR-605"
     },
     {
       "from": "TEST-036",
       "type": "verifies",
-      "to": "FR-703"
+      "to": "FR-703",
+      "description": "Verifies acceptance criteria for FR-703"
     },
     {
       "from": "TEST-037",
       "type": "verifies",
-      "to": "FR-1100"
+      "to": "FR-1100",
+      "description": "Verifies acceptance criteria for FR-1100"
     },
     {
       "from": "TEST-038",
       "type": "verifies",
-      "to": "FR-1102"
+      "to": "FR-1102",
+      "description": "Verifies acceptance criteria for FR-1102"
     },
     {
       "from": "TEST-039",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-039",
       "type": "verifies",
-      "to": "FR-301"
+      "to": "FR-301",
+      "description": "Verifies acceptance criteria for FR-301"
     },
     {
       "from": "TEST-039",
       "type": "verifies",
-      "to": "NFR-004"
+      "to": "NFR-004",
+      "description": "Verifies acceptance criteria for NFR-004"
     },
     {
       "from": "TEST-040",
       "type": "verifies",
-      "to": "FR-401"
+      "to": "FR-401",
+      "description": "Verifies acceptance criteria for FR-401"
     },
     {
       "from": "TEST-040",
       "type": "verifies",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Verifies acceptance criteria for FR-701"
     },
     {
       "from": "TEST-041",
       "type": "verifies",
-      "to": "CMD-CONVERT"
+      "to": "CMD-CONVERT",
+      "description": "Verifies CMD-CONVERT"
     },
     {
       "from": "TEST-041",
       "type": "verifies",
-      "to": "FR-1104"
+      "to": "FR-1104",
+      "description": "Verifies acceptance criteria for FR-1104"
     },
     {
       "from": "TEST-042",
       "type": "verifies",
-      "to": "FR-603"
+      "to": "FR-603",
+      "description": "Verifies acceptance criteria for FR-603"
     },
     {
       "from": "TEST-042",
       "type": "verifies",
-      "to": "FR-604"
+      "to": "FR-604",
+      "description": "Verifies acceptance criteria for FR-604"
     },
     {
       "from": "TEST-043",
       "type": "verifies",
-      "to": "FR-302"
+      "to": "FR-302",
+      "description": "Verifies acceptance criteria for FR-302"
     },
     {
       "from": "TEST-043",
       "type": "verifies",
-      "to": "FR-800"
+      "to": "FR-800",
+      "description": "Verifies acceptance criteria for FR-800"
     },
     {
       "from": "TEST-044",
       "type": "verifies",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Verifies acceptance criteria for FR-104"
     },
     {
       "from": "TEST-045",
       "type": "verifies",
-      "to": "FR-602"
+      "to": "FR-602",
+      "description": "Verifies acceptance criteria for FR-602"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1004"
+      "to": "FR-1004",
+      "description": "Verifies acceptance criteria for FR-1004"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1005"
+      "to": "FR-1005",
+      "description": "Verifies acceptance criteria for FR-1005"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1007"
+      "to": "FR-1007",
+      "description": "Verifies acceptance criteria for FR-1007"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1008"
+      "to": "FR-1008",
+      "description": "Verifies acceptance criteria for FR-1008"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1011"
+      "to": "FR-1011",
+      "description": "Verifies acceptance criteria for FR-1011"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1014"
+      "to": "FR-1014",
+      "description": "Verifies acceptance criteria for FR-1014"
     },
     {
       "from": "TEST-050",
       "type": "verifies",
-      "to": "FR-1015"
+      "to": "FR-1015",
+      "description": "Verifies acceptance criteria for FR-1015"
     },
     {
       "from": "TEST-051",
       "type": "verifies",
-      "to": "FR-1003"
+      "to": "FR-1003",
+      "description": "Verifies acceptance criteria for FR-1003"
     },
     {
       "from": "TEST-051",
       "type": "verifies",
-      "to": "FR-1010"
+      "to": "FR-1010",
+      "description": "Verifies acceptance criteria for FR-1010"
     },
     {
       "from": "TEST-051",
       "type": "verifies",
-      "to": "FR-1013"
+      "to": "FR-1013",
+      "description": "Verifies acceptance criteria for FR-1013"
     },
     {
       "from": "TEST-060",
       "type": "verifies",
-      "to": "FR-1017"
+      "to": "FR-1017",
+      "description": "Verifies acceptance criteria for FR-1017"
     },
     {
       "from": "TEST-060",
       "type": "verifies",
-      "to": "FR-605"
+      "to": "FR-605",
+      "description": "Verifies acceptance criteria for FR-605"
     },
     {
       "from": "TEST-061",
       "type": "verifies",
-      "to": "NFR-012"
+      "to": "NFR-012",
+      "description": "Verifies acceptance criteria for NFR-012"
     },
     {
       "from": "TEST-061",
       "type": "verifies",
-      "to": "NFR-013"
+      "to": "NFR-013",
+      "description": "Verifies acceptance criteria for NFR-013"
     },
     {
       "from": "TEST-061",
       "type": "verifies",
-      "to": "NFR-014"
+      "to": "NFR-014",
+      "description": "Verifies acceptance criteria for NFR-014"
     },
     {
       "from": "TEST-062",
       "type": "verifies",
-      "to": "FR-605"
+      "to": "FR-605",
+      "description": "Verifies acceptance criteria for FR-605"
     },
     {
       "from": "TEST-062",
       "type": "verifies",
-      "to": "NFR-002"
+      "to": "NFR-002",
+      "description": "Verifies acceptance criteria for NFR-002"
     },
     {
       "from": "TEST-062",
       "type": "verifies",
-      "to": "NFR-003"
+      "to": "NFR-003",
+      "description": "Verifies acceptance criteria for NFR-003"
     },
     {
       "from": "TEST-062",
       "type": "verifies",
-      "to": "NFR-008"
+      "to": "NFR-008",
+      "description": "Verifies acceptance criteria for NFR-008"
     },
     {
       "from": "TEST-062",
       "type": "verifies",
-      "to": "NFR-015"
+      "to": "NFR-015",
+      "description": "Verifies acceptance criteria for NFR-015"
     },
     {
       "from": "TEST-063",
       "type": "verifies",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Verifies acceptance criteria for FR-701"
     },
     {
       "from": "TEST-063",
       "type": "verifies",
-      "to": "FR-800"
+      "to": "FR-800",
+      "description": "Verifies acceptance criteria for FR-800"
     },
     {
       "from": "TEST-064",
       "type": "verifies",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Verifies acceptance criteria for FR-500"
     },
     {
       "from": "TEST-070",
       "type": "verifies",
-      "to": "FR-101"
+      "to": "FR-101",
+      "description": "Verifies acceptance criteria for FR-101"
     },
     {
       "from": "TEST-070",
       "type": "verifies",
-      "to": "FR-102"
+      "to": "FR-102",
+      "description": "Verifies acceptance criteria for FR-102"
     },
     {
       "from": "TEST-070",
       "type": "verifies",
-      "to": "FR-401"
+      "to": "FR-401",
+      "description": "Verifies acceptance criteria for FR-401"
     },
     {
       "from": "TEST-071",
       "type": "verifies",
-      "to": "FR-107"
+      "to": "FR-107",
+      "description": "Verifies acceptance criteria for FR-107"
     },
     {
       "from": "TEST-072",
       "type": "verifies",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Verifies acceptance criteria for FR-200"
     },
     {
       "from": "TEST-073",
       "type": "verifies",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Verifies acceptance criteria for FR-600"
     },
     {
       "from": "TEST-073",
       "type": "verifies",
-      "to": "FR-601"
+      "to": "FR-601",
+      "description": "Verifies acceptance criteria for FR-601"
     },
     {
       "from": "TEST-074",
       "type": "verifies",
-      "to": "FR-201"
+      "to": "FR-201",
+      "description": "Verifies acceptance criteria for FR-201"
     },
     {
       "from": "TEST-080",
       "type": "verifies",
-      "to": "FR-1100"
+      "to": "FR-1100",
+      "description": "Verifies acceptance criteria for FR-1100"
     },
     {
       "from": "TEST-080",
       "type": "verifies",
-      "to": "FR-1101"
+      "to": "FR-1101",
+      "description": "Verifies acceptance criteria for FR-1101"
     },
     {
       "from": "TEST-080",
       "type": "verifies",
-      "to": "FR-1103"
+      "to": "FR-1102",
+      "description": "Verifies acceptance criteria for FR-1102"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1103",
+      "description": "Verifies acceptance criteria for FR-1103"
+    },
+    {
+      "from": "TEST-080",
+      "type": "verifies",
+      "to": "FR-1211",
+      "description": "Verifies acceptance criteria for FR-1211"
     },
     {
       "from": "TEST-081",
       "type": "verifies",
-      "to": "NFR-001"
+      "to": "NFR-001",
+      "description": "Verifies acceptance criteria for NFR-001"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1200",
+      "description": "Verifies acceptance criteria for FR-1200"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1201",
+      "description": "Verifies acceptance criteria for FR-1201"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1202",
+      "description": "Verifies acceptance criteria for FR-1202"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1203",
+      "description": "Verifies acceptance criteria for FR-1203"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1204",
+      "description": "Verifies acceptance criteria for FR-1204"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1205",
+      "description": "Verifies acceptance criteria for FR-1205"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1206",
+      "description": "Verifies acceptance criteria for FR-1206"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1207",
+      "description": "Verifies acceptance criteria for FR-1207"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1208",
+      "description": "Verifies acceptance criteria for FR-1208"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1209",
+      "description": "Verifies acceptance criteria for FR-1209"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1210",
+      "description": "Verifies acceptance criteria for FR-1210"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1212",
+      "description": "Verifies acceptance criteria for FR-1212"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "NFR-016",
+      "description": "Verifies acceptance criteria for NFR-016"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "NFR-017",
+      "description": "Verifies acceptance criteria for NFR-017"
     },
     {
       "from": "UC-001",
       "type": "traces",
-      "to": "FR-100"
+      "to": "FR-100",
+      "description": "Related to common requirements"
     },
     {
       "from": "UC-001",
       "type": "traces",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Related to model definition requirement"
     },
     {
       "from": "UC-002",
       "type": "traces",
-      "to": "FR-104"
+      "to": "FR-104",
+      "description": "Related to model definition requirement"
     },
     {
       "from": "UC-002",
       "type": "traces",
-      "to": "FR-300"
+      "to": "FR-300",
+      "description": "Related to build command requirement"
     },
     {
       "from": "UC-002",
       "type": "traces",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Related to lint requirement"
     },
     {
       "from": "UC-006",
       "type": "traces",
-      "to": "FR-200"
+      "to": "FR-200",
+      "description": "Related to external SSOT reference requirement"
     },
     {
       "from": "UC-006",
       "type": "traces",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Related to check command requirement"
     },
     {
       "from": "UC-010",
       "type": "traces",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Related to lint command requirement"
     },
     {
       "from": "UC-010",
       "type": "traces",
-      "to": "FR-701"
+      "to": "FR-701",
+      "description": "Related to inter-model relation requirement"
     },
     {
       "from": "UC-011",
       "type": "traces",
-      "to": "FR-500"
+      "to": "FR-500",
+      "description": "Related to drift check requirement"
     },
     {
       "from": "UC-012",
       "type": "traces",
-      "to": "FR-600"
+      "to": "FR-600",
+      "description": "Related to check command requirement"
     }
   ]
 }

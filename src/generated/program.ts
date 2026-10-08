@@ -6,18 +6,21 @@ import { CONTRACT_YAML, CONTRACT_JSON_STR } from "./contract.js";
 export interface CommandHandlers {
   init: (options: { force?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   build: (options: { config?: string; output?: string; format?: string; watch?: boolean; verbose?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
-  lint: (options: { config?: string; phase?: string; strict?: boolean; fix?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  lint: (options: { config?: string; phase?: string; strict?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   drift: (options: { config?: string; update?: boolean; format?: string; failOnDrift?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   check: (type: string | undefined, options: { config?: string; strict?: boolean; verbose?: boolean; coverage?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   new: (type: string | undefined, options: { kind?: string; name?: string; output?: string; template?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   impact: (id: string | undefined, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   insights: (options: { format?: string; projectRoot?: string; config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  scaffold: (options: { source: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   convert: (file: string | undefined, options: { output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  review: (options: { config?: string; check?: string[]; target?: string[]; adapter?: string; model?: string; concurrency?: string; force?: boolean; dryRun?: boolean; showPacket?: boolean; requireJudge?: boolean; allowApiKey?: boolean; maxTargets?: string; prune?: boolean; emit?: string; format?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  reviewIngest: (dir: string | undefined, options: { config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  reviewRebaseline: (options: { config?: string; reason: string; check?: string[]; target?: string[]; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   agents: (options: { format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
 }
 
@@ -72,7 +75,6 @@ export function createProgram(
     .option("-c, --config <path>", "Path to config file.")
     .option("-p, --phase <phase>", "Phase gate to check against: REQ, HLD, LLD, OPS.")
     .option("-s, --strict", "Treat warnings as errors.", false)
-    .option("--fix", "Attempt to fix auto-fixable issues (not yet implemented).", false)
     .option("-f, --format <format>", "Output format: text, json, github.", "text")
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
@@ -186,6 +188,9 @@ export function createProgram(
         const policy = deriveCommandPolicy("scaffold", opts);
         console.log(JSON.stringify(policy, null, 2));
         return;
+      }
+      if (opts.source === undefined) {
+        cmd.error("error: required option '-s, --source <path>' not specified", { code: "commander.missingMandatoryOptionValue" });
       }
       await handlers.scaffold(opts, globalOpts);
     });
@@ -310,6 +315,79 @@ export function createProgram(
       await handlers.proposeAcceptanceCriteria(specIds, opts, globalOpts);
     });
 
+  const __cmd_review = program.command("review");
+  __cmd_review.description("Judge declared review checks per target with an LLM and record the judgments.");
+  const __self_review = __cmd_review.command("review", { isDefault: true, hidden: true });
+  __cmd_review.configureHelp({ visibleOptions: () => __self_review.createHelp().visibleOptions(__self_review) });
+  __self_review
+    .description("Judge declared review checks per target with an LLM and record the judgments.")
+    .option("-c, --config <path>", "Path to config file.")
+    .option("--check <id...>", "Judge only these checks (repeatable).")
+    .option("--target <id...>", "Judge only these targets (repeatable).")
+    .option("--adapter <name>", "SDK adapter to use for LLM execution (default from review.adapter, else claude).")
+    .option("--model <name>", "LLM model override.")
+    .option("--concurrency <n>", "Number of targets judged in parallel.", "2")
+    .option("--force", "Judge every selected target, fresh or not.", false)
+    .option("--dry-run", "List the targets to judge and to skip with the reasons, and the estimated token usage, without calling the LLM. With --prune, list the records that would be removed.", false)
+    .option("--show-packet", "Print the packets of the selected targets without calling the LLM.", false)
+    .option("--require-judge", "Exit 14 instead of skipping when no LLM credentials are available.", false)
+    .option("--allow-api-key", "Allow API-key billing for this run even when review.allowApiKey is false.", false)
+    .option("--max-targets <n>", "Judge at most this many targets in this run.")
+    .option("--prune", "Remove records whose check is no longer declared or whose target is no longer selected.", false)
+    .option("--emit <dir>", "Write the packets of the targets to judge into this directory instead of calling the LLM.")
+    .option("-f, --format <format>", "Output format: text, json.", "text")
+    .option("--show-prompt", "Output the constructed prompt without calling the LLM API.", false)
+    .action(async (opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals();
+      if (globalOpts.introspect) {
+        const policy = deriveCommandPolicy("review", opts);
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.showPrompt) {
+        const prompt = await handlers.review(opts, globalOpts);
+        if (typeof prompt === "string") process.stdout.write(prompt + "\n");
+        return;
+      }
+      await handlers.review(opts, globalOpts);
+    });
+
+  __cmd_review
+    .command("ingest")
+    .description("Record externally produced review results whose packet hash is current.")
+    .argument("<dir>", "Directory holding the results.")
+    .option("-c, --config <path>", "Path to config file.")
+    .action(async (dir, opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals();
+      if (globalOpts.introspect) {
+        const policy = deriveCommandPolicy("review.ingest", opts);
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      await handlers.reviewIngest(dir, opts, globalOpts);
+    });
+
+  __cmd_review
+    .command("rebaseline")
+    .description("Accept stale records as current without calling the LLM.")
+    .option("-c, --config <path>", "Path to config file.")
+    .option("--reason <text>", "Why the change cannot affect the verdict (recorded).")
+    .option("--check <id...>", "Rebaseline only these checks (repeatable).")
+    .option("--target <id...>", "Rebaseline only these targets (repeatable).")
+    .option("--dry-run", "List the targets to rebaseline and their changed inputs without writing.", false)
+    .action(async (opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals();
+      if (globalOpts.introspect) {
+        const policy = deriveCommandPolicy("review.rebaseline", opts);
+        console.log(JSON.stringify(policy, null, 2));
+        return;
+      }
+      if (opts.reason === undefined) {
+        cmd.error("error: required option '--reason <text>' not specified", { code: "commander.missingMandatoryOptionValue" });
+      }
+      await handlers.reviewRebaseline(opts, globalOpts);
+    });
+
   program
     .command("agents")
     .description("Output the full resolved agent DSL as structured data.")
@@ -336,7 +414,8 @@ export function createProgram(
     .action(async (commands: string[], opts: { all?: boolean; includeMeta?: boolean; format?: string }) => {
       if (commands.length === 0 && !opts.all) {
         process.stderr.write(JSON.stringify({ code: "INVALID_ARGS", message: "Specify command IDs or use --all" }) + "\n");
-        process.exit(2);
+        process.exitCode = 2;
+        return;
       }
 
       const format = opts.format || "yaml";
@@ -353,7 +432,7 @@ export function createProgram(
               type: "cli-contracts/extract",
               extractedAt: new Date().toISOString(),
               specVersion: doc.cli_contracts ?? "0.1.0",
-              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"],
+              commands: ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.review","speckeeper.review.ingest","speckeeper.review.rebaseline","speckeeper.agents"],
             };
           }
           Object.assign(out, doc);
@@ -371,7 +450,7 @@ export function createProgram(
             yamlLines.push("extractedAt: " + new Date().toISOString());
             yamlLines.push("spec_version: " + (doc.cli_contracts ?? "0.1.0"));
             yamlLines.push("commands:");
-            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.agents"]) {
+            for (const id of ["speckeeper.init","speckeeper.build","speckeeper.lint","speckeeper.drift","speckeeper.check","speckeeper.new","speckeeper.impact","speckeeper.insights","speckeeper.scaffold","speckeeper.convert","speckeeper.audit-requirements","speckeeper.propose-trace-links","speckeeper.explain-impact","speckeeper.propose-acceptance-criteria","speckeeper.review","speckeeper.review.ingest","speckeeper.review.rebaseline","speckeeper.agents"]) {
               yamlLines.push("  - " + id);
             }
           }
@@ -406,7 +485,7 @@ export function createProgram(
         if (doc.components) filtered.components = doc.components;
         process.stdout.write(JSON.stringify(filtered, null, 2) + "\n");
       }
-      process.exit(0);
+      process.exitCode = 0;
     });
   return program;
 }

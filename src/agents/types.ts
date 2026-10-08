@@ -1,10 +1,18 @@
-import type { RequirementAuditResult } from "../generated/dsl/handoffs.js";
+import type {
+  AcceptanceCriteriaResult,
+  ImpactExplainResult,
+  RequirementAuditResult,
+  TraceLinkResult,
+} from "../generated/dsl/handoffs.js";
 
 export type TaskId =
   | "audit-requirement-quality"
   | "propose-trace-links"
   | "explain-impact-result"
   | "propose-acceptance-criteria";
+
+/** The result handoff of an LLM command's task */
+export type AgentTaskResult = RequirementAuditResult | TraceLinkResult | ImpactExplainResult | AcceptanceCriteriaResult;
 
 export interface AuditConfig {
   adapter?: string;
@@ -20,7 +28,8 @@ export interface AuditOptions {
 
 export interface AuditRunResult {
   taskId: TaskId;
-  data: RequirementAuditResult | null;
+  /** The task's result, validated against its result handoff */
+  data: AgentTaskResult | null;
   raw: string;
   prompt: string;
   status: "success" | "error" | "escalation" | "validation_error";

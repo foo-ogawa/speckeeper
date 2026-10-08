@@ -1664,6 +1664,299 @@ entries:
           - type: refines
             target: FR-104
             description: Extends model definition with format conversion
+      - id: FR-1200
+        name: Review Check Declaration
+        description: Declare per-target LLM review checks with target selection, context provider, prompt, output schema,
+          model class, and optional verifier
+        type: functional
+        priority: should
+        category: review
+        rationale: Project-wide LLM audits (FR-1100) cannot scale to large designs, cannot be tied to individual specs, and
+          leave no record that lint or CI can consume
+        acceptanceCriteria:
+          - id: FR-1200-01
+            description: Checks are declared in config review.checks or in a Model's reviewChecks
+            verificationMethod: test
+          - id: FR-1200-02
+            description: A check's select() returns targets with their spec IDs; default is one target per spec of the model
+            verificationMethod: test
+          - id: FR-1200-03
+            description: A check's output is built with defineReviewOutput; projects can add only extra and findingExtra
+              fields
+            verificationMethod: test
+        relations:
+          - type: satisfies
+            target: UC-010
+            description: Satisfies design consistency check use case via per-target LLM review
+      - id: FR-1201
+        name: Review Context Provider
+        description: Build the LLM context for one target and report the spec IDs and files it read
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1201-01
+            description: build() may be sync or async and returns body, inputs, and optional files
+            verificationMethod: test
+          - id: FR-1201-02
+            description: The built-in relations provider reuses the impact traversal over the same reference graph, with
+              configurable depth, relation types, and edge filter, in a stable order
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1200
+            description: Refines the check's context
+          - type: dependsOn
+            target: FR-700
+            description: Follows relations with the impact traversal
+      - id: FR-1202
+        name: Review Packet Hash
+        description: Hash the packet from check id, prompt, output JSON Schema, context body, file contents, and verifier
+          prompt, excluding the model
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1202-01
+            description: Identical specs and config produce identical hashes across OS, time, and concurrency
+            verificationMethod: test
+          - id: FR-1202-02
+            description: --show-packet prints the packet without calling the LLM
+            verificationMethod: test
+          - id: FR-1202-03
+            description: The judge signature (adapter, model, verifier model) is recorded separately from the packet hash
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1200
+            description: Refines what a judgment is about
+      - id: FR-1203
+        name: Review Judge Execution
+        description: Run each packet through @aaac/runtime runTask with a read-only reviewer agent, no tools, and the
+          check's output schema
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1203-01
+            description: The adapter is created with tools [] and an empty temporary cwd
+            verificationMethod: test
+          - id: FR-1203-02
+            description: Schema mismatches get one follow-up correction; persistent mismatches are reported as failures
+            verificationMethod: test
+          - id: FR-1203-03
+            description: On usage-limit or rate-limit responses, no new calls start and completed records are kept
+            verificationMethod: test
+          - id: FR-1203-04
+            description: Token usage from TaskRunResult is stored in the record
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1200
+            description: Refines how a check is judged
+      - id: FR-1204
+        name: Review Credential Policy
+        description: Classify adapter credentials before calling the LLM, skip the run when no credentials are available,
+          and optionally refuse API-key billing
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        rationale: CI and other environments without credentials must not fail on review, while local runs must not
+          silently fall back to unintended API-key billing
+        acceptanceCriteria:
+          - id: FR-1204-01
+            description: With CI set and no credential variables, review exits 0 without touching records and reports the skip
+            verificationMethod: test
+          - id: FR-1204-02
+            description: --require-judge turns an unavailable judge into exit code 14
+            verificationMethod: test
+          - id: FR-1204-03
+            description: With allowApiKey false and an API key present, review exits 13 without calling the LLM
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1203
+            description: Refines when the judge may run
+      - id: FR-1205
+        name: Review Output Schema
+        description: Provide a common finding shape (code, severity, message, subject, location, evidence, suggestion)
+          owned by speckeeper, let projects add fields only through defineReviewOutput, and treat unknown IDs or quotes
+          not found in the packet as a schema mismatch
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1205-01
+            description: Severity uses the lint scale (error, warning, info)
+            verificationMethod: test
+          - id: FR-1205-02
+            description: Unknown spec IDs in subject or evidence are handled as a schema mismatch (one follow-up, then target
+              failure)
+            verificationMethod: test
+          - id: FR-1205-03
+            description: A location.quote not contained in the packet context after whitespace normalization is handled as a
+              schema mismatch
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1200
+            description: Refines the check's output
+      - id: FR-1206
+        name: Incremental Review Selection
+        description: Judge only targets whose record is missing or stale (packet hash changed, or judge signature changed
+          under judgeChange stale) using the same staleness function as the gate; support --force, --check,
+          --target, and --dry-run
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1206-01
+            description: An unchanged target is skipped without calling the LLM
+            verificationMethod: test
+          - id: FR-1206-02
+            description: --dry-run lists targets to run and to skip with the changed inputs as reasons, and estimates token
+              usage from previous records
+            verificationMethod: test
+          - id: FR-1206-03
+            description: --max-targets caps one run in a stable order so that split runs never judge a target twice
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1203
+            description: Refines which targets are judged
+      - id: FR-1207
+        name: Review Verifier
+        description: Optionally re-check each finding in a separate call and mark false positives without deleting them
+        type: functional
+        priority: could
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1207-01
+            description: Findings judged false_positive keep their text and carry status false_positive and the verifier
+              rationale
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1203
+            description: Refines the judgment with a second opinion per finding
+      - id: FR-1208
+        name: Judgment Record Store
+        description: Store one deterministic YAML record per check and target, and carry finding status across
+          re-judgments
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1208-01
+            description: Records are written with stable key order and sorting
+            verificationMethod: test
+          - id: FR-1208-02
+            description: speckeeper computes each finding's fingerprint from check, target, code, subject (or normalized
+              quote), and sorted evidence, never from message
+            verificationMethod: test
+          - id: FR-1208-03
+            description: dismissed requires statusNote
+            verificationMethod: test
+          - id: FR-1208-04
+            description: Records store per-input hashes (prompt, schema, each spec, each file) used only to explain staleness
+            verificationMethod: test
+          - id: FR-1208-05
+            description: Status carries over only for one-to-one fingerprint matches; other findings become open
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1200
+            description: Refines where judgments are kept
+      - id: FR-1209
+        name: Review Gate in Lint
+        description: Add REVIEW-001 (missing or stale record), REVIEW-002 (open blocking finding), REVIEW-003 (orphaned
+          record), and REVIEW-004 (judge change) to the common lint items when review is configured
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1209-01
+            description: lint evaluates the gate without network access or LLM credentials
+            verificationMethod: test
+          - id: FR-1209-02
+            description: Gate severities are configurable as error, warning, or off
+            verificationMethod: test
+          - id: FR-1209-03
+            description: REVIEW-003 warns on records whose check or target no longer exists; review --prune removes them
+            verificationMethod: test
+          - id: FR-1209-04
+            description: gate.judgeChange ignore, warning, and stale respectively skip, report REVIEW-004 for, and mark
+              stale records whose judge signature differs from the configured one; review uses the same staleness function
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-400
+            description: Adds the review gate to the common lint items
+      - id: FR-1210
+        name: Manual Review Emit and Ingest
+        description: Emit packets for external judging and ingest schema-valid results whose packet hash still matches
+        type: functional
+        priority: could
+        category: review
+        parentId: FR-1200
+        acceptanceCriteria:
+          - id: FR-1210-01
+            description: ingest rejects results whose packet hash differs from the current one
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1203
+            description: Refines judging outside the SDK
+      - id: FR-1211
+        name: Single LLM Runtime
+        description: Run all LLM features through @aaac/runtime and declare it and the Claude Agent SDK as optional
+          peerDependencies
+        type: functional
+        priority: should
+        category: llm
+        rationale: agent-contracts-runtime is deprecated in favor of @aaac/runtime; two runtimes would split adapter,
+          retry, and credential handling
+        acceptanceCriteria:
+          - id: FR-1211-01
+            description: FR-1100 to FR-1103 commands execute via @aaac/runtime executeTask
+            verificationMethod: test
+          - id: FR-1211-02
+            description: package.json declares @aaac/runtime as an optional peer dependency
+            verificationMethod: inspection
+        relations:
+          - type: refines
+            target: FR-1100
+            description: Changes the runtime the LLM commands run on
+      - id: FR-1212
+        name: Review Rebaseline
+        description: Accept stale records as current without calling the LLM, keeping findings and recording the reason
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        rationale: A change to a widely shared input (prompt wording, a commonly included spec) otherwise forces every
+          target to be judged again even when the change cannot affect the verdict
+        acceptanceCriteria:
+          - id: FR-1212-01
+            description: rebaseline updates packetHash and inputHashes, keeps findings and status, and appends from, to,
+              changedInputs, reason, at, gitHead, and gitDirty without any personal identity
+            verificationMethod: test
+          - id: FR-1212-02
+            description: rebaseline requires --reason and skips targets that have no record
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1206
+            description: Refines how a stale record becomes current
   - model: nonfunctional-requirement
     specs:
       - id: NFR-001
@@ -1913,6 +2206,37 @@ entries:
           - id: NFR-015-02
             description: No changes to existing public API or CLI behavior
             verificationMethod: review
+        relations:
+          - type: satisfies
+            target: UC-010
+            description: Satisfies design consistency check use case
+      - id: NFR-016
+        name: Lint Without Network or LLM Credentials
+        description: lint uses no network access and no LLM credentials, including the review gate
+        type: non-functional
+        priority: must
+        category: reliability
+        rationale: The review gate runs in CI, where LLM credentials are not expected
+        acceptanceCriteria:
+          - id: NFR-016-01
+            description: lint evaluates REVIEW-001 to REVIEW-004 from records and packets only, with credential variables unset
+            verificationMethod: test
+        relations:
+          - type: satisfies
+            target: UC-010
+            description: Satisfies design consistency check use case
+      - id: NFR-017
+        name: Deterministic Review Packets
+        description: Packets built from the same specs and config hash identically regardless of OS, time, and concurrency
+        type: non-functional
+        priority: must
+        category: reliability
+        rationale: A record is current only while its packet hash matches; a hash that varied by environment would make
+          records stale for no reason
+        acceptanceCriteria:
+          - id: NFR-017-01
+            description: Building a packet twice, in a different order, and from CRLF prompt files gives the same hash
+            verificationMethod: test
         relations:
           - type: satisfies
             target: UC-010

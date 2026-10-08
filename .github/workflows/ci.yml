@@ -35,6 +35,8 @@ jobs:
         run: |
           npx cli-contracts generate
           git diff --exit-code -- src/generated/ docs/cli-reference.md
+      - name: Embedded agent DSL matches the DSL
+        run: npx agent-runtime generate --config dsl/agent-runtime.config.yaml --check
       - name: Build
         run: npm run build
       - name: Bundle

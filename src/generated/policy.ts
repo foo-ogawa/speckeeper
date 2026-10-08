@@ -163,13 +163,6 @@ export const commandDefinitions = {
         }
       },
       {
-        "name": "fix",
-        "schema": {
-          "type": "boolean",
-          "default": false
-        }
-      },
-      {
         "name": "format",
         "schema": {
           "type": "string",
@@ -934,6 +927,235 @@ export const commandDefinitions = {
       },
       {
         "name": "show-prompt",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    ],
+    "env": {
+      "GEMINI_API_KEY": {
+        "sensitive": true
+      },
+      "OPENAI_API_KEY": {
+        "sensitive": true
+      },
+      "ANTHROPIC_API_KEY": {
+        "sensitive": true
+      }
+    }
+  },
+  "review": {
+    "effects": {
+      "network": {
+        "description": "LLM API calls to the configured provider",
+        "idempotent": false
+      }
+    },
+    "options": [
+      {
+        "name": "config",
+        "schema": {
+          "type": "string"
+        },
+        "file": {
+          "mode": "read",
+          "exists": true,
+          "encoding": "utf-8"
+        }
+      },
+      {
+        "name": "check",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repeatable": true
+      },
+      {
+        "name": "target",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repeatable": true
+      },
+      {
+        "name": "adapter",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "claude",
+            "openai",
+            "gemini",
+            "mock"
+          ]
+        }
+      },
+      {
+        "name": "model",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "concurrency",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2
+        }
+      },
+      {
+        "name": "force",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "dry-run",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "show-packet",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "require-judge",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "allow-api-key",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "max-targets",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      {
+        "name": "prune",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "emit",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "format",
+        "schema": {
+          "type": "string",
+          "default": "text",
+          "enum": [
+            "text",
+            "json"
+          ]
+        }
+      }
+    ],
+    "env": {
+      "GEMINI_API_KEY": {
+        "sensitive": true
+      },
+      "OPENAI_API_KEY": {
+        "sensitive": true
+      },
+      "ANTHROPIC_API_KEY": {
+        "sensitive": true
+      }
+    }
+  },
+  "review.ingest": {
+    "options": [
+      {
+        "name": "config",
+        "schema": {
+          "type": "string"
+        },
+        "file": {
+          "mode": "read",
+          "exists": true,
+          "encoding": "utf-8"
+        }
+      }
+    ],
+    "env": {
+      "GEMINI_API_KEY": {
+        "sensitive": true
+      },
+      "OPENAI_API_KEY": {
+        "sensitive": true
+      },
+      "ANTHROPIC_API_KEY": {
+        "sensitive": true
+      }
+    }
+  },
+  "review.rebaseline": {
+    "options": [
+      {
+        "name": "config",
+        "schema": {
+          "type": "string"
+        },
+        "file": {
+          "mode": "read",
+          "exists": true,
+          "encoding": "utf-8"
+        }
+      },
+      {
+        "name": "reason",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "check",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repeatable": true
+      },
+      {
+        "name": "target",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repeatable": true
+      },
+      {
+        "name": "dry-run",
         "schema": {
           "type": "boolean",
           "default": false

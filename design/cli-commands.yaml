@@ -94,12 +94,6 @@ specs:
         required: false
         default: false
       - kind: option
-        name: fix
-        type: boolean
-        description: Fix auto-fixable issues
-        required: false
-        default: false
-      - kind: option
         name: format
         alias: f
         type: enum
@@ -359,7 +353,7 @@ specs:
         alias: s
         type: path
         description: Path to Markdown file containing mermaid flowchart
-        required: false
+        required: true
       - kind: option
         name: output
         alias: o
@@ -745,6 +739,209 @@ specs:
         description: Runtime dependency missing
       - code: 12
         description: LLM provider or adapter error
+  - id: CMD-REVIEW
+    name: review
+    description: Judge the declared review checks per target with an LLM and record the judgments; only targets whose record is missing or stale are judged
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: config
+        alias: c
+        type: path
+        description: Path to config file
+        required: false
+      - kind: option
+        name: check
+        type: array
+        description: Judge only these checks
+        required: false
+      - kind: option
+        name: target
+        type: array
+        description: Judge only these targets
+        required: false
+      - kind: option
+        name: adapter
+        type: enum
+        description: SDK adapter for LLM execution (default from review.adapter, else claude)
+        required: false
+        choices:
+          - claude
+          - openai
+          - gemini
+          - mock
+      - kind: option
+        name: model
+        type: string
+        description: LLM model override
+        required: false
+      - kind: option
+        name: concurrency
+        type: number
+        description: Number of targets judged in parallel
+        required: false
+        default: '2'
+      - kind: option
+        name: force
+        type: boolean
+        description: Judge every selected target, fresh or not
+        required: false
+        default: false
+      - kind: option
+        name: dry-run
+        type: boolean
+        description: List the targets to judge and to skip with their reasons and the estimated tokens, without calling the LLM
+        required: false
+        default: false
+      - kind: option
+        name: show-packet
+        type: boolean
+        description: Print the packets of the selected targets without calling the LLM
+        required: false
+        default: false
+      - kind: option
+        name: require-judge
+        type: boolean
+        description: Exit 14 instead of skipping when no LLM credentials are available
+        required: false
+        default: false
+      - kind: option
+        name: allow-api-key
+        type: boolean
+        description: Allow API-key billing for this run even when review.allowApiKey is false
+        required: false
+        default: false
+      - kind: option
+        name: max-targets
+        type: number
+        description: Judge at most this many targets in this run
+        required: false
+      - kind: option
+        name: prune
+        type: boolean
+        description: Remove records whose check or target no longer exists
+        required: false
+        default: false
+      - kind: option
+        name: emit
+        type: path
+        description: Write the packets of the targets to judge into this directory instead of calling the LLM
+        required: false
+      - kind: option
+        name: format
+        alias: f
+        type: enum
+        description: Output format
+        required: false
+        choices:
+          - text
+          - json
+        default: text
+      - kind: option
+        name: show-prompt
+        type: boolean
+        description: Same as --show-packet (the flag every LLM command carries)
+        required: false
+        default: false
+    subCommands: []
+    relatedRequirements:
+      - FR-1200
+      - FR-1202
+      - FR-1203
+      - FR-1204
+      - FR-1206
+      - FR-1207
+      - FR-1210
+    examples:
+      - speckeeper review
+      - speckeeper review --dry-run
+      - speckeeper review --check req-verifiability --target REQ-012 --force
+      - speckeeper review --emit review-packets
+      - speckeeper review --prune
+    exitCodes:
+      - code: 0
+        description: Review completed, or skipped because no LLM credentials are available
+      - code: 1
+        description: Configuration error, or a target whose output stayed invalid after one correction
+      - code: 11
+        description: Runtime dependency missing (@aaac/runtime)
+      - code: 12
+        description: LLM provider or adapter error, including usage limits; records already written are kept
+      - code: 13
+        description: An API key would be used while review.allowApiKey is false
+      - code: 14
+        description: --require-judge was given and no LLM credentials are available
+  - id: CMD-REVIEW-INGEST
+    name: review.ingest
+    description: Record externally produced review results whose packet hash is current
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: argument
+        name: dir
+        type: path
+        description: Directory holding the results
+        required: true
+      - kind: option
+        name: config
+        alias: c
+        type: path
+        description: Path to config file
+        required: false
+    subCommands: []
+    relatedRequirements:
+      - FR-1210
+    examples:
+      - speckeeper review ingest review-packets
+    exitCodes:
+      - code: 0
+        description: Every result was recorded
+      - code: 1
+        description: A result was rejected, or a configuration error
+  - id: CMD-REVIEW-REBASELINE
+    name: review.rebaseline
+    description: Accept stale records as current without calling the LLM, keeping their findings and recording the reason
+    componentId: COMP-CLI
+    globalParameters: []
+    parameters:
+      - kind: option
+        name: config
+        alias: c
+        type: path
+        description: Path to config file
+        required: false
+      - kind: option
+        name: reason
+        type: string
+        description: Why the change cannot affect the verdict (recorded)
+        required: true
+      - kind: option
+        name: check
+        type: array
+        description: Rebaseline only these checks
+        required: false
+      - kind: option
+        name: target
+        type: array
+        description: Rebaseline only these targets
+        required: false
+      - kind: option
+        name: dry-run
+        type: boolean
+        description: List the targets to rebaseline and their changed inputs without writing
+        required: false
+        default: false
+    subCommands: []
+    relatedRequirements:
+      - FR-1212
+    examples:
+      - speckeeper review rebaseline --reason "fix a typo in the prompt" --check req-verifiability
+    exitCodes:
+      - code: 0
+        description: Rebaseline completed
+      - code: 1
+        description: Configuration error
   - id: CMD-CONVERT
     name: convert
     description: Convert a TS spec data file to YAML format

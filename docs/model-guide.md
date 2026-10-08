@@ -49,7 +49,7 @@ Below are examples of models actually defined in the speckeeper project.
 
 ### CLICommand Model (with External SSOT Checker)
 
-<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="300" end="419" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
+<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="348" end="467" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
 **design/_models/cli-command.ts (excerpt)**
 
 ```typescript
@@ -214,7 +214,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="27" end="86" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="28" end="87" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -283,7 +283,7 @@ export interface CheckResult {
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="253" end="297" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="254" end="301" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
@@ -311,6 +311,9 @@ export interface CheckResult {
   
   /** Lint rules (override in subclass) */
   protected lintRules: LintRule<z.infer<TSchema>>[] = [];
+  
+  /** Review checks judged per target by an LLM (override in subclass); targets default to one per spec */
+  protected reviewChecks: ReviewCheck[] = [];
   
   /** Exporters (override in subclass) */
   protected exporters: Exporter<z.infer<TSchema>>[] = [];

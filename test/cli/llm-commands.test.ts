@@ -5,7 +5,7 @@
  * --show-prompt is set, return it instead of reaching the runtime. They are
  * covered together so the shared behaviour is asserted once.
  *
- * The runtime is reached through a single dynamic import in
+ * The runtime (@aaac/runtime) is reached through a single dynamic import in
  * src/agents/orchestrator.ts, so mocking that module is what lets these tests
  * assert that no LLM call happens.
  */
@@ -13,9 +13,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Readable } from 'node:stream';
 import { join } from 'node:path';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 
 const executeTask = vi.fn();
-vi.mock('agent-contracts-runtime', () => ({ executeTask }));
+vi.mock('@aaac/runtime', () => ({ executeTask }));
 
 const repoRoot = join(import.meta.dirname, '..', '..');
 const configPath = join(repoRoot, 'speckeeper.config.ts');
@@ -219,4 +222,73 @@ describe('FR-1103: propose-acceptance-criteria', () => {
     expect(other).toBeDefined();
     expect(prompt).not.toContain(other as string);
   }, 60_000);
+});
+
+describe('FR-1211: the LLM commands run on @aaac/runtime', () => {
+  beforeEach(() => {
+    executeTask.mockReset();
+    vi.restoreAllMocks();
+  });
+
+  it('FR-1211-01 audit-requirements executes its task through @aaac/runtime executeTask', async () => {
+    executeTask.mockResolvedValue({
+      outcome: {
+        status: 'success',
+        data: { summary: 'fine', riskLevel: 'low', findings: [] },
+        raw: '{}',
+      },
+      follow_ups_used: 0,
+      retries_used: 0,
+    });
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const { commandAuditRequirements } = await import('../../src/cli/audit-requirements.js');
+
+    await commandAuditRequirements({ config: configPath, adapter: 'mock', logFile: 'agent.log', reportFormat: 'json' });
+
+    expect(executeTask).toHaveBeenCalledTimes(1);
+    const [taskId, options] = executeTask.mock.calls[0];
+    expect(taskId).toBe('audit-requirement-quality');
+    expect(options).toMatchObject({
+      adapter: 'mock',
+      progressLog: { destination: 'file', file: 'agent.log' },
+    });
+    expect(options.dsl).toBeDefined();
+    expect(write.mock.calls.map(c => String(c[0])).join('')).toContain('"summary": "fine"');
+  }, 60_000);
+
+  it('FR-1211-01 --log-file reaches the runtime from the command line', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'speckeeper-log-file-'));
+    try {
+      const logFile = join(dir, 'agent.log');
+      spawnSync(
+        process.execPath,
+        [join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs'), join(repoRoot, 'src', 'cli', 'index.ts'),
+          'audit-requirements', '--config', configPath, '--adapter', 'mock', '--log-file', logFile],
+        { cwd: repoRoot, encoding: 'utf-8', timeout: 120_000 },
+      );
+      expect(existsSync(logFile)).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 150_000);
+});
+
+describe('FR-1102: explain-impact report', () => {
+  it('FR-1102-02 reports an explanation that has no findings, and shows the explanation', async () => {
+    const { computeExitCode, formatResult } = await import('../../src/agents/formatter.js');
+    const result = {
+      taskId: 'explain-impact-result' as const,
+      status: 'success' as const,
+      data: { summary: 'Small change', riskLevel: 'low' as const, explanation: 'Only the export screen is affected.' },
+      raw: '{}',
+      prompt: '',
+      followUpsUsed: 0,
+      retriesUsed: 0,
+    };
+
+    expect(computeExitCode(result, {})).toBe(0);
+    const text = formatResult(result, 'text');
+    expect(text).toContain('Summary: Small change');
+    expect(text).toContain('Only the export screen is affected.');
+  });
 });

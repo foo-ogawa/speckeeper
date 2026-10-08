@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-03T15:41:44.914Z",
+  "generated_at": "2026-10-08T16:41:58.781Z",
   "dsl_hash": "e7b28260fdce6ae3d26bafba7c0c5365072462ae105b18c77f436ad585702650",
-  "generation_input_hash": "e7b28260fdce6ae3d26bafba7c0c5365072462ae105b18c77f436ad585702650",
+  "generation_input_hash": "6272fff411990c27f51331928da450fc835fd0e0501f7b76e31cde747c844b49",
   "files": [
     "../src/generated/dsl/agents.ts",
     "../src/generated/dsl/tasks.ts",

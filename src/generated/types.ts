@@ -29,7 +29,6 @@ export interface LintOptions {
   config?: string;
   phase?: "REQ" | "HLD" | "LLD" | "OPS";
   strict?: boolean;
-  fix?: boolean;
   format?: "text" | "json" | "github";
 }
 
@@ -231,6 +230,62 @@ export type ProposeAcceptanceCriteriaExitResult =
   | { exitCode: 10; stdout: { summary: string; riskLevel: "low" | "medium" | "high" | "critical"; findings: { id?: string; severity: "info" | "warning" | "error" | "critical"; category: string; target?: string; location?: string; message: string; recommendation?: string; confidence?: number; evidence?: { kind: "file" | "command" | "schema" | "diff" | "stdout" | "stderr" | "text"; target?: string; location?: string; excerpt?: string }[]; details?: Record<string, unknown> }[]; recommendedActions?: { kind: "run_command" | "edit_file" | "review" | "confirm" | "block" | "ignore"; title: string; command?: string; target?: string; rationale?: string }[]; metadata?: { tool?: string; command?: string; version?: string; generatedAt?: string; adapter?: string; model?: string } } & { criteriaProposals: { specId: string; criteria: string[]; rationale: string }[] } }
   | { exitCode: 11; stderr: unknown }
   | { exitCode: 12; stderr: unknown };
+
+export interface ReviewOptions {
+  config?: string;
+  check?: string[];
+  target?: string[];
+  adapter?: "claude" | "openai" | "gemini" | "mock";
+  model?: string;
+  concurrency?: number;
+  force?: boolean;
+  dryRun?: boolean;
+  showPacket?: boolean;
+  requireJudge?: boolean;
+  allowApiKey?: boolean;
+  maxTargets?: number;
+  prune?: boolean;
+  emit?: string;
+  format?: "text" | "json";
+}
+
+export type ReviewExitCode = 0 | 1 | 11 | 12 | 13 | 14;
+
+export type ReviewExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown }
+  | { exitCode: 11; stderr: unknown }
+  | { exitCode: 12; stderr: unknown }
+  | { exitCode: 13; stderr: unknown }
+  | { exitCode: 14; stderr: unknown };
+
+export interface ReviewIngestArgs {
+  dir: string;
+}
+
+export interface ReviewIngestOptions {
+  config?: string;
+}
+
+export type ReviewIngestExitCode = 0 | 1;
+
+export type ReviewIngestExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown };
+
+export interface ReviewRebaselineOptions {
+  config?: string;
+  reason: string;
+  check?: string[];
+  target?: string[];
+  dryRun?: boolean;
+}
+
+export type ReviewRebaselineExitCode = 0 | 1;
+
+export type ReviewRebaselineExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown };
 
 export interface AgentsOptions {
   format?: "yaml" | "json";

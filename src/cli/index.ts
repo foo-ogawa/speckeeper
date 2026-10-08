@@ -48,6 +48,7 @@ import { commandAuditRequirements } from './audit-requirements.js';
 import { commandProposeTraceLinks } from './propose-trace-links.js';
 import { commandExplainImpact } from './explain-impact-result.js';
 import { commandProposeAcceptanceCriteria } from './propose-acceptance-criteria.js';
+import { reviewCommand, reviewIngestCommand, reviewRebaselineCommand } from './review.js';
 import { resolvedDsl } from '../generated/dsl/index.js';
 import type { InitOptions } from './init.js';
 import type { BuildCommandOptions } from './build.js';
@@ -108,6 +109,7 @@ const handlers: CommandHandlers = {
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+      logFile: opts.logFile,
     }),
   proposeTraceLinks: (opts) =>
     commandProposeTraceLinks({
@@ -118,6 +120,7 @@ const handlers: CommandHandlers = {
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+      logFile: opts.logFile,
     }),
   explainImpact: (opts) =>
     commandExplainImpact({
@@ -127,6 +130,7 @@ const handlers: CommandHandlers = {
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+      logFile: opts.logFile,
     }),
   proposeAcceptanceCriteria: (specIds, opts) =>
     commandProposeAcceptanceCriteria(specIds, {
@@ -137,7 +141,20 @@ const handlers: CommandHandlers = {
       failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
       output: opts.output,
       reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
+      logFile: opts.logFile,
     }),
+  review: async (opts) => {
+    const exitCode = await reviewCommand(opts);
+    if (exitCode !== 0) process.exit(exitCode);
+  },
+  reviewIngest: async (dir, opts) => {
+    const exitCode = await reviewIngestCommand(dir!, opts);
+    if (exitCode !== 0) process.exit(exitCode);
+  },
+  reviewRebaseline: async (opts) => {
+    const exitCode = await reviewRebaselineCommand(opts);
+    if (exitCode !== 0) process.exit(exitCode);
+  },
   agents: async (opts) => {
     const YAML = await import('yaml');
     const format = opts.format ?? 'yaml';
