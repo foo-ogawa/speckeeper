@@ -1403,6 +1403,7 @@ specs:
       framework: vitest
     implementsCommand: CMD-REVIEW
     verifiesRequirements:
+      - FR-1213
       - FR-1200
       - FR-1201
       - FR-1202
@@ -1418,6 +1419,24 @@ specs:
       - NFR-016
       - NFR-017
     testCasePatterns:
+      - acceptanceCriteriaId: FR-1213-01
+        pattern: 'FR-1213-01 lists the rules in the packet and makes the record stale when a rule changes'
+        description: 'lists the rules in the packet and makes the record stale when a rule changes'
+      - acceptanceCriteriaId: FR-1213-01
+        pattern: 'FR-1213-01 rejects empty rules, a malformed rule and a code declared twice'
+        description: 'rejects empty rules, a malformed rule and a code declared twice'
+      - acceptanceCriteriaId: FR-1213-02
+        pattern: 'FR-1213-02 treats a code that is not a declared rule as a schema mismatch'
+        description: 'treats a code that is not a declared rule as a schema mismatch'
+      - acceptanceCriteriaId: FR-1213-03
+        pattern: 'FR-1213-03 records the severity of the rule, not one the judge gives'
+        description: 'records the severity of the rule, not one the judge gives'
+      - acceptanceCriteriaId: FR-1213-03
+        pattern: 'FR-1213-03 an ingested result takes its severity from the rule as well'
+        description: 'an ingested result takes its severity from the rule as well'
+      - acceptanceCriteriaId: FR-1213-04
+        pattern: 'FR-1213-04 a check without rules lets the judge choose the code and the severity'
+        description: 'a check without rules lets the judge choose the code and the severity'
       - acceptanceCriteriaId: FR-1203-04
         pattern: 'FR-1203-04 records no usage when the runtime reports none'
         description: 'records no usage when the runtime reports none'
@@ -1557,6 +1576,9 @@ specs:
         pattern: 'FR-1212-02 needs --reason and leaves targets without a record alone'
         description: 'needs --reason and leaves targets without a record alone'
     relations:
+      - type: verifies
+        target: FR-1213
+        description: Verifies acceptance criteria for FR-1213
       - type: verifies
         target: FR-1200
         description: Verifies acceptance criteria for FR-1200

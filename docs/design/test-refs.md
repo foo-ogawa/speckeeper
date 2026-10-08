@@ -46,7 +46,7 @@
 | TEST-064 | Drift verification test over the machine-readable artifacts (specs/) | vitest | 1 |
 | TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 5 |
 | TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
-| TEST-082 | Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline) | vitest | 14 |
+| TEST-082 | Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline) | vitest | 15 |
 
 ---
 
@@ -1146,6 +1146,7 @@
 
 ### Verified Requirements
 
+- FR-1213
 - FR-1200
 - FR-1201
 - FR-1202
@@ -1169,6 +1170,12 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-1213-01 | `FR-1213-01 lists the rules in the packet and makes the record stale when a rule changes` | lists the rules in the packet and makes the record stale when a rule changes |
+| FR-1213-01 | `FR-1213-01 rejects empty rules, a malformed rule and a code declared twice` | rejects empty rules, a malformed rule and a code declared twice |
+| FR-1213-02 | `FR-1213-02 treats a code that is not a declared rule as a schema mismatch` | treats a code that is not a declared rule as a schema mismatch |
+| FR-1213-03 | `FR-1213-03 records the severity of the rule, not one the judge gives` | records the severity of the rule, not one the judge gives |
+| FR-1213-03 | `FR-1213-03 an ingested result takes its severity from the rule as well` | an ingested result takes its severity from the rule as well |
+| FR-1213-04 | `FR-1213-04 a check without rules lets the judge choose the code and the severity` | a check without rules lets the judge choose the code and the severity |
 | FR-1203-04 | `FR-1203-04 records no usage when the runtime reports none` | records no usage when the runtime reports none |
 | FR-1203-03 | `FR-1203-03 starts no verifier call once the adapter call of another target failed` | starts no verifier call once the adapter call of another target failed |
 | FR-1206-02 | `FR-1206-02 lists the skipped targets with their reasons and averages recorded usage over every record of the check` | lists the skipped targets with their reasons and averages recorded usage over every record of the check |

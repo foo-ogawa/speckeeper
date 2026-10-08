@@ -706,6 +706,101 @@ describe('FR-1207 verifier verdicts across judgments', () => {
   });
 });
 
+describe('FR-1213 review rules', () => {
+  const rules = [
+    { code: 'AC-VAGUE', severity: 'warning' as const, description: 'A criterion without a number or a decision rule' },
+    { code: 'AC-NO-ERROR', severity: 'error' as const, description: 'No criterion for the error case' },
+  ];
+  const withRules: ReviewCheck = { ...verifiability, rules };
+
+  it('FR-1213-01 lists the rules in the packet and makes the record stale when a rule changes', async () => {
+    useProject({ models: [requirementModel([withRules])], specs: design() });
+    await reviewCommand({ showPacket: true, target: ['REQ-001'] }, environment(fakeJudge(noFindings)));
+    expect(stdout()).toContain('## Rules');
+    expect(stdout()).toContain('- AC-VAGUE (warning): A criterion without a number or a decision rule');
+    expect(stdout()).toContain('- AC-NO-ERROR (error): No criterion for the error case');
+
+    await reviewCommand({ target: ['REQ-001'] }, environment(fakeJudge(noFindings)));
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.inputHashes.rules).toMatch(/^sha256:/);
+
+    project.models = [requirementModel([{ ...withRules, rules: [...rules, { code: 'AC-DUP', severity: 'info', description: 'Duplicate criteria' }] }])];
+    logSpy.mockClear();
+    stdoutSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json', target: ['REQ-001'] }, environment(fakeJudge(noFindings)));
+    expect((JSON.parse(stdout()) as { run: Array<{ reasons: string[] }> }).run[0].reasons).toEqual(['rules changed', 'schema changed']);
+  });
+
+  it('FR-1213-01 rejects empty rules, a malformed rule and a code declared twice', async () => {
+    const run = async (badRules: unknown) => {
+      useProject({ models: [requirementModel([{ ...verifiability, rules: badRules as never }])], specs: design() });
+      return reviewCommand({ dryRun: true }, environment(fakeJudge(noFindings)));
+    };
+
+    expect(await run([])).toBe(1);
+    expect(await run([{ code: 'X', severity: 'fatal', description: 'd' }])).toBe(1);
+    expect(await run([rules[0], { ...rules[0] }])).toBe(1);
+    expect(stderr()).toContain('rule code "AC-VAGUE" is declared twice');
+  });
+
+  it('FR-1213-02 treats a code that is not a declared rule as a schema mismatch', async () => {
+    useProject({ models: [requirementModel([withRules])], specs: design() });
+    const judge = fakeJudge(({ target, followUp }) => ({
+      findings: target === 'REQ-001'
+        ? [{ code: followUp ? 'AC-VAGUE' : 'AC-OTHER', message: 'Quickly is vague' }]
+        : [{ code: 'AC-MADE-UP', message: 'm' }],
+    }));
+
+    expect(await reviewCommand({}, environment(judge))).toBe(1);
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings.map(f => f.code)).toEqual(['AC-VAGUE']);
+    expect(existsSync(recordFile('req-verifiability', 'REQ-002'))).toBe(false);
+  });
+
+  it('FR-1213-03 records the severity of the rule, not one the judge gives', async () => {
+    useProject({ models: [requirementModel([withRules])], specs: design() });
+    const judge = fakeJudge(({ target }) => ({
+      findings: target === 'REQ-001'
+        ? [{ code: 'AC-NO-ERROR', message: 'No failure case' }, { code: 'AC-VAGUE', message: 'Vague' }]
+        : [],
+    }));
+
+    expect(await reviewCommand({}, environment(judge))).toBe(0);
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings.map(f => [f.code, f.severity]))
+      .toEqual([['AC-NO-ERROR', 'error'], ['AC-VAGUE', 'warning']]);
+    // The judge is shown no severity to give
+    expect(judge.calls[0].prompt).not.toContain('"severity"');
+  });
+
+  it('FR-1213-03 an ingested result takes its severity from the rule as well', async () => {
+    useProject({ models: [requirementModel([withRules])], specs: design() });
+    await reviewCommand({ emit: 'packets', target: ['REQ-001'] }, environment(fakeJudge(noFindings)));
+    const [entry] = (YAML.parse(readFileSync(join(project.dir, 'packets', 'index.yaml'), 'utf-8')) as {
+      packets: Array<{ packetHash: string; result: string }>;
+    }).packets;
+    writeFileSync(join(project.dir, 'packets', entry.result), YAML.stringify({
+      packetHash: entry.packetHash,
+      output: { findings: [{ code: 'AC-NO-ERROR', message: 'No failure case' }] },
+    }));
+
+    expect(await reviewIngestCommand(join(project.dir, 'packets'), {}, { cwd: project.dir })).toBe(0);
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings.map(f => f.severity)).toEqual(['error']);
+  });
+
+  it('FR-1213-04 a check without rules lets the judge choose the code and the severity', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+    const judge = fakeJudge(({ target }) => ({
+      findings: target === 'REQ-001' ? [{ code: 'ANYTHING', severity: 'info', message: 'm' }] : [],
+    }));
+
+    expect(await reviewCommand({}, environment(judge))).toBe(0);
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings.map(f => [f.code, f.severity])).toEqual([['ANYTHING', 'info']]);
+    expect(judge.calls[0].prompt).not.toContain('## Rules');
+  });
+});
+
 describe('FR-1208 judgment record store', () => {
   const finding = (code: string, extra: Partial<RecordedFinding> = {}): RecordedFinding => ({
     fingerprint: findingFingerprint('c', 't', { code, severity: 'warning', message: 'm', subject: 'REQ-001' }),

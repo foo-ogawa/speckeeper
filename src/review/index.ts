@@ -16,5 +16,6 @@ export type {
   ReviewModelClass,
   ReviewPrompt,
   ReviewRegistry,
+  ReviewRule,
   ReviewTarget,
 } from './types.js';

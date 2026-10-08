@@ -6,6 +6,7 @@
  * lint gate both read it from the plan built here.
  */
 import { join } from 'node:path';
+import { z } from 'zod';
 import { relationsContext } from './context.js';
 import { buildPacket, readPrompt, type Packet, type PacketSource } from './packet.js';
 import { compareStrings, type ReferenceGraphEdge } from '../core/model.js';
@@ -23,6 +24,7 @@ import type {
   ReviewGateConfig,
   ReviewModelClass,
   ReviewRegistry,
+  ReviewRule,
   ReviewTarget,
 } from './types.js';
 
@@ -113,6 +115,7 @@ export function resolveReviewSetup(
       description: check.description,
       prompt: readPrompt(check.prompt, rootDir),
       ...(check.verify ? { verifyPrompt: readPrompt(check.verify.prompt, rootDir) } : {}),
+      ...(check.rules ? { rules: validateRules(check.rules, where) } : {}),
       output: check.output,
       provider,
       modelClass: check.modelClass ?? 'standard',
@@ -132,6 +135,24 @@ export function resolveReviewSetup(
     },
     checks,
   };
+}
+
+const ReviewRuleSchema = z.object({
+  code: z.string().min(1),
+  severity: z.enum(['error', 'warning', 'info']),
+  description: z.string().min(1),
+}).strict();
+
+/** A check's rules: at least one, each well formed, no code twice */
+function validateRules(rules: ReviewRule[], where: string): ReviewRule[] {
+  const parsed = z.array(ReviewRuleSchema).min(1).safeParse(rules);
+  if (!parsed.success) throw new ReviewConfigError(`${where}: invalid rules: ${z.prettifyError(parsed.error)}`);
+  const seen = new Set<string>();
+  for (const rule of parsed.data) {
+    if (seen.has(rule.code)) throw new ReviewConfigError(`${where}: rule code "${rule.code}" is declared twice`);
+    seen.add(rule.code);
+  }
+  return parsed.data;
 }
 
 /** The targets a check judges, validated against the design */
@@ -251,6 +272,7 @@ export function changedInputs(record: JudgmentRecord, packet: Packet): ChangedIn
 function flattenInputHashes(hashes: JudgmentRecord['inputHashes']): Record<string, string> {
   const flat: Record<string, string> = { prompt: hashes.prompt, schema: hashes.schema };
   if (hashes.verifyPrompt) flat.verifyPrompt = hashes.verifyPrompt;
+  if (hashes.rules) flat.rules = hashes.rules;
   for (const [id, hash] of Object.entries(hashes.specs)) flat[`spec:${id}`] = hash;
   for (const [path, hash] of Object.entries(hashes.files)) flat[`file:${path}`] = hash;
   return flat;

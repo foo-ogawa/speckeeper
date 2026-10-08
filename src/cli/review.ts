@@ -206,13 +206,13 @@ export async function reviewIngestCommand(
         rejected.push(`${path}: answers packet ${file.data.packetHash}, the current packet is ${planned.packet.hash}`);
         continue;
       }
-      const answer = buildJudgeSchema(planned.check.output, { specs: registry.specs, contextBody: planned.packet.contextBody })
+      const answer = buildJudgeSchema(planned.check, { specs: registry.specs, contextBody: planned.packet.contextBody })
         .safeParse(file.data.output);
       if (!answer.success) {
         rejected.push(`${path}: ${z.prettifyError(answer.error)}`);
         continue;
       }
-      const findings = answerToFindings(check, target, answer.data);
+      const findings = answerToFindings(planned.check, target, answer.data);
       const judgedAt = (environment.now?.() ?? new Date()).toISOString();
       writeRecord(planned.recordFile, assembleRecord(planned, answer.data, findings, { adapter: 'manual' }, judgedAt));
       recorded++;

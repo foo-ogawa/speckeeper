@@ -224,10 +224,10 @@ async function judgeTarget(
     description: check.description,
     modelClass: check.modelClass,
     request: packet.text,
-    schema: buildJudgeSchema(check.output, { specs: options.registry.specs, contextBody: packet.contextBody }),
+    schema: buildJudgeSchema(check, { specs: options.registry.specs, contextBody: packet.contextBody }),
   });
 
-  let findings = answerToFindings(check.id, target.id, answer);
+  let findings = answerToFindings(check, target.id, answer);
 
   const { verifyPrompt, verifyModelClass } = check;
   if (verifyPrompt !== undefined && verifyModelClass !== undefined) {
@@ -252,14 +252,27 @@ async function judgeTarget(
     usage.reported ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : undefined);
 }
 
-/** A judge's findings as recorded: fingerprinted, open, project fields under `extra` */
-export function answerToFindings(checkId: string, targetId: string, answer: ReviewOutput): RecordedFinding[] {
+/**
+ * A judge's findings as recorded: fingerprinted, open, project fields under
+ * `extra`, and with the declared rule's severity when the check has rules.
+ */
+export function answerToFindings(
+  check: Pick<ResolvedCheck, 'id' | 'rules'>,
+  targetId: string,
+  answer: ReviewOutput,
+): RecordedFinding[] {
+  const ruleSeverity = new Map(check.rules?.map(rule => [rule.code, rule.severity]));
   return answer.findings.map(finding => {
     const extra = Object.fromEntries(Object.entries(finding).filter(([key]) => !COMMON_FINDING_FIELDS.includes(key)));
+    const severity = ruleSeverity.get(finding.code) ?? finding.severity;
+    if (severity === undefined) {
+      // The output schema requires either a severity or a declared code
+      throw new Error(`Finding ${finding.code} of ${check.id} has no severity`);
+    }
     return {
-      fingerprint: findingFingerprint(checkId, targetId, finding),
+      fingerprint: findingFingerprint(check.id, targetId, finding),
       code: finding.code,
-      severity: finding.severity,
+      severity,
       message: finding.message,
       ...(finding.subject !== undefined ? { subject: finding.subject } : {}),
       ...(finding.location !== undefined ? { location: finding.location } : {}),
