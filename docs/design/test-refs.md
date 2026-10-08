@@ -1168,6 +1168,12 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-1203-04 | `FR-1203-04 records no usage when the runtime reports none` | records no usage when the runtime reports none |
+| FR-1203-03 | `FR-1203-03 starts no verifier call once the adapter call of another target failed` | starts no verifier call once the adapter call of another target failed |
+| FR-1206-02 | `FR-1206-02 lists the skipped targets with their reasons and averages recorded usage over every record of the check` | lists the skipped targets with their reasons and averages recorded usage over every record of the check |
+| FR-1206-02 | `FR-1206-02 names the relation the context followed to a changed spec, not one the context leaves out` | names the relation the context followed to a changed spec, not one the context leaves out |
+| FR-1207-01 | `FR-1207-01 decides the verifier false positive again on the next judgment` | decides the verifier false positive again on the next judgment |
+| FR-1212-02 | `FR-1212-02 hands review rebaseline and review ingest the options written after them` | hands review rebaseline and review ingest the options written after them |
 | FR-1200-01 | `FR-1200-01 plans checks declared in config review\.checks and in a model\\` | plans checks declared in config review.checks and in a model\ |
 | FR-1200-02 | `FR-1200-02 defaults a model check to one target per spec, and a select\(\) target may span several specs` | defaults a model check to one target per spec, and a select() target may span several specs |
 | FR-1200-02 | `FR-1200-02 rejects a config check without select\(\) and a target naming an unknown spec` | rejects a config check without select() and a target naming an unknown spec |

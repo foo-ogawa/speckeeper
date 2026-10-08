@@ -8,8 +8,9 @@
 import { join } from 'node:path';
 import { relationsContext } from './context.js';
 import { buildPacket, readPrompt, type Packet, type PacketSource } from './packet.js';
+import { compareStrings, type ReferenceGraphEdge } from '../core/model.js';
 import {
-  listRecordFiles,
+  listCheckFiles,
   readRecord,
   recordPath,
   type JudgeSignature,
@@ -134,7 +135,7 @@ export function resolveReviewSetup(
 }
 
 /** The targets a check judges, validated against the design */
-export function selectTargets(check: ResolvedCheck, registry: ReviewRegistry): ReviewTarget[] {
+function selectTargets(check: ResolvedCheck, registry: ReviewRegistry): ReviewTarget[] {
   const targets = check.check.select
     ? check.check.select(registry)
     : [...(registry.models[check.modelId!]?.keys() ?? [])].map(id => ({ id, specIds: [id] }));
@@ -225,7 +226,7 @@ export async function planReview(
   }
 
   const planned = new Set(targets.map(t => `${t.check.id}/${t.target.id}`));
-  const orphans = listRecordFiles(setup.dir).filter(file => !planned.has(`${file.check}/${file.target}`));
+  const orphans = listCheckFiles(setup.dir, '.yaml').filter(file => !planned.has(`${file.check}/${file.target}`));
   return { targets, orphans };
 }
 
@@ -255,15 +256,31 @@ function flattenInputHashes(hashes: JudgmentRecord['inputHashes']): Record<strin
   return flat;
 }
 
+/**
+ * Why a record is stale for a packet, one entry per reason: the inputs whose
+ * hash changed (with the relations that brought a changed spec into the
+ * context, when `withPaths`), or else what changed besides the inputs.
+ */
+export function staleReasons(record: JudgmentRecord, packet: Packet, withPaths = false): string[] {
+  if (record.packetHash === packet.hash) return ['the judge changed'];
+  const changed = changedInputs(record, packet);
+  if (changed.length === 0) return ['the packet changed (its layout, not an input)'];
+  return changed.map(c => {
+    const verb = c.from === null ? 'added' : c.to === null ? 'removed' : 'changed';
+    const path = withPaths && c.input.startsWith('spec:') ? packet.paths[c.input.slice('spec:'.length)] : undefined;
+    return `${c.input} ${verb}${path && path.length > 0 ? ` (${describePath(path)})` : ''}`;
+  });
+}
+
+function describePath(path: ReferenceGraphEdge[]): string {
+  return path.map(e => `${e.from} -${e.type}-> ${e.to}`).join(', ');
+}
+
 /** Targets in the order a run judges them: missing records first, then stale ones, each by target ID */
 export function runOrder(targets: PlannedTarget[]): PlannedTarget[] {
   const rank = { missing: 0, stale: 1, fresh: 2 } as const;
   return [...targets].sort((a, b) =>
     rank[a.state] - rank[b.state] ||
-    compare(a.target.id, b.target.id) ||
-    compare(a.check.id, b.check.id));
-}
-
-function compare(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0;
+    compareStrings(a.target.id, b.target.id) ||
+    compareStrings(a.check.id, b.check.id));
 }

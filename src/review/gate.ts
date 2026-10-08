@@ -8,10 +8,9 @@
 import { relative } from 'node:path';
 import type { LintResult } from '../core/model.js';
 import { loadRuntime } from '../agents/orchestrator.js';
-import { changedInputs, planReview, type ReviewSetup } from './checks.js';
-import type { Packet } from './packet.js';
+import { planReview, staleReasons, type ReviewSetup } from './checks.js';
 import { resolveJudgeSignature } from './judge.js';
-import type { JudgeSignature, JudgmentRecord } from './record.js';
+import type { JudgeSignature } from './record.js';
 import type { ReviewRegistry } from './types.js';
 
 export const REVIEW_LINT_RULES = {
@@ -43,9 +42,11 @@ export async function runReviewGate(setup: ReviewSetup, registry: ReviewRegistry
       results.push({
         ruleId: REVIEW_LINT_RULES.stale,
         severity: gate.stale,
-        message: planned.record
-          ? `${label}: the record is stale (${staleReason(planned.record, planned.packet)}); run "speckeeper review" or "speckeeper review rebaseline"`
-          : `${label}: no judgment is recorded; run "speckeeper review"`,
+        message: !planned.record
+          ? `${label}: no judgment is recorded; run "speckeeper review"`
+          : planned.record.packetHash === planned.packet.hash
+            ? `${label}: the record was judged by ${describeJudge(planned.record.judge)}, not the configured judge; run "speckeeper review"`
+            : `${label}: the record is stale (${staleReasons(planned.record, planned.packet).join(', ')}); run "speckeeper review" or "speckeeper review rebaseline"`,
         specId,
       });
     }
@@ -81,14 +82,6 @@ export async function runReviewGate(setup: ReviewSetup, registry: ReviewRegistry
   }
 
   return results;
-}
-
-/** Why a record is stale for a packet, from its per-input hashes */
-export function staleReason(record: JudgmentRecord, packet: Packet): string {
-  if (record.packetHash === packet.hash) return 'the judge changed';
-  const changed = changedInputs(record, packet);
-  if (changed.length === 0) return 'the packet changed (its layout, not an input)';
-  return changed.map(c => `${c.input} ${c.from === null ? 'added' : c.to === null ? 'removed' : 'changed'}`).join(', ');
 }
 
 function describeJudge(judge: JudgeSignature): string {

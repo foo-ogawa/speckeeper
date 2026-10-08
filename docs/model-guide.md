@@ -49,7 +49,7 @@ Below are examples of models actually defined in the speckeeper project.
 
 ### CLICommand Model (with External SSOT Checker)
 
-<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="317" end="436" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
+<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="348" end="467" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
 **design/_models/cli-command.ts (excerpt)**
 
 ```typescript

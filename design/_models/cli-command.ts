@@ -182,7 +182,7 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
       const member = current.parent.name.text;
       if (member === 'command') break;
 
-      if (member === 'option' || member === 'requiredOption') {
+      if (member === 'option') {
         const flags = literalValue(call.arguments[0]);
         if (typeof flags === 'string') {
           const { name, alias, takesValue } = parseOptionFlags(flags);
@@ -191,11 +191,14 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
               name,
               alias,
               takesValue,
-              required: member === 'requiredOption',
+              required: false,
               default: call.arguments.length >= 3 ? literalValue(call.arguments[2]) : undefined,
             });
           }
         }
+      } else if (member === 'action') {
+        // A required option is checked at the start of the action, with commander's message
+        markRequiredOptions(call.arguments[0], impl);
       } else if (member === 'argument') {
         const declaration = literalValue(call.arguments[0]);
         if (typeof declaration === 'string') {
@@ -208,6 +211,33 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
     }
   }
 
+  /** Mark the options an action rejects with "error: required option '<flags>' not specified" */
+  function markRequiredOptions(action: ts.Node | undefined, impl: CLICommandImpl): void {
+    if (!action) return;
+    const visitAction = (node: ts.Node): void => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === 'error'
+      ) {
+        const message = literalValue(node.arguments[0]);
+        const flags = typeof message === 'string' ? /^error: required option '(.+)' not specified$/.exec(message)?.[1] : undefined;
+        const name = flags ? parseOptionFlags(flags).name : undefined;
+        const option = impl.options.find(o => o.name === name);
+        if (option) option.required = true;
+      }
+      ts.forEachChild(node, visitAction);
+    };
+    visitAction(action);
+  }
+
+  /** Whether `.command(name, options)` registers the default subcommand (`{ isDefault: true }`) */
+  function isDefaultSubcommand(options: ts.Expression | undefined): boolean {
+    return options !== undefined && ts.isObjectLiteralExpression(options) && options.properties.some(p =>
+      ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === 'isDefault' &&
+      p.initializer.kind === ts.SyntaxKind.TrueKeyword);
+  }
+
   /** Variables holding a parent command, keyed by name, valued by its dotted command name */
   const commandVariables = new Map<string, string>();
 
@@ -217,10 +247,11 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
       if (ts.isPropertyAccessExpression(expr) && expr.name.text === 'command') {
         const args = node.arguments;
         if (args.length > 0 && ts.isStringLiteral(args[0])) {
-          // A command registered on a parent's variable is named by its path, as the contract names it
+          // A command registered on a parent's variable is named by its path, as the contract names it;
+          // the parent's default subcommand carries the parent's own action, so it is the parent
           const parent = ts.isIdentifier(expr.expression) ? commandVariables.get(expr.expression.text) : undefined;
           const segment = args[0].text.split(' ')[0];
-          const cmdName = parent ? `${parent}.${segment}` : segment;
+          const cmdName = parent ? (isDefaultSubcommand(args[1]) ? parent : `${parent}.${segment}`) : segment;
           const impl: CLICommandImpl = commands.get(cmdName) ?? { name: cmdName, options: [], arguments: [] };
           commands.set(cmdName, impl);
           if (ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)) {

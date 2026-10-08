@@ -6,18 +6,19 @@
  */
 import chalk from 'chalk';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { findConfigFile, loadConfig } from '../utils/config-loader.js';
-import { loadRuntime, type LlmRuntime } from '../agents/orchestrator.js';
-import { traverseReferenceGraph, type ReferenceGraphEdge } from '../core/model.js';
+import { EXIT_ADAPTER_ERROR, loadRuntime, type LlmRuntime } from '../agents/orchestrator.js';
 import {
+  assessRecord,
   changedInputs,
   planReview,
   resolveReviewSetup,
   runOrder,
+  staleReasons,
   ReviewConfigError,
   type PlannedTarget,
   type ReviewModel,
@@ -33,14 +34,12 @@ import {
   type AdapterFactory,
 } from '../review/judge.js';
 import { buildJudgeSchema } from '../review/output.js';
-import { writeRecord, type JudgmentRecord } from '../review/record.js';
+import { listCheckFiles, writeRecord, type JudgmentRecord } from '../review/record.js';
 import { buildReviewRegistry } from '../review/registry.js';
-import { staleReason } from '../review/gate.js';
 import type { ReviewAdapterName, ReviewRegistry } from '../review/types.js';
 
-export const EXIT_JUDGE_ERROR = 12;
-export const EXIT_API_KEY_REFUSED = 13;
-export const EXIT_JUDGE_UNAVAILABLE = 14;
+const EXIT_API_KEY_REFUSED = 13;
+const EXIT_JUDGE_UNAVAILABLE = 14;
 
 export interface ReviewCommandOptions {
   config?: string;
@@ -116,7 +115,7 @@ async function runReview(opts: ReviewCommandOptions, environment: ReviewEnvironm
   const toRun = maxTargets !== undefined ? ordered.slice(0, maxTargets) : ordered;
 
   if (opts.emit) return emit(toRun, opts.emit, environment.cwd, json);
-  if (opts.dryRun) return dryRun(selected, toRun, registry, opts.force ?? false, json);
+  if (opts.dryRun) return dryRun(selected, toRun, plan.targets, opts.force ?? false, json);
 
   if (toRun.length === 0) {
     report(json, { judged: [], failed: [] }, '  ✓ Every selected target has a current record');
@@ -165,7 +164,7 @@ async function runReview(opts: ReviewCommandOptions, environment: ReviewEnvironm
       : []),
   ].join('\n'));
 
-  if (result.adapterError !== undefined) return EXIT_JUDGE_ERROR;
+  if (result.adapterError !== undefined) return EXIT_ADAPTER_ERROR;
   return result.failed.length > 0 ? 1 : 0;
 }
 
@@ -191,7 +190,8 @@ export async function reviewIngestCommand(
 
     let recorded = 0;
     const rejected: string[] = [];
-    for (const { check, target, path } of listResultFiles(dir)) {
+    if (!existsSync(dir)) throw new ReviewConfigError(`review ingest: ${dir} does not exist`);
+    for (const { check, target, path } of listCheckFiles(dir, '.result.yaml')) {
       const planned = byKey.get(`${check}/${target}`);
       if (!planned) {
         rejected.push(`${path}: check "${check}" has no target "${target}"`);
@@ -246,8 +246,10 @@ export async function reviewRebaselineCommand(
     const plan = await planReview(setup, registry);
     const selected = selectPlanned(plan, opts.check, opts.target);
 
+    // Only a changed packet can be accepted; a changed judge has to judge again
     const candidates = selected.filter(
-      (t): t is PlannedTarget & { record: JudgmentRecord } => t.record !== undefined && t.record.packetHash !== t.packet.hash,
+      (t): t is PlannedTarget & { record: JudgmentRecord } =>
+        t.record !== undefined && assessRecord(t.record, t.packet.hash, undefined, 'ignore').state === 'stale',
     );
     const withoutRecord = selected.filter(t => t.record === undefined).length;
 
@@ -387,29 +389,23 @@ function emit(toRun: PlannedTarget[], dir: string, cwd: string, json: boolean): 
 function dryRun(
   selected: PlannedTarget[],
   toRun: PlannedTarget[],
-  registry: ReviewRegistry,
+  all: PlannedTarget[],
   force: boolean,
   json: boolean,
 ): number {
   const running = new Set(toRun);
-  const reasonOf = (t: PlannedTarget): string[] => {
+  const reasonsOf = (t: PlannedTarget): string[] => {
     if (!t.record) return ['no record'];
-    if (t.state === 'fresh') return [force ? 'forced' : 'current'];
-    if (t.record.packetHash === t.packet.hash) return ['the judge changed'];
-    const changed = changedInputs(t.record, t.packet);
-    if (changed.length === 0) return [staleReason(t.record, t.packet)];
-    return changed.map(c => {
-      const path = c.input.startsWith('spec:') ? relationPath(registry, t.target.specIds, c.input.slice('spec:'.length)) : undefined;
-      return `${c.input} ${c.from === null ? 'added' : c.to === null ? 'removed' : 'changed'}${path ? ` (${path})` : ''}`;
-    });
+    if (t.state === 'fresh') return ['forced'];
+    return staleReasons(t.record, t.packet, true);
   };
 
-  const estimate = estimateTokens(toRun, selected);
-  const run = toRun.map(t => ({ check: t.check.id, target: t.target.id, reasons: reasonOf(t) }));
+  const estimate = estimateTokens(toRun, all);
+  const run = toRun.map(t => ({ check: t.check.id, target: t.target.id, reasons: reasonsOf(t) }));
   const skip = selected.filter(t => !running.has(t)).map(t => ({
     check: t.check.id,
     target: t.target.id,
-    reasons: t.state === 'fresh' ? ['current'] : ['beyond --max-targets'],
+    reasons: [t.state === 'fresh' && !force ? 'current' : 'beyond --max-targets'],
   }));
 
   report(json, { run, skip, estimatedTokens: estimate }, [
@@ -422,9 +418,9 @@ function dryRun(
 }
 
 /**
- * Tokens a run would use: per check, the average recorded usage of that
- * check's records, or the packet length (about 4 characters a token) when the
- * check has no recorded usage.
+ * Tokens a run would use: per check, the average recorded usage over every
+ * record of that check, or the packet length (about 4 characters a token)
+ * when the check has no recorded usage.
  */
 function estimateTokens(toRun: PlannedTarget[], all: PlannedTarget[]): number {
   const average = new Map<string, number>();
@@ -435,23 +431,6 @@ function estimateTokens(toRun: PlannedTarget[], all: PlannedTarget[]): number {
     if (usages.length > 0) average.set(checkId, usages.reduce((a, b) => a + b, 0) / usages.length);
   }
   return Math.round(toRun.reduce((sum, t) => sum + (average.get(t.check.id) ?? t.packet.text.length / 4), 0));
-}
-
-/** How a target's spec reaches a changed spec over the reference graph, for the dry-run reason */
-function relationPath(registry: ReviewRegistry, fromIds: string[], toId: string): string | undefined {
-  for (const start of fromIds) {
-    if (start === toId) return undefined;
-    const reached = traverseReferenceGraph(registry.graph, start, { depth: registry.graph.nodes.length, direction: 'both' });
-    const via = new Map(reached.map(r => [r.id, r.via]));
-    if (!via.has(toId)) continue;
-    const steps: ReferenceGraphEdge[] = [];
-    for (let id = toId, edge = via.get(id); edge && id !== start; edge = via.get(id)) {
-      steps.unshift(edge);
-      id = edge.to === id ? edge.from : edge.to;
-    }
-    return steps.map(e => `${e.from} -${e.type}-> ${e.to}`).join(', ');
-  }
-  return undefined;
 }
 
 /** Prompt and context files a target's packet was built from, relative to the project root */
@@ -473,18 +452,4 @@ function gitState(cwd: string, paths: string[]): { gitHead: string | null; gitDi
   } catch {
     return { gitHead: null, gitDirty: null };
   }
-}
-
-/** `<dir>/<check>/<target>.result.yaml` files */
-function listResultFiles(dir: string): Array<{ check: string; target: string; path: string }> {
-  if (!existsSync(dir)) throw new ReviewConfigError(`review ingest: ${dir} does not exist`);
-  const files: Array<{ check: string; target: string; path: string }> = [];
-  for (const check of readdirSync(dir, { withFileTypes: true })) {
-    if (!check.isDirectory()) continue;
-    for (const file of readdirSync(join(dir, check.name))) {
-      if (!file.endsWith('.result.yaml')) continue;
-      files.push({ check: check.name, target: file.slice(0, -'.result.yaml'.length), path: join(dir, check.name, file) });
-    }
-  }
-  return files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }

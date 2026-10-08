@@ -31,7 +31,8 @@ export const ReviewFindingSchema = z.object({
 
 export type ReviewFinding = z.infer<typeof ReviewFindingSchema>;
 
-const COMMON_FINDING_FIELDS = Object.keys(ReviewFindingSchema.shape);
+/** The finding fields speckeeper owns; anything else on a finding comes from the check's output definition */
+export const COMMON_FINDING_FIELDS: readonly string[] = Object.keys(ReviewFindingSchema.shape);
 const COMMON_OUTPUT_FIELDS = ['findings'];
 
 /** Fields a project adds to the common output, made with `defineReviewOutput` */

@@ -10,10 +10,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ReviewOutputDefinition } from './output.js';
 import { outputJsonSchema } from './output.js';
+import type { ReferenceGraphEdge } from '../core/model.js';
 import type { ContextProvider, ReviewPrompt, ReviewRegistry, ReviewTarget } from './types.js';
 
 /** The reviewer's role, shared by every packet */
-export const REVIEWER_ROLE = [
+const REVIEWER_ROLE = [
   'You are a design reviewer. You judge one target of a specification against the check below.',
   'Use only the context in this packet; you have no tools and no other files.',
   'Report each problem as one finding. Cite spec IDs that appear in the context, and quote context text verbatim.',
@@ -43,6 +44,8 @@ export interface Packet {
   /** Spec IDs the context was built from */
   inputs: string[];
   inputHashes: InputHashes;
+  /** How the context reached each input spec (not hashed; explains staleness) */
+  paths: Record<string, ReferenceGraphEdge[]>;
 }
 
 /** A check with its prompt files read and its context provider resolved */
@@ -125,6 +128,7 @@ export async function buildPacket(
     })),
     inputs: Object.keys(specs),
     inputHashes,
+    paths: context.paths ?? {},
   };
 }
 

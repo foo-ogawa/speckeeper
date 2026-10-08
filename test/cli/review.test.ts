@@ -106,17 +106,17 @@ interface Call {
   verify: boolean;
 }
 
-type Answer = (call: Call) => unknown;
+type Answer = (call: Call) => unknown | Promise<unknown>;
 
-function fakeJudge(answer: Answer, usage = { inputTokens: 100, outputTokens: 20 }) {
+function fakeJudge(answer: Answer, usage: { inputTokens: number; outputTokens: number } | null = { inputTokens: 100, outputTokens: 20 }) {
   const created: Array<{ name: string; options: Record<string, unknown>; cwdEntries: string[] }> = [];
   const calls: Call[] = [];
   const createAdapter = vi.fn(async (name: string, options?: Record<string, unknown>) => {
     created.push({ name, options: options ?? {}, cwdEntries: readdirSync(String(options?.cwd)) });
     let first: Call | undefined;
-    const respond = (call: Call): string => {
+    const respond = async (call: Call): Promise<string> => {
       calls.push(call);
-      const result = answer(call);
+      const result = await answer(call);
       if (result instanceof Error) throw result;
       return typeof result === 'string' ? result : JSON.stringify(result);
     };
@@ -133,7 +133,7 @@ function fakeJudge(answer: Answer, usage = { inputTokens: 100, outputTokens: 20 
       async followUp(message: string) {
         return respond({ ...first!, prompt: message, followUp: true });
       },
-      getLastTokenUsage: () => usage,
+      ...(usage ? { getLastTokenUsage: () => usage } : {}),
     };
   });
   return { createAdapter, created, calls };
@@ -418,6 +418,37 @@ describe('FR-1203 review judge execution', () => {
     expect(stdout()).toContain('429 rate limit exceeded');
   });
 
+  it('FR-1203-04 records no usage when the runtime reports none', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+
+    await reviewCommand({ target: ['REQ-001'] }, environment(fakeJudge(noFindings, null)));
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.usage).toBeUndefined();
+  });
+
+  it('FR-1203-03 starts no verifier call once the adapter call of another target failed', async () => {
+    useProject({
+      models: [requirementModel([{ ...verifiability, verify: { prompt: 'Check the finding.' } }])],
+      specs: design(),
+    });
+    let failed!: () => void;
+    const failure = new Promise<void>(resolve => { failed = resolve; });
+    const judge = fakeJudge(async ({ target, verify }) => {
+      if (target === 'REQ-001') {
+        failed();
+        return new Error('usage limit reached');
+      }
+      if (verify) return { verdict: 'confirmed', rationale: 'r' };
+      await failure;
+      return { findings: [{ code: 'C', severity: 'error', message: 'm' }] };
+    });
+
+    expect(await reviewCommand({ concurrency: '2' }, environment(judge))).toBe(12);
+
+    expect(judge.calls.filter(c => c.verify)).toEqual([]);
+    expect(existsSync(recordFile('req-verifiability', 'REQ-002'))).toBe(false);
+  });
+
   it('FR-1203-04 stores the token usage the runtime reports', async () => {
     useProject({ models: [requirementModel([verifiability])], specs: design() });
 
@@ -543,6 +574,59 @@ describe('FR-1206 incremental review selection', () => {
     expect(result.estimatedTokens).toBe(800);
   });
 
+  it('FR-1206-02 lists the skipped targets with their reasons and averages recorded usage over every record of the check', async () => {
+    useProject({
+      models: [requirementModel([verifiability])],
+      specs: design({ requirements: ['REQ-001', 'REQ-002', 'REQ-003'].map(id => ({ id, description: id })) }),
+    });
+    await reviewCommand({ target: ['REQ-001'] }, environment(fakeJudge(noFindings, { inputTokens: 300, outputTokens: 100 })));
+
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json', target: ['REQ-002'] }, environment(fakeJudge(noFindings)));
+    expect((JSON.parse(stdout()) as { estimatedTokens: number }).estimatedTokens).toBe(400);
+
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json', maxTargets: '1' }, environment(fakeJudge(noFindings)));
+    const result = JSON.parse(stdout()) as { run: Array<{ target: string }>; skip: Array<{ target: string; reasons: string[] }> };
+    expect(result.run.map(r => r.target)).toEqual(['REQ-002']);
+    expect(result.skip).toEqual([
+      { check: 'req-verifiability', target: 'REQ-001', reasons: ['current'] },
+      { check: 'req-verifiability', target: 'REQ-003', reasons: ['beyond --max-targets'] },
+    ]);
+
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json', force: true, maxTargets: '1' }, environment(fakeJudge(noFindings)));
+    const forced = JSON.parse(stdout()) as { run: Array<{ target: string; reasons: string[] }>; skip: Array<{ target: string; reasons: string[] }> };
+    expect(forced.run).toEqual([{ check: 'req-verifiability', target: 'REQ-002', reasons: ['no record'] }]);
+    expect(forced.skip.map(r => [r.target, r.reasons])).toEqual([['REQ-001', ['beyond --max-targets']], ['REQ-003', ['beyond --max-targets']]]);
+  });
+
+  it('FR-1206-02 names the relation the context followed to a changed spec, not one the context leaves out', async () => {
+    const specs = (uc: string) => design({
+      requirements: [{
+        id: 'REQ-001',
+        description: 'Root',
+        relations: [
+          { type: 'relatedTo', target: 'UC-001', description: 'source: workshop notes' },
+          { type: 'satisfies', target: 'UC-001' },
+        ],
+      }],
+      usecases: [{ id: 'UC-001', description: uc }],
+    });
+    useProject({
+      models: [requirementModel([{ ...verifiability, context: relationsContext({ edgeFilter: e => !e.description?.startsWith('source:') }) }])],
+      specs: specs('One'),
+    });
+    await reviewCommand({}, environment(fakeJudge(noFindings)));
+
+    project.specs = specs('One, revised');
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json' }, environment(fakeJudge(noFindings)));
+
+    expect((JSON.parse(stdout()) as { run: Array<{ reasons: string[] }> }).run[0].reasons)
+      .toEqual(['spec:UC-001 changed (REQ-001 -satisfies-> UC-001)']);
+  });
+
   it('FR-1206-03 --max-targets splits a run in a stable order without judging a target twice', async () => {
     useProject({
       models: [requirementModel([verifiability])],
@@ -599,6 +683,28 @@ describe('FR-1207 review verifier', () => {
 // ============================================================================
 // Records
 // ============================================================================
+
+describe('FR-1207 verifier verdicts across judgments', () => {
+  it('FR-1207-01 decides the verifier false positive again on the next judgment', async () => {
+    useProject({
+      models: [requirementModel([{ ...verifiability, verify: { prompt: 'Check the finding.' } }])],
+      specs: design(),
+    });
+    let verdict = 'false_positive';
+    const answer: Answer = ({ target, verify }) => {
+      if (verify) return { verdict, rationale: `verdict ${verdict}` };
+      return { findings: target === 'REQ-001' ? [{ code: 'C', severity: 'error', message: 'm', subject: 'REQ-001' }] : [] };
+    };
+    await reviewCommand({ target: ['REQ-001'] }, environment(fakeJudge(answer)));
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings[0].status).toBe('false_positive');
+
+    verdict = 'confirmed';
+    await reviewCommand({ target: ['REQ-001'], force: true }, environment(fakeJudge(answer)));
+
+    const finding = readRecord(recordFile('req-verifiability', 'REQ-001'))!.findings[0];
+    expect([finding.status, finding.verifier?.verdict]).toEqual(['open', 'confirmed']);
+  });
+});
 
 describe('FR-1208 judgment record store', () => {
   const finding = (code: string, extra: Partial<RecordedFinding> = {}): RecordedFinding => ({
@@ -782,7 +888,11 @@ describe('FR-1209 review gate in lint', () => {
 
     expect(onlyReq1(await gate({ gate: { judgeChange: 'ignore' } }, configured))).toEqual([]);
     expect(onlyReq1(await gate({ gate: { judgeChange: 'warning' } }, configured))).toEqual(['REVIEW-004 warning REQ-001']);
-    expect(onlyReq1(await gate({ gate: { judgeChange: 'stale' } }, configured))).toEqual(['REVIEW-001 error REQ-001']);
+    const staleByJudge = await gate({ gate: { judgeChange: 'stale' } }, configured);
+    expect(onlyReq1(staleByJudge)).toEqual(['REVIEW-001 error REQ-001']);
+    const message = staleByJudge.find(r => r.specId === 'REQ-001')!.message;
+    expect(message).toContain('judged by claude / claude-old');
+    expect(message).not.toContain('rebaseline');
 
     project.review = { gate: { judgeChange: 'stale' } };
     const rejudge = fakeJudge(noFindings);
@@ -840,6 +950,26 @@ describe('FR-1210 manual review emit and ingest', () => {
 // ============================================================================
 // Rebaseline
 // ============================================================================
+
+describe('review subcommands on the command line', () => {
+  it('FR-1212-02 hands review rebaseline and review ingest the options written after them', async () => {
+    const { createProgram } = await import('../../src/generated/program.js');
+    const received: Record<string, unknown> = {};
+    const handlers = new Proxy({}, {
+      get: (_target, name: string) => async (...args: unknown[]) => { received[name] = args.slice(0, -1); },
+    });
+
+    await createProgram(handlers as never, '0.0.0').parseAsync([
+      'node', 'speckeeper', 'review', 'rebaseline', '--reason', 'typo', '--dry-run', '--check', 'c1', '--target', 'T1',
+    ]);
+    await createProgram(handlers as never, '0.0.0').parseAsync(['node', 'speckeeper', 'review', 'ingest', 'out', '-c', 'my.config.ts']);
+    await createProgram(handlers as never, '0.0.0').parseAsync(['node', 'speckeeper', 'review', '--dry-run', '--check', 'c1']);
+
+    expect(received.reviewRebaseline).toEqual([{ reason: 'typo', dryRun: true, check: ['c1'], target: ['T1'] }]);
+    expect(received.reviewIngest).toEqual(['out', { config: 'my.config.ts' }]);
+    expect(received.review).toMatchObject([{ dryRun: true, check: ['c1'] }]);
+  });
+});
 
 describe('FR-1212 review rebaseline', () => {
   it('FR-1212-01 replaces the hashes, keeps the findings, and records the change without a personal identity', async () => {

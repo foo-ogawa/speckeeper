@@ -6,7 +6,7 @@
  * of the packet, so lint can tell from the records alone whether every target
  * has a current judgment and whether any blocking finding is open.
  */
-import type { ReferenceGraph } from '../core/model.js';
+import type { ReferenceGraph, ReferenceGraphEdge } from '../core/model.js';
 import type { ReviewOutputDefinition } from './output.js';
 
 /** The design a check selects from and a context provider reads */
@@ -35,6 +35,12 @@ export interface ContextResult {
   inputs: string[];
   /** Paths (relative to the project root) of other files the body was built from */
   files?: string[];
+  /**
+   * How the provider reached each input spec from the target's specs, as the
+   * relations it followed. Not hashed; it only explains which relation made a
+   * changed spec part of the context.
+   */
+  paths?: Record<string, ReferenceGraphEdge[]>;
 }
 
 export interface ContextProvider {

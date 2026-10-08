@@ -865,7 +865,7 @@ export interface ReferenceGraph {
 }
 
 /** Locale-independent string ordering, so generated output is byte-stable everywhere */
-function compareStrings(a: string, b: string): number {
+export function compareStrings(a: string, b: string): number {
   if (a < b) return -1;
   if (a > b) return 1;
   return 0;

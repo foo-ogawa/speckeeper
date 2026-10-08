@@ -6,12 +6,13 @@ import { dirname, join } from 'node:path';
 import { z } from 'zod';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { canonicalJson, sha256 } from './packet.js';
-import { normalizeWhitespace, type ReviewFinding } from './output.js';
+import { compareStrings } from '../core/model.js';
+import { normalizeWhitespace, ReviewFindingSchema, type ReviewFinding } from './output.js';
 
 const hashString = z.string().regex(/^sha256:[0-9a-f]{64}$/);
 
 /** The adapter and model(s) a record was judged with */
-export const JudgeSignatureSchema = z.object({
+const JudgeSignatureSchema = z.object({
   adapter: z.string(),
   model: z.string().optional(),
   verifyModel: z.string().optional(),
@@ -19,25 +20,12 @@ export const JudgeSignatureSchema = z.object({
 
 export type JudgeSignature = z.infer<typeof JudgeSignatureSchema>;
 
-export const FINDING_STATUSES = ['open', 'false_positive', 'dismissed'] as const;
-export type FindingStatus = typeof FINDING_STATUSES[number];
-
-const RecordedFindingSchema = z.object({
+/** A recorded finding: the judge's finding plus what speckeeper and people add to it */
+const RecordedFindingSchema = ReviewFindingSchema.extend({
   fingerprint: hashString,
-  code: z.string(),
-  severity: z.enum(['error', 'warning', 'info']),
-  message: z.string(),
-  subject: z.string().optional(),
-  location: z.object({
-    file: z.string().optional(),
-    line: z.number().int().optional(),
-    quote: z.string().optional(),
-  }).strict().optional(),
-  evidence: z.array(z.string()).optional(),
-  suggestion: z.string().optional(),
   /** Fields the check's output definition adds to a finding */
   extra: z.record(z.string(), z.unknown()).optional(),
-  status: z.enum(FINDING_STATUSES),
+  status: z.enum(['open', 'false_positive', 'dismissed']),
   statusNote: z.string().optional(),
   verifier: z.object({
     verdict: z.enum(['confirmed', 'false_positive']),
@@ -73,7 +61,7 @@ const RebaselineSchema = z.object({
   gitDirty: z.boolean().nullable(),
 }).strict();
 
-export const JudgmentRecordSchema = z.object({
+const JudgmentRecordSchema = z.object({
   check: z.string(),
   target: z.string(),
   packetHash: hashString,
@@ -89,7 +77,6 @@ export const JudgmentRecordSchema = z.object({
 }).strict();
 
 export type JudgmentRecord = z.infer<typeof JudgmentRecordSchema>;
-export type RebaselineEntry = z.infer<typeof RebaselineSchema>;
 
 export function recordPath(dir: string, checkId: string, targetId: string): string {
   return join(dir, checkId, `${targetId}.yaml`);
@@ -105,18 +92,22 @@ export function readRecord(path: string): JudgmentRecord | undefined {
   return parsed.data;
 }
 
-/** Every record file under the review directory, as (check, target, path) */
-export function listRecordFiles(dir: string): Array<{ check: string; target: string; path: string }> {
+/**
+ * Every `<dir>/<check>/<target><suffix>` file, as (check, target, path):
+ * records (`.yaml`) under the review directory, results (`.result.yaml`)
+ * under an emit directory.
+ */
+export function listCheckFiles(dir: string, suffix: string): Array<{ check: string; target: string; path: string }> {
   if (!existsSync(dir)) return [];
   const files: Array<{ check: string; target: string; path: string }> = [];
   for (const check of readdirSync(dir, { withFileTypes: true })) {
     if (!check.isDirectory()) continue;
     for (const file of readdirSync(join(dir, check.name), { withFileTypes: true })) {
-      if (!file.isFile() || !file.name.endsWith('.yaml')) continue;
-      files.push({ check: check.name, target: file.name.slice(0, -'.yaml'.length), path: join(dir, check.name, file.name) });
+      if (!file.isFile() || !file.name.endsWith(suffix)) continue;
+      files.push({ check: check.name, target: file.name.slice(0, -suffix.length), path: join(dir, check.name, file.name) });
     }
   }
-  return files.sort((a, b) => compare(a.path, b.path));
+  return files.sort((a, b) => compareStrings(a.path, b.path));
 }
 
 /**
@@ -129,7 +120,7 @@ export function writeRecord(path: string, record: JudgmentRecord): void {
     check: valid.check,
     target: valid.target,
     packetHash: valid.packetHash,
-    inputs: [...valid.inputs].sort(compare),
+    inputs: [...valid.inputs].sort(compareStrings),
     inputHashes: {
       prompt: valid.inputHashes.prompt,
       ...(valid.inputHashes.verifyPrompt ? { verifyPrompt: valid.inputHashes.verifyPrompt } : {}),
@@ -163,16 +154,19 @@ export function findingFingerprint(checkId: string, targetId: string, finding: R
     target: targetId,
     code: finding.code,
     subject: finding.subject ?? normalizeWhitespace(finding.location?.quote ?? ''),
-    evidence: [...(finding.evidence ?? [])].sort(compare),
+    evidence: [...(finding.evidence ?? [])].sort(compareStrings),
   }));
 }
 
 /**
- * Carry the status a person (or an earlier verifier) set on a finding over to
- * a new judgment. Only a fingerprint that occurs exactly once in both the old
- * and the new findings carries over; every other new finding keeps the status
- * the new judgment gave it. A wrongly carried status would silence a finding
- * that should be reported, so ambiguity resolves towards reporting.
+ * Carry the status a person set on a finding over to a new judgment.
+ *
+ * Only a fingerprint that occurs exactly once in both the old and the new
+ * findings carries over; every other new finding keeps the status the new
+ * judgment gave it. A status the old verifier set (false_positive with the
+ * verifier's own false_positive verdict) is not a person's decision: the new
+ * judgment decides it again. A wrongly carried status would silence a finding
+ * that should be reported, so every ambiguity resolves towards reporting.
  */
 export function carryOverStatus(previous: RecordedFinding[], next: RecordedFinding[]): RecordedFinding[] {
   const count = (findings: RecordedFinding[]) => {
@@ -185,7 +179,8 @@ export function carryOverStatus(previous: RecordedFinding[], next: RecordedFindi
   return next.map(finding => {
     if (before.get(finding.fingerprint) !== 1 || after.get(finding.fingerprint) !== 1) return finding;
     const old = previous.find(f => f.fingerprint === finding.fingerprint)!;
-    if (old.status === 'open') return finding;
+    const setByVerifier = old.status === 'false_positive' && old.verifier?.verdict === 'false_positive';
+    if (old.status === 'open' || setByVerifier) return finding;
     const carried: RecordedFinding = { ...finding, status: old.status };
     if (old.statusNote !== undefined) carried.statusNote = old.statusNote;
     else delete carried.statusNote;
@@ -197,10 +192,10 @@ const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 } as const;
 
 function compareFindings(a: RecordedFinding, b: RecordedFinding): number {
   return SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] ||
-    compare(a.code, b.code) ||
-    compare(a.subject ?? '', b.subject ?? '') ||
-    compare(a.fingerprint, b.fingerprint) ||
-    compare(a.message, b.message);
+    compareStrings(a.code, b.code) ||
+    compareStrings(a.subject ?? '', b.subject ?? '') ||
+    compareStrings(a.fingerprint, b.fingerprint) ||
+    compareStrings(a.message, b.message);
 }
 
 function orderFinding(f: RecordedFinding): Record<string, unknown> {
@@ -211,7 +206,7 @@ function orderFinding(f: RecordedFinding): Record<string, unknown> {
     message: f.message,
     ...(f.subject !== undefined ? { subject: f.subject } : {}),
     ...(f.location !== undefined ? { location: f.location } : {}),
-    ...(f.evidence !== undefined ? { evidence: [...f.evidence].sort(compare) } : {}),
+    ...(f.evidence !== undefined ? { evidence: [...f.evidence].sort(compareStrings) } : {}),
     ...(f.suggestion !== undefined ? { suggestion: f.suggestion } : {}),
     ...(f.extra !== undefined && Object.keys(f.extra).length > 0 ? { extra: sortedRecord(f.extra) } : {}),
     status: f.status,
@@ -221,9 +216,6 @@ function orderFinding(f: RecordedFinding): Record<string, unknown> {
 }
 
 function sortedRecord<T>(record: Record<string, T>): Record<string, T> {
-  return Object.fromEntries(Object.keys(record).sort(compare).map(key => [key, record[key]]));
+  return Object.fromEntries(Object.keys(record).sort(compareStrings).map(key => [key, record[key]]));
 }
 
-function compare(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0;
-}

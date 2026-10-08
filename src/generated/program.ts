@@ -178,7 +178,7 @@ export function createProgram(
   program
     .command("scaffold")
     .description("Generate _models/ from a Mermaid flowchart definition.")
-    .requiredOption("-s, --source <path>", "Path to Markdown file containing Mermaid flowchart.")
+    .option("-s, --source <path>", "Path to Markdown file containing Mermaid flowchart.")
     .option("-o, --output <path>", "Output directory.", "design/")
     .option("-F, --force", "Overwrite existing files.", false)
     .option("--dry-run", "Preview generated files without writing.", false)
@@ -189,6 +189,9 @@ export function createProgram(
         const policy = deriveCommandPolicy("scaffold", opts);
         console.log(JSON.stringify(policy, null, 2));
         return;
+      }
+      if (opts.source === undefined) {
+        cmd.error("error: required option '-s, --source <path>' not specified", { code: "commander.missingMandatoryOptionValue" });
       }
       await handlers.scaffold(opts, globalOpts);
     });
@@ -314,7 +317,10 @@ export function createProgram(
     });
 
   const __cmd_review = program.command("review");
-  __cmd_review
+  __cmd_review.description("Judge declared review checks per target with an LLM and record the judgments.");
+  const __self_review = __cmd_review.command("review", { isDefault: true, hidden: true });
+  __cmd_review.configureHelp({ visibleOptions: () => __self_review.createHelp().visibleOptions(__self_review) });
+  __self_review
     .description("Judge declared review checks per target with an LLM and record the judgments.")
     .option("-c, --config <path>", "Path to config file.")
     .option("--check <id...>", "Judge only these checks (repeatable).")
@@ -366,7 +372,7 @@ export function createProgram(
     .command("rebaseline")
     .description("Accept stale records as current without calling the LLM.")
     .option("-c, --config <path>", "Path to config file.")
-    .requiredOption("--reason <text>", "Why the change cannot affect the verdict (recorded).")
+    .option("--reason <text>", "Why the change cannot affect the verdict (recorded).")
     .option("--check <id...>", "Rebaseline only these checks (repeatable).")
     .option("--target <id...>", "Rebaseline only these targets (repeatable).")
     .option("--dry-run", "List the targets to rebaseline and their changed inputs without writing.", false)
@@ -376,6 +382,9 @@ export function createProgram(
         const policy = deriveCommandPolicy("review.rebaseline", opts);
         console.log(JSON.stringify(policy, null, 2));
         return;
+      }
+      if (opts.reason === undefined) {
+        cmd.error("error: required option '--reason <text>' not specified", { code: "commander.missingMandatoryOptionValue" });
       }
       await handlers.reviewRebaseline(opts, globalOpts);
     });

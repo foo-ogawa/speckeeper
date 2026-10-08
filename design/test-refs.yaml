@@ -1415,6 +1415,24 @@ specs:
       - NFR-016
       - NFR-017
     testCasePatterns:
+      - acceptanceCriteriaId: FR-1203-04
+        pattern: 'FR-1203-04 records no usage when the runtime reports none'
+        description: 'records no usage when the runtime reports none'
+      - acceptanceCriteriaId: FR-1203-03
+        pattern: 'FR-1203-03 starts no verifier call once the adapter call of another target failed'
+        description: 'starts no verifier call once the adapter call of another target failed'
+      - acceptanceCriteriaId: FR-1206-02
+        pattern: 'FR-1206-02 lists the skipped targets with their reasons and averages recorded usage over every record of the check'
+        description: 'lists the skipped targets with their reasons and averages recorded usage over every record of the check'
+      - acceptanceCriteriaId: FR-1206-02
+        pattern: 'FR-1206-02 names the relation the context followed to a changed spec, not one the context leaves out'
+        description: 'names the relation the context followed to a changed spec, not one the context leaves out'
+      - acceptanceCriteriaId: FR-1207-01
+        pattern: 'FR-1207-01 decides the verifier false positive again on the next judgment'
+        description: 'decides the verifier false positive again on the next judgment'
+      - acceptanceCriteriaId: FR-1212-02
+        pattern: 'FR-1212-02 hands review rebaseline and review ingest the options written after them'
+        description: 'hands review rebaseline and review ingest the options written after them'
       - acceptanceCriteriaId: FR-1200-01
         pattern: 'FR-1200-01 plans checks declared in config review\.checks and in a model\\'
         description: 'plans checks declared in config review.checks and in a model\'

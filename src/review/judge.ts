@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import type { LlmRuntime } from '../agents/orchestrator.js';
 import type { PlannedTarget, ResolvedCheck } from './checks.js';
-import { buildJudgeSchema, ReviewFindingSchema, type ReviewOutput } from './output.js';
+import { buildJudgeSchema, COMMON_FINDING_FIELDS, type ReviewOutput } from './output.js';
 import {
   carryOverStatus,
   findingFingerprint,
@@ -118,6 +118,9 @@ export interface JudgeRunResult {
 /** An adapter call failed (network, authentication, usage limit, ...) */
 class AdapterFailure extends Error {}
 
+/** Another target's adapter call failed, so this target starts no further call */
+class Stopped extends Error {}
+
 /** A judge's answer stayed invalid after its correction */
 class InvalidAnswer extends Error {}
 
@@ -141,9 +144,10 @@ export async function judgeTargets(targets: PlannedTarget[], options: JudgeRunOp
     return judge;
   };
 
+  const stopped = (): boolean => result.adapterError !== undefined;
   const judgeOne = async (planned: PlannedTarget): Promise<void> => {
     try {
-      const record = await judgeTarget(planned, judgeOf(planned.check), emptyDir, options);
+      const record = await judgeTarget(planned, judgeOf(planned.check), emptyDir, options, stopped);
       writeRecord(planned.recordFile, record);
       result.written.push(planned);
     } catch (error) {
@@ -151,6 +155,7 @@ export async function judgeTargets(targets: PlannedTarget[], options: JudgeRunOp
         result.failed.push({ target: planned, reason: error.message });
         return;
       }
+      if (error instanceof Stopped) return;
       throw error;
     }
   };
@@ -205,11 +210,16 @@ async function judgeTarget(
   judge: JudgeSignature,
   emptyDir: string,
   options: JudgeRunOptions,
+  stopped: () => boolean,
 ): Promise<JudgmentRecord> {
   const { check, target, packet } = planned;
-  const usage = { inputTokens: 0, outputTokens: 0 };
+  const usage: Usage = { reported: false, inputTokens: 0, outputTokens: 0 };
+  const run = <S extends z.ZodType>(model: string | undefined, task: JudgeTask<S>): Promise<z.infer<S>> => {
+    if (stopped()) throw new Stopped();
+    return runJudgeTask(options, emptyDir, model, usage, task);
+  };
 
-  const answer = await runJudgeTask(options, emptyDir, judge.model, usage, {
+  const answer = await run(judge.model, {
     taskId: `review-${check.id}`,
     description: check.description,
     modelClass: check.modelClass,
@@ -222,7 +232,7 @@ async function judgeTarget(
   const { verifyPrompt, verifyModelClass } = check;
   if (verifyPrompt !== undefined && verifyModelClass !== undefined) {
     findings = await Promise.all(findings.map(async (finding): Promise<RecordedFinding> => {
-      const verdict = await runJudgeTask(options, emptyDir, judge.verifyModel, usage, {
+      const verdict = await run(judge.verifyModel, {
         taskId: `review-${check.id}-verify`,
         description: `Verify one finding of ${check.id}`,
         modelClass: verifyModelClass,
@@ -237,15 +247,15 @@ async function judgeTarget(
     }));
   }
 
-  return assembleRecord(planned, answer, findings, judge, (options.now?.() ?? new Date()).toISOString(), usage);
+  const judgedAt = (options.now?.() ?? new Date()).toISOString();
+  return assembleRecord(planned, answer, findings, judge, judgedAt,
+    usage.reported ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : undefined);
 }
-
-const COMMON_FINDING_FIELDS = new Set(Object.keys(ReviewFindingSchema.shape));
 
 /** A judge's findings as recorded: fingerprinted, open, project fields under `extra` */
 export function answerToFindings(checkId: string, targetId: string, answer: ReviewOutput): RecordedFinding[] {
   return answer.findings.map(finding => {
-    const extra = Object.fromEntries(Object.entries(finding).filter(([key]) => !COMMON_FINDING_FIELDS.has(key)));
+    const extra = Object.fromEntries(Object.entries(finding).filter(([key]) => !COMMON_FINDING_FIELDS.includes(key)));
     return {
       fingerprint: findingFingerprint(checkId, targetId, finding),
       code: finding.code,
@@ -305,6 +315,13 @@ function verificationRequest(prompt: string, contextBody: string, finding: Recor
   ].join('\n');
 }
 
+/** Token usage summed over a target's calls; recorded only when the runtime reported any */
+interface Usage {
+  reported: boolean;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 interface JudgeTask<S extends z.ZodType> {
   taskId: string;
   description: string;
@@ -318,7 +335,7 @@ async function runJudgeTask<S extends z.ZodType>(
   options: JudgeRunOptions,
   emptyDir: string,
   model: string | undefined,
-  usage: { inputTokens: number; outputTokens: number },
+  usage: Usage,
   task: JudgeTask<S>,
 ): Promise<z.infer<S>> {
   const handoff = `${task.taskId}-output`;
@@ -352,8 +369,11 @@ async function runJudgeTask<S extends z.ZodType>(
     throw new AdapterFailure(error instanceof Error ? error.message : String(error));
   }
 
-  usage.inputTokens += run.tokenUsage?.inputTokens ?? 0;
-  usage.outputTokens += run.tokenUsage?.outputTokens ?? 0;
+  if (run.tokenUsage) {
+    usage.reported = true;
+    usage.inputTokens += run.tokenUsage.inputTokens;
+    usage.outputTokens += run.tokenUsage.outputTokens;
+  }
 
   const outcome = run.outcome;
   switch (outcome.status) {
