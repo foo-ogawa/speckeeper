@@ -886,6 +886,80 @@ export function buildReferenceGraph(specs: SpecEntry[] | undefined): ReferenceGr
   return { nodes, edges };
 }
 
+/**
+ * Which way a traversal follows the reference graph from its start spec.
+ *
+ * - `upstream`: the specs the start spec declares relations to (edges followed from → to)
+ * - `downstream`: the specs that declare relations to the start spec (edges followed to → from)
+ * - `both`: either way
+ */
+export type ReferenceDirection = 'upstream' | 'downstream' | 'both';
+
+export interface ReferenceTraversalOptions {
+  /** Maximum number of edges from the start spec (1 = directly related only) */
+  depth: number;
+  direction: ReferenceDirection;
+}
+
+/**
+ * One spec reached by a traversal.
+ */
+export interface ReachedSpec {
+  id: string;
+  /** ID of the model this spec belongs to */
+  model: string;
+  /** Number of edges on the shortest path from the start spec */
+  depth: number;
+  /** The edge that first reached this spec; following `via` back leads to the start spec */
+  via: ReferenceGraphEdge;
+}
+
+/**
+ * Collect the specs reachable from `startId` over the reference graph.
+ *
+ * Breadth-first, so each spec is reported at its shortest distance; within one
+ * depth the specs are ordered by ID. Relation targets that are not specs (an
+ * unresolved or external ID) are not reported. The start spec itself is never
+ * reported.
+ */
+export function traverseReferenceGraph(
+  graph: ReferenceGraph,
+  startId: string,
+  options: ReferenceTraversalOptions,
+): ReachedSpec[] {
+  const modelById = new Map(graph.nodes.map(node => [node.id, node.model]));
+  const followUpstream = options.direction !== 'downstream';
+  const followDownstream = options.direction !== 'upstream';
+
+  const reached: ReachedSpec[] = [];
+  const visited = new Set<string>([startId]);
+  let frontier = [startId];
+
+  for (let depth = 1; depth <= options.depth && frontier.length > 0; depth++) {
+    const current = new Set(frontier);
+    const found = new Map<string, ReferenceGraphEdge>();
+
+    for (const edge of graph.edges) {
+      const candidates: string[] = [];
+      if (followUpstream && current.has(edge.from)) candidates.push(edge.to);
+      if (followDownstream && current.has(edge.to)) candidates.push(edge.from);
+      for (const id of candidates) {
+        if (visited.has(id) || found.has(id) || !modelById.has(id)) continue;
+        found.set(id, edge);
+      }
+    }
+
+    const ids = [...found.keys()].sort(compareStrings);
+    for (const id of ids) {
+      visited.add(id);
+      reached.push({ id, model: modelById.get(id)!, depth, via: found.get(id)! });
+    }
+    frontier = ids;
+  }
+
+  return reached;
+}
+
 // ============================================================================
 // Exporter Output Paths
 // ============================================================================

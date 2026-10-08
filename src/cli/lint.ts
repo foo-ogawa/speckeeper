@@ -45,12 +45,12 @@ export interface LintResult {
 // ============================================================================
 
 export async function lintCommand(options: LintCommandOptions): Promise<void> {
-  console.log(chalk.blue('speckeeper lint'));
-  console.log('');
+  console.error(chalk.blue('speckeeper lint'));
+  console.error('');
   
   const config = await loadConfig(options.config);
 
-  console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
+  console.error(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
 
   let gatePhase: Phase | undefined;
   try {
@@ -61,22 +61,22 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
   }
 
   if (gatePhase) {
-    console.log(chalk.gray(`  Phase:  ${gatePhase}`));
+    console.error(chalk.gray(`  Phase:  ${gatePhase}`));
   }
-  console.log('');
+  console.error('');
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const models = (config.models || []) as any[];
     const specs = config.specs;
 
-    console.log(chalk.gray(`  Loaded: ${models.length} models`));
-    console.log('');
+    console.error(chalk.gray(`  Loaded: ${models.length} models`));
+    console.error('');
 
-    console.log(chalk.blue('  Running lint checks...'));
+    console.error(chalk.blue('  Running lint checks...'));
     const result = runModelLint(models, specs, { ...options, gatePhase });
 
-    console.log('');
+    console.error('');
     outputLintResults(result, options);
     
     if (result.errors > 0) {

@@ -88,7 +88,7 @@ export function createProgram(
     .command("drift")
     .description("Check if generated files have been manually edited.")
     .option("-c, --config <path>", "Path to config file.")
-    .option("-u, --update", "Auto-update if differences are found (not yet implemented).", false)
+    .option("-u, --update", "Rewrite drifted and missing generated files with their expected content.", false)
     .option("-f, --format <format>", "Output format: text, json, diff.", "text")
     .option("--fail-on-drift", "Exit with code 1 if drift is detected (for CI).", false)
     .action(async (opts, cmd) => {

@@ -132,11 +132,9 @@ describe('lintCommand', () => {
       const options: LintCommandOptions = { format: 'json' };
       await lintCommand(options);
 
-      const jsonCalls = logSpy.mock.calls.filter(c =>
-        typeof c[0] === 'string' && c[0].startsWith('{'),
-      );
-      expect(jsonCalls.length).toBeGreaterThan(0);
-      const parsed = JSON.parse(jsonCalls[0][0]);
+      // The whole stdout is the JSON document: progress lines go to stderr
+      const stdout = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      const parsed = JSON.parse(stdout);
       expect(parsed).toHaveProperty('issues');
       expect(parsed).toHaveProperty('errors');
       expect(parsed).toHaveProperty('warnings');
