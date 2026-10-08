@@ -164,6 +164,19 @@ describe('lintCommand', () => {
       expect(output).toContain('Info-level notice');
     });
 
+    it('FR-402-01 fails the run on warnings when strict is set, and only then', async () => {
+      const model = createMockModel({
+        lintResults: [{ ruleId: 'warn-rule', severity: 'warning', message: 'Warning-level issue' }],
+      });
+      mockedLoadConfig.mockResolvedValue(createMockConfig({ models: [model] }) as never);
+
+      await lintCommand({});
+      expect(exitSpy).not.toHaveBeenCalled();
+
+      await lintCommand({ strict: true });
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
     it('filters out info-severity issues when strict is NOT set', async () => {
       const model = createMockModel({
         lintResults: [

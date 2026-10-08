@@ -6,7 +6,7 @@ import { CONTRACT_YAML, CONTRACT_JSON_STR } from "./contract.js";
 export interface CommandHandlers {
   init: (options: { force?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   build: (options: { config?: string; output?: string; format?: string; watch?: boolean; verbose?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
-  lint: (options: { config?: string; phase?: string; strict?: boolean; fix?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  lint: (options: { config?: string; phase?: string; strict?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   drift: (options: { config?: string; update?: boolean; format?: string; failOnDrift?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   check: (type: string | undefined, options: { config?: string; strict?: boolean; verbose?: boolean; coverage?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   new: (type: string | undefined, options: { kind?: string; name?: string; output?: string; template?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
@@ -75,7 +75,6 @@ export function createProgram(
     .option("-c, --config <path>", "Path to config file.")
     .option("-p, --phase <phase>", "Phase gate to check against: REQ, HLD, LLD, OPS.")
     .option("-s, --strict", "Treat warnings as errors.", false)
-    .option("--fix", "Attempt to fix auto-fixable issues (not yet implemented).", false)
     .option("-f, --format <format>", "Output format: text, json, github.", "text")
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();

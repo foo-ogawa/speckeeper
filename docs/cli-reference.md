@@ -149,7 +149,6 @@ speckeeper lint --phase HLD
 | `--config` | -c | No |  | Path to config file. |
 | `--phase` | -p | No |  | Phase gate to check against: REQ, HLD, LLD, OPS. |
 | `--strict` | -s | No | `false` | Treat warnings as errors. |
-| `--fix` |  | No | `false` | Attempt to fix auto-fixable issues (not yet implemented). |
 | `--format` | -f | No | `"text"` | Output format: text, json, github. |
 
 #### Exit Codes

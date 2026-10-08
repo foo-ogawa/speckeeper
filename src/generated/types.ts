@@ -29,7 +29,6 @@ export interface LintOptions {
   config?: string;
   phase?: "REQ" | "HLD" | "LLD" | "OPS";
   strict?: boolean;
-  fix?: boolean;
   format?: "text" | "json" | "github";
 }
 

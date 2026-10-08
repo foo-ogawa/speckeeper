@@ -232,12 +232,6 @@ command_sets:
               type: boolean
               default: false
 
-          - name: fix
-            description: Attempt to fix auto-fixable issues (not yet implemented).
-            schema:
-              type: boolean
-              default: false
-
           - name: format
             aliases: [f]
             description: "Output format: text, json, github."

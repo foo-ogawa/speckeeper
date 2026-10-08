@@ -94,12 +94,6 @@ specs:
         required: false
         default: false
       - kind: option
-        name: fix
-        type: boolean
-        description: Fix auto-fixable issues
-        required: false
-        default: false
-      - kind: option
         name: format
         alias: f
         type: enum

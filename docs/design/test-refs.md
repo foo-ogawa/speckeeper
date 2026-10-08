@@ -165,6 +165,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-402-01 | `FR-402-01 fails the run on warnings when strict is set, and only then` | --strict fails the run on warnings |
 | FR-400-01 | `FR-400-01 verifies ID uniqueness across models and fails the run` | The lint command runs the common lint items over the whole design |
 | FR-401-01 | `FR-401-01.*lintAll.*exits.*code 1` | Error-severity results trigger exit(1) |
 | FR-401-03 | `FR-401-03.*exits.*code 1.*error message` | Ref-exists error triggers exit and output |

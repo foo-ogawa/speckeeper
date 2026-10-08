@@ -79,7 +79,6 @@ speckeeper lint [options]
 | -c, --config | option | path |  | - | Path to config file |
 | -p, --phase | option | enum (REQ, HLD, LLD, OPS) |  | - | Phase gate (prohibit TBD at specified phase) |
 | -s, --strict | option | boolean |  | false | Strict mode (treat warnings as errors) |
-| --fix | option | boolean |  | false | Fix auto-fixable issues |
 | -f, --format | option | enum (text, json, github) |  | text | Output format |
 
 ### Examples

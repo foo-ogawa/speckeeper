@@ -19,8 +19,8 @@ export interface LintCommandOptions {
   config?: string;
   /** Phase the phase gate runs against; rejected when it is not a known phase */
   phase?: string;
+  /** Warnings fail the run as errors do, and info results are reported */
   strict?: boolean;
-  fix?: boolean;
   format?: 'text' | 'json' | 'github';
 }
 
@@ -81,7 +81,7 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
     console.error('');
     outputLintResults(result, options);
     
-    if (result.errors > 0) {
+    if (result.errors > 0 || (options.strict && result.warnings > 0)) {
       process.exit(1);
     }
     

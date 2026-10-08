@@ -163,13 +163,6 @@ export const commandDefinitions = {
         }
       },
       {
-        "name": "fix",
-        "schema": {
-          "type": "boolean",
-          "default": false
-        }
-      },
-      {
         "name": "format",
         "schema": {
           "type": "string",

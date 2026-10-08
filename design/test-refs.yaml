@@ -109,6 +109,9 @@ specs:
       - FR-402
     implementsCommand: CMD-LINT
     testCasePatterns:
+      - acceptanceCriteriaId: FR-402-01
+        pattern: FR-402-01 fails the run on warnings when strict is set, and only then
+        description: --strict fails the run on warnings
       - acceptanceCriteriaId: FR-400-01
         pattern: FR-400-01 verifies ID uniqueness across models and fails the run
         description: The lint command runs the common lint items over the whole design
