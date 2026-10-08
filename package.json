@@ -104,7 +104,7 @@
     "agent-contracts": "^0.35.5",
     "agent-contracts-runtime": "^0.36.13",
     "chalk": "^6.0.0",
-    "cli-contracts": "^0.34.7",
+    "cli-contracts": "^0.34.11",
     "commander": "^15.0.0",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
