@@ -1957,6 +1957,35 @@ entries:
           - type: refines
             target: FR-1206
             description: Refines how a stale record becomes current
+      - id: FR-1213
+        name: Review Rules
+        description: Declare the points a review check judges as rules (code, severity, description); with rules, findings
+          use only declared codes and take their rule's severity
+        type: functional
+        priority: should
+        category: review
+        parentId: FR-1200
+        rationale: A point written only in the prompt cannot bind the judge; a code outside it is recorded, and the
+          judge's choice of severity makes the blocking gate depend on the judgment
+        acceptanceCriteria:
+          - id: FR-1213-01
+            description: A check declares rules with a code, severity, and description; the packet lists them and its hash
+              covers them; empty rules, malformed rules, and a code declared twice are configuration errors
+            verificationMethod: test
+          - id: FR-1213-02
+            description: With rules, a finding code that is not a declared rule code is a schema mismatch
+            verificationMethod: test
+          - id: FR-1213-03
+            description: With rules, the judge gives no severity and every finding is recorded with its rule's severity,
+              including results taken in with review ingest
+            verificationMethod: test
+          - id: FR-1213-04
+            description: A check without rules keeps the common output, where the judge chooses the code and the severity
+            verificationMethod: test
+        relations:
+          - type: refines
+            target: FR-1205
+            description: Refines the output with declared codes and severities
   - model: nonfunctional-requirement
     specs:
       - id: NFR-001

@@ -327,6 +327,9 @@ entries:
           - type: implements
             target: FR-1212
             description: Implements record rebaseline
+          - type: implements
+            target: FR-1213
+            description: Implements review rules
           - type: dependsOn
             target: CONT-010
             description: Judges packets through the LLM runtime

@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import type { ReviewOutputDefinition } from './output.js';
 import { outputJsonSchema } from './output.js';
 import type { ReferenceGraphEdge } from '../core/model.js';
-import type { ContextProvider, ReviewPrompt, ReviewRegistry, ReviewTarget } from './types.js';
+import type { ContextProvider, ReviewPrompt, ReviewRegistry, ReviewRule, ReviewTarget } from './types.js';
 
 /** The reviewer's role, shared by every packet */
 const REVIEWER_ROLE = [
@@ -26,6 +26,8 @@ export interface InputHashes {
   prompt: string;
   /** Present when the check declares a verifier */
   verifyPrompt?: string;
+  /** Present when the check declares rules */
+  rules?: string;
   schema: string;
   /** specId → hash of the spec */
   specs: Record<string, string>;
@@ -54,6 +56,7 @@ export interface PacketSource {
   description: string;
   prompt: string;
   verifyPrompt?: string;
+  rules?: readonly ReviewRule[];
   output?: ReviewOutputDefinition;
   provider: ContextProvider;
 }
@@ -70,7 +73,8 @@ export async function buildPacket(
   rootDir: string,
 ): Promise<Packet> {
   const context = await source.provider.build(target, registry);
-  const schemaJson = JSON.stringify(outputJsonSchema(source.output), null, 2);
+  const schemaJson = JSON.stringify(outputJsonSchema(source), null, 2);
+  const rules = source.rules ?? [];
 
   const text = [
     '# Review packet',
@@ -86,6 +90,14 @@ export async function buildPacket(
     '## Instructions',
     source.prompt.trim(),
     '',
+    ...(rules.length > 0
+      ? [
+          '## Rules',
+          'Report every finding under exactly one of these codes. The severity is fixed by the rule; do not give one.',
+          ...rules.map(rule => `- ${rule.code} (${rule.severity}): ${rule.description}`),
+          '',
+        ]
+      : []),
     '## Context',
     context.body.trimEnd(),
     '',
@@ -110,6 +122,7 @@ export async function buildPacket(
   const inputHashes: InputHashes = {
     prompt: sha256(source.prompt),
     ...(source.verifyPrompt !== undefined ? { verifyPrompt: sha256(source.verifyPrompt) } : {}),
+    ...(rules.length > 0 ? { rules: sha256(canonicalJson(rules)) } : {}),
     schema: sha256(schemaJson),
     specs,
     files,

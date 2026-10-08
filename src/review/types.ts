@@ -53,6 +53,16 @@ export type ReviewPrompt = string | { file: string };
 
 export type ReviewModelClass = 'fast' | 'standard' | 'thinking';
 
+/** One point a check reviews: findings carry its code and get its severity */
+export interface ReviewRule {
+  /** Finding code; the judge may only use declared codes */
+  code: string;
+  /** Severity every finding of this rule is recorded with (the judge does not choose it) */
+  severity: 'error' | 'warning' | 'info';
+  /** What the rule reports */
+  description: string;
+}
+
 export interface ReviewCheck {
   /** Check ID; names the record directory */
   id: string;
@@ -66,6 +76,12 @@ export interface ReviewCheck {
   /** Context provider, or the ID of one (built-in: `relations`). Default `relations` */
   context?: string | ContextProvider;
   prompt: ReviewPrompt;
+  /**
+   * The points the check reviews. When given, the judge reports findings only
+   * under these codes and each finding's severity is its rule's. When omitted,
+   * the judge chooses the code and the severity.
+   */
+  rules?: ReviewRule[];
   /** Output shape; the common finding shape when omitted */
   output?: ReviewOutputDefinition;
   /** Default `standard` */

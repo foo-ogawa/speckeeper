@@ -69,6 +69,7 @@
 | FR-1210 | Manual Review Emit and Ingest | could | review |
 | FR-1211 | Single LLM Runtime | should | llm |
 | FR-1212 | Review Rebaseline | should | review |
+| FR-1213 | Review Rules | should | review |
 
 ---
 
@@ -1114,3 +1115,22 @@ A change to a widely shared input (prompt wording, a commonly included spec) oth
 
 - **FR-1212-01**: rebaseline updates packetHash and inputHashes, keeps findings and status, and appends from, to, changedInputs, reason, at, gitHead, and gitDirty without any personal identity [test]
 - **FR-1212-02**: rebaseline requires --reason and skips targets that have no record [test]
+
+---
+
+## FR-1213: Review Rules
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Declare the points a review check judges as rules (code, severity, description); with rules, findings use only declared codes and take their rule's severity
+
+### Rationale
+
+A point written only in the prompt cannot bind the judge; a code outside it is recorded, and the judge's choice of severity makes the blocking gate depend on the judgment
+
+### Acceptance Criteria
+
+- **FR-1213-01**: A check declares rules with a code, severity, and description; the packet lists them and its hash covers them; empty rules, malformed rules, and a code declared twice are configuration errors [test]
+- **FR-1213-02**: With rules, a finding code that is not a declared rule code is a schema mismatch [test]
+- **FR-1213-03**: With rules, the judge gives no severity and every finding is recorded with its rule's severity, including results taken in with review ingest [test]
+- **FR-1213-04**: A check without rules keeps the common output, where the judge chooses the code and the severity [test]

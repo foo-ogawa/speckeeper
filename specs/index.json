@@ -425,6 +425,10 @@
       "model": "functional-requirement"
     },
     {
+      "id": "FR-1213",
+      "model": "functional-requirement"
+    },
+    {
       "id": "FR-200",
       "model": "functional-requirement"
     },
@@ -1387,6 +1391,12 @@
       "description": "Implements record rebaseline"
     },
     {
+      "from": "CONT-009",
+      "type": "implements",
+      "to": "FR-1213",
+      "description": "Implements review rules"
+    },
+    {
       "from": "CONT-010",
       "type": "implements",
       "to": "FR-1100",
@@ -1784,6 +1794,12 @@
       "type": "refines",
       "to": "FR-1206",
       "description": "Refines how a stale record becomes current"
+    },
+    {
+      "from": "FR-1213",
+      "type": "refines",
+      "to": "FR-1205",
+      "description": "Refines the output with declared codes and severities"
     },
     {
       "from": "FR-200",
@@ -2750,6 +2766,12 @@
       "type": "verifies",
       "to": "FR-1212",
       "description": "Verifies acceptance criteria for FR-1212"
+    },
+    {
+      "from": "TEST-082",
+      "type": "verifies",
+      "to": "FR-1213",
+      "description": "Verifies acceptance criteria for FR-1213"
     },
     {
       "from": "TEST-082",

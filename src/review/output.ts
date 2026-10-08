@@ -7,6 +7,7 @@
  * validated with.
  */
 import { z } from 'zod';
+import type { ReviewRule } from './types.js';
 
 const SEVERITIES = ['error', 'warning', 'info'] as const;
 
@@ -76,20 +77,40 @@ export function defineReviewOutput(input: {
 
 const COMMON_OUTPUT: ReviewOutputDefinition = defineReviewOutput({});
 
-/** The output schema of a check, before any check against the design or the packet */
-export function buildOutputSchema(definition: ReviewOutputDefinition = COMMON_OUTPUT) {
+/** What decides the shape of a check's output */
+export interface ReviewOutputShape {
+  output?: ReviewOutputDefinition;
+  rules?: readonly ReviewRule[];
+}
+
+/** A finding as a judge answers it: without a severity when the check declares rules */
+export type ReviewAnswerFinding = Omit<ReviewFinding, 'severity'> & {
+  severity?: ReviewFinding['severity'];
+} & Record<string, unknown>;
+
+/** A judge's answer: the common findings plus the fields the check adds */
+export type ReviewOutput = { findings: ReviewAnswerFinding[] } & Record<string, unknown>;
+
+/**
+ * The output schema of a check, before any check against the design or the
+ * packet. With rules, a finding's code is one of the declared codes and the
+ * judge gives no severity (the rule fixes it).
+ */
+export function buildOutputSchema(shape: ReviewOutputShape = {}): z.ZodType<ReviewOutput> {
+  const definition = shape.output ?? COMMON_OUTPUT;
+  const codes = shape.rules?.map(rule => rule.code);
+  const finding = codes && codes.length > 0
+    ? ReviewFindingSchema.omit({ severity: true }).extend({ code: z.enum(codes as [string, ...string[]]) })
+    : ReviewFindingSchema;
   // Intersections keep the common fields typed; zod renders them as one object in JSON Schema
   return z.object({
-    findings: z.array(ReviewFindingSchema.and(z.object(definition.findingExtra))),
+    findings: z.array(finding.and(z.object(definition.findingExtra))),
   }).and(z.object(definition.extra));
 }
 
-/** A judge's answer: the common findings plus the fields the check adds */
-export type ReviewOutput = z.infer<ReturnType<typeof buildOutputSchema>>;
-
 /** JSON Schema of a check's output, as shown in the packet and hashed into it */
-export function outputJsonSchema(definition?: ReviewOutputDefinition): unknown {
-  return z.toJSONSchema(buildOutputSchema(definition));
+export function outputJsonSchema(shape?: ReviewOutputShape): unknown {
+  return z.toJSONSchema(buildOutputSchema(shape));
 }
 
 /** Everything a judge's answer is checked against beyond its shape */
@@ -106,9 +127,9 @@ export interface JudgeOutputScope {
  * packet's context. A violation is a schema mismatch, so the judge gets the
  * same one correction as for a malformed answer.
  */
-export function buildJudgeSchema(definition: ReviewOutputDefinition | undefined, scope: JudgeOutputScope) {
+export function buildJudgeSchema(shape: ReviewOutputShape, scope: JudgeOutputScope) {
   const context = normalizeWhitespace(scope.contextBody);
-  return buildOutputSchema(definition).superRefine((output, ctx) => {
+  return buildOutputSchema(shape).superRefine((output, ctx) => {
     output.findings.forEach((finding, index) => {
       const at = ['findings', index];
       if (finding.subject !== undefined) {

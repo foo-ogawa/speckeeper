@@ -236,6 +236,10 @@ export default defineConfig({
       id: 'req-verifiability',
       description: 'Each acceptance criterion can be verified',
       select: (registry) => [...registry.models.requirement.keys()].map((id) => ({ id, specIds: [id] })),
+      rules: [
+        { code: 'AC-VAGUE', severity: 'warning', description: 'A criterion without a number or a decision rule' },
+        { code: 'AC-NO-ERROR', severity: 'error', description: 'No criterion for the error or boundary case' },
+      ],
       prompt: { file: 'review/prompts/verifiability.md' },
       output: defineReviewOutput({ findingExtra: { reason: z.string() } }),
       modelClass: 'standard',
@@ -249,7 +253,8 @@ export default defineConfig({
 |-------|---------|
 | `select(registry)` | Targets (`{ id, specIds }`); a model's check defaults to one target per spec |
 | `context` | A context provider or its ID; the default `relations` lists the target's specs and the specs reachable over relations, found the way `impact` finds them |
-| `prompt` | Instructions, inline or `{ file }` |
+| `rules` | The points the check reviews: `{ code, severity, description }`. The codes are the project's own. With rules, the judge may only report declared codes (any other is sent back once, then fails the target) and each finding is recorded with its rule's severity, so the blocking gate does not depend on the judge |
+| `prompt` | Instructions, inline or `{ file }` (relative to the project root). With `rules`, it carries what the rules share; without them, it is where the points are described and the judge chooses code and severity |
 | `output` | Fields added to the common finding shape with `defineReviewOutput` (`code`, `severity`, `message`, `subject`, `location`, `evidence`, `suggestion` are fixed) |
 | `modelClass` | `fast`, `standard` (default) or `thinking`, resolved by `@aaac/runtime` |
 | `verify` | `{ prompt }`: re-check each finding in a separate call; false positives are kept with `status: false_positive` |

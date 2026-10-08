@@ -42,6 +42,7 @@ export type RecordedFinding = z.infer<typeof RecordedFindingSchema>;
 const InputHashesSchema = z.object({
   prompt: hashString,
   verifyPrompt: hashString.optional(),
+  rules: hashString.optional(),
   schema: hashString,
   specs: z.record(z.string(), hashString),
   files: z.record(z.string(), hashString),
@@ -124,6 +125,7 @@ export function writeRecord(path: string, record: JudgmentRecord): void {
     inputHashes: {
       prompt: valid.inputHashes.prompt,
       ...(valid.inputHashes.verifyPrompt ? { verifyPrompt: valid.inputHashes.verifyPrompt } : {}),
+      ...(valid.inputHashes.rules ? { rules: valid.inputHashes.rules } : {}),
       schema: valid.inputHashes.schema,
       specs: sortedRecord(valid.inputHashes.specs),
       files: sortedRecord(valid.inputHashes.files),
@@ -148,7 +150,11 @@ export function writeRecord(path: string, record: JudgmentRecord): void {
  * structured fields only. The message is left out because its wording changes
  * from one judgment to the next.
  */
-export function findingFingerprint(checkId: string, targetId: string, finding: ReviewFinding): string {
+export function findingFingerprint(
+  checkId: string,
+  targetId: string,
+  finding: Pick<ReviewFinding, 'code' | 'subject' | 'location' | 'evidence'>,
+): string {
   return sha256(canonicalJson({
     check: checkId,
     target: targetId,
