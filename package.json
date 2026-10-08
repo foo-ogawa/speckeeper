@@ -82,6 +82,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@aaac/runtime": "^0.2.6",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.0",
     "@types/node-sql-parser": "^1.0.0",
@@ -89,7 +90,6 @@
     "@typescript-eslint/parser": "^8.65.0",
     "@vitest/coverage-v8": "^4.1.11",
     "agent-contracts": "^0.35.5",
-    "agent-contracts-runtime": "^0.36.4",
     "chalk": "^6.0.0",
     "cli-contracts": "^0.34.7",
     "commander": "^15.0.0",

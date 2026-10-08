@@ -1238,6 +1238,291 @@ command_sets:
             - "Run with --show-prompt first to preview the prompt"
           retryableExitCodes: [1, 12]
 
+      # ── review ──────────────────────────────────────────
+      review:
+        summary: Judge declared review checks per target with an LLM and record the judgments.
+        description: >-
+          Runs the review checks declared in the config (review.checks) and in
+          models (reviewChecks). Each target's packet is hashed; only targets
+          whose record is missing or stale are judged. Records are written to
+          review/<check>/<target>.yaml and checked by lint (REVIEW-001 to
+          REVIEW-004). When no LLM credentials are available the run is skipped.
+
+        effects:
+          network:
+            description: LLM API calls to the configured provider
+            idempotent: false
+          filesystem:
+            description: Writes judgment records under the review directory
+            idempotent: false
+
+        usage:
+          - speckeeper review
+          - speckeeper review --dry-run
+          - speckeeper review --check req-verifiability --target REQ-012 --force
+          - speckeeper review --emit review-packets
+          - speckeeper review --prune
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            value_name: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: check
+            description: Judge only these checks (repeatable).
+            value_name: id
+            repeatable: true
+            schema:
+              type: array
+              items:
+                type: string
+
+          - name: target
+            description: Judge only these targets (repeatable).
+            value_name: id
+            repeatable: true
+            schema:
+              type: array
+              items:
+                type: string
+
+          - name: adapter
+            description: SDK adapter to use for LLM execution (default from review.adapter, else claude).
+            value_name: name
+            schema:
+              type: string
+              enum: [claude, openai, gemini, mock]
+
+          - name: model
+            description: LLM model override.
+            value_name: name
+            schema:
+              type: string
+
+          - name: concurrency
+            description: Number of targets judged in parallel.
+            value_name: n
+            schema:
+              type: integer
+              minimum: 1
+              default: 2
+
+          - name: force
+            description: Judge every selected target, fresh or not.
+            schema:
+              type: boolean
+              default: false
+
+          - name: dry-run
+            description: >-
+              List the targets to judge and to skip with the reasons, and the
+              estimated token usage, without calling the LLM. With --prune, list
+              the records that would be removed.
+            schema:
+              type: boolean
+              default: false
+
+          - name: show-packet
+            description: Print the packets of the selected targets without calling the LLM.
+            schema:
+              type: boolean
+              default: false
+
+          - name: require-judge
+            description: Exit 14 instead of skipping when no LLM credentials are available.
+            schema:
+              type: boolean
+              default: false
+
+          - name: allow-api-key
+            description: Allow API-key billing for this run even when review.allowApiKey is false.
+            schema:
+              type: boolean
+              default: false
+
+          - name: max-targets
+            description: Judge at most this many targets in this run.
+            value_name: n
+            schema:
+              type: integer
+              minimum: 1
+
+          - name: prune
+            description: Remove records whose check is no longer declared or whose target is no longer selected.
+            schema:
+              type: boolean
+              default: false
+
+          - name: emit
+            description: Write the packets of the targets to judge into this directory instead of calling the LLM.
+            value_name: dir
+            schema:
+              type: string
+
+          - name: format
+            aliases: [f]
+            description: "Output format: text, json."
+            value_name: format
+            schema:
+              type: string
+              default: text
+              enum: [text, json]
+
+        exits:
+          '0':
+            description: >-
+              Review completed, or skipped because no LLM credentials are
+              available. Findings do not change the exit code; lint gates them.
+            stdout:
+              format: '{options.format}'
+
+          '1':
+            description: Configuration error, or a target whose output stayed invalid after one correction.
+            stderr:
+              format: text
+
+          '11':
+            description: Runtime dependency missing (@aaac/runtime).
+            stderr:
+              format: text
+
+          '12':
+            description: LLM provider or adapter error, including usage limits; records already written are kept.
+            stderr:
+              format: text
+
+          '13':
+            description: An API key would be used while review.allowApiKey is false.
+            stderr:
+              format: text
+
+          '14':
+            description: --require-judge was given and no LLM credentials are available.
+            stderr:
+              format: text
+
+        x-agent:
+          safeDryRunOption: dry-run
+          sideEffectNote: >-
+            Makes network calls to the configured LLM provider when adapter is
+            not mock, and writes records under the review directory.
+          retryableExitCodes: [12]
+
+      # ── review ingest ───────────────────────────────────
+      review.ingest:
+        summary: Record externally produced review results whose packet hash is current.
+        description: >-
+          Reads <dir>/<check>/<target>.result.yaml written for packets from
+          review --emit, validates each against the check's output schema, and
+          records it when its packet hash equals the current one. Results for
+          a different packet hash are rejected.
+        usage:
+          - speckeeper review ingest review-packets
+
+        arguments:
+          - name: dir
+            index: 0
+            required: true
+            description: Directory holding the results.
+            schema:
+              type: string
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            value_name: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+        exits:
+          '0':
+            description: Every result was recorded.
+            stdout:
+              format: text
+
+          '1':
+            description: A result was rejected (schema mismatch or a packet hash that is not current), or a configuration error.
+            stderr:
+              format: text
+
+      # ── review rebaseline ───────────────────────────────
+      review.rebaseline:
+        summary: Accept stale records as current without calling the LLM.
+        description: >-
+          For targets whose record is stale because an input changed in a way
+          that cannot affect the verdict, replaces the record's packet hash and
+          input hashes with the current ones and keeps its findings. The
+          reason, the changed inputs, and the git HEAD are appended to the
+          record.
+        usage:
+          - speckeeper review rebaseline --reason "fix a typo in the prompt" --check req-verifiability
+
+        options:
+          - name: config
+            aliases: [c]
+            description: Path to config file.
+            value_name: path
+            schema:
+              type: string
+            file:
+              mode: read
+              exists: true
+              encoding: utf-8
+
+          - name: reason
+            description: Why the change cannot affect the verdict (recorded).
+            value_name: text
+            required: true
+            schema:
+              type: string
+
+          - name: check
+            description: Rebaseline only these checks (repeatable).
+            value_name: id
+            repeatable: true
+            schema:
+              type: array
+              items:
+                type: string
+
+          - name: target
+            description: Rebaseline only these targets (repeatable).
+            value_name: id
+            repeatable: true
+            schema:
+              type: array
+              items:
+                type: string
+
+          - name: dry-run
+            description: List the targets to rebaseline and their changed inputs without writing.
+            schema:
+              type: boolean
+              default: false
+
+        exits:
+          '0':
+            description: Rebaseline completed.
+            stdout:
+              format: text
+
+          '1':
+            description: Configuration error.
+            stderr:
+              format: text
+
       # ── agents ──────────────────────────────────────────
       agents:
         summary: Output the full resolved agent DSL as structured data.

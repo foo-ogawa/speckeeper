@@ -1096,4 +1096,7 @@ export const auditRequirementsExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const proposeTraceLinksExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const explainImpactExitCodes = [0, 1, 2, 10, 11, 12] as const;
 export const proposeAcceptanceCriteriaExitCodes = [0, 1, 2, 10, 11, 12] as const;
+export const reviewExitCodes = [0, 1, 11, 12, 13, 14] as const;
+export const reviewIngestExitCodes = [0, 1] as const;
+export const reviewRebaselineExitCodes = [0, 1] as const;
 export const agentsExitCodes = [0, 1] as const;

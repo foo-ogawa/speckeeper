@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.16.22
+**Version:** 0.16.26
 
 ## Table of Contents
 
@@ -21,6 +21,9 @@ TypeScript-first specification validation framework — validate design consiste
   - [propose-trace-links](#speckeeper-propose-trace-links)
   - [explain-impact](#speckeeper-explain-impact)
   - [propose-acceptance-criteria](#speckeeper-propose-acceptance-criteria)
+  - [review](#speckeeper-review)
+  - [review.ingest](#speckeeper-review-ingest)
+  - [review.rebaseline](#speckeeper-review-rebaseline)
   - [agents](#speckeeper-agents)
 
 ---
@@ -2618,6 +2621,158 @@ x-agent:
     - 1
     - 12
 ```
+
+---
+
+### review
+
+Judge declared review checks per target with an LLM and record the judgments.
+
+Runs the review checks declared in the config (review.checks) and in models (reviewChecks). Each target's packet is hashed; only targets whose record is missing or stale are judged. Records are written to review/<check>/<target>.yaml and checked by lint (REVIEW-001 to REVIEW-004). When no LLM credentials are available the run is skipped.
+
+**Usage:**
+
+```
+speckeeper review
+```
+```
+speckeeper review --dry-run
+```
+```
+speckeeper review --check req-verifiability --target REQ-012 --force
+```
+```
+speckeeper review --emit review-packets
+```
+```
+speckeeper review --prune
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--check` |  | No |  | Judge only these checks (repeatable). |
+| `--target` |  | No |  | Judge only these targets (repeatable). |
+| `--adapter` |  | No |  | SDK adapter to use for LLM execution (default from review.adapter, else claude). |
+| `--model` |  | No |  | LLM model override. |
+| `--concurrency` |  | No | `2` | Number of targets judged in parallel. |
+| `--force` |  | No | `false` | Judge every selected target, fresh or not. |
+| `--dry-run` |  | No | `false` | List the targets to judge and to skip with the reasons, and the estimated token usage, without calling the LLM. With --prune, list the records that would be removed. |
+| `--show-packet` |  | No | `false` | Print the packets of the selected targets without calling the LLM. |
+| `--require-judge` |  | No | `false` | Exit 14 instead of skipping when no LLM credentials are available. |
+| `--allow-api-key` |  | No | `false` | Allow API-key billing for this run even when review.allowApiKey is false. |
+| `--max-targets` |  | No |  | Judge at most this many targets in this run. |
+| `--prune` |  | No | `false` | Remove records whose check is no longer declared or whose target is no longer selected. |
+| `--emit` |  | No |  | Write the packets of the targets to judge into this directory instead of calling the LLM. |
+| `--format` | -f | No | `"text"` | Output format: text, json. |
+
+#### Exit Codes
+
+**Exit 0:** Review completed, or skipped because no LLM credentials are available. Findings do not change the exit code; lint gates them.
+
+- **stdout:** format=`{options.format}`
+
+**Exit 1:** Configuration error, or a target whose output stayed invalid after one correction.
+
+- **stderr:** format=`text`
+
+**Exit 11:** Runtime dependency missing (@aaac/runtime).
+
+- **stderr:** format=`text`
+
+**Exit 12:** LLM provider or adapter error, including usage limits; records already written are kept.
+
+- **stderr:** format=`text`
+
+**Exit 13:** An API key would be used while review.allowApiKey is false.
+
+- **stderr:** format=`text`
+
+**Exit 14:** --require-judge was given and no LLM credentials are available.
+
+- **stderr:** format=`text`
+
+#### Extensions
+
+```yaml
+x-agent:
+  safeDryRunOption: dry-run
+  sideEffectNote: Makes network calls to the configured LLM provider when adapter is not mock, and writes records under the review directory.
+  retryableExitCodes:
+    - 12
+```
+
+---
+
+### review.ingest
+
+Record externally produced review results whose packet hash is current.
+
+Reads <dir>/<check>/<target>.result.yaml written for packets from review --emit, validates each against the check's output schema, and records it when its packet hash equals the current one. Results for a different packet hash are rejected.
+
+**Usage:**
+
+```
+speckeeper review ingest review-packets
+```
+
+#### Arguments
+
+| Name | Required | Description |
+|---|---|---|
+| `dir` | Yes | Directory holding the results. |
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+
+#### Exit Codes
+
+**Exit 0:** Every result was recorded.
+
+- **stdout:** format=`text`
+
+**Exit 1:** A result was rejected (schema mismatch or a packet hash that is not current), or a configuration error.
+
+- **stderr:** format=`text`
+
+---
+
+### review.rebaseline
+
+Accept stale records as current without calling the LLM.
+
+For targets whose record is stale because an input changed in a way that cannot affect the verdict, replaces the record's packet hash and input hashes with the current ones and keeps its findings. The reason, the changed inputs, and the git HEAD are appended to the record.
+
+**Usage:**
+
+```
+speckeeper review rebaseline --reason "fix a typo in the prompt" --check req-verifiability
+```
+
+#### Options
+
+| Option | Aliases | Required | Default | Description |
+|---|---|---|---|---|
+| `--config` | -c | No |  | Path to config file. |
+| `--reason` |  | Yes |  | Why the change cannot affect the verdict (recorded). |
+| `--check` |  | No |  | Rebaseline only these checks (repeatable). |
+| `--target` |  | No |  | Rebaseline only these targets (repeatable). |
+| `--dry-run` |  | No | `false` | List the targets to rebaseline and their changed inputs without writing. |
+
+#### Exit Codes
+
+**Exit 0:** Rebaseline completed.
+
+- **stdout:** format=`text`
+
+**Exit 1:** Configuration error.
+
+- **stderr:** format=`text`
 
 ---
 

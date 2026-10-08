@@ -232,6 +232,62 @@ export type ProposeAcceptanceCriteriaExitResult =
   | { exitCode: 11; stderr: unknown }
   | { exitCode: 12; stderr: unknown };
 
+export interface ReviewOptions {
+  config?: string;
+  check?: string[];
+  target?: string[];
+  adapter?: "claude" | "openai" | "gemini" | "mock";
+  model?: string;
+  concurrency?: number;
+  force?: boolean;
+  dryRun?: boolean;
+  showPacket?: boolean;
+  requireJudge?: boolean;
+  allowApiKey?: boolean;
+  maxTargets?: number;
+  prune?: boolean;
+  emit?: string;
+  format?: "text" | "json";
+}
+
+export type ReviewExitCode = 0 | 1 | 11 | 12 | 13 | 14;
+
+export type ReviewExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown }
+  | { exitCode: 11; stderr: unknown }
+  | { exitCode: 12; stderr: unknown }
+  | { exitCode: 13; stderr: unknown }
+  | { exitCode: 14; stderr: unknown };
+
+export interface ReviewIngestArgs {
+  dir: string;
+}
+
+export interface ReviewIngestOptions {
+  config?: string;
+}
+
+export type ReviewIngestExitCode = 0 | 1;
+
+export type ReviewIngestExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown };
+
+export interface ReviewRebaselineOptions {
+  config?: string;
+  reason: string;
+  check?: string[];
+  target?: string[];
+  dryRun?: boolean;
+}
+
+export type ReviewRebaselineExitCode = 0 | 1;
+
+export type ReviewRebaselineExitResult =
+  { exitCode: 0; stdout: unknown }
+  | { exitCode: 1; stderr: unknown };
+
 export interface AgentsOptions {
   format?: "yaml" | "json";
 }
