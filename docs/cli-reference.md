@@ -191,7 +191,7 @@ speckeeper drift --fail-on-drift
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
-| `--update` | -u | No | `false` | Auto-update if differences are found (not yet implemented). |
+| `--update` | -u | No | `false` | Rewrite drifted and missing generated files with their expected content. |
 | `--format` | -f | No | `"text"` | Output format: text, json, diff. |
 | `--fail-on-drift` |  | No | `false` | Exit with code 1 if drift is detected (for CI). |
 

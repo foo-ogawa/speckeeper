@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { driftCommand } from '../../src/cli/drift.js';
 
 vi.mock('../../src/utils/config-loader.js');
+vi.mock('../../src/utils/file-writer.js', () => ({ batchWriteFiles: vi.fn() }));
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return {
@@ -14,6 +15,8 @@ vi.mock('node:fs', async (importOriginal) => {
 
 const { loadConfig } = await import('../../src/utils/config-loader.js');
 const { existsSync, readFileSync } = await import('node:fs');
+const { batchWriteFiles } = await import('../../src/utils/file-writer.js');
+const mockedBatchWriteFiles = vi.mocked(batchWriteFiles);
 const mockedLoadConfig = vi.mocked(loadConfig);
 const mockedExistsSync = vi.mocked(existsSync);
 const mockedReadFileSync = vi.mocked(readFileSync);
@@ -85,6 +88,7 @@ describe('driftCommand', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    mockedBatchWriteFiles.mockReset();
   });
 
   describe('FR-500-01 orchestration: no drift when generated content matches file', () => {
@@ -192,6 +196,62 @@ describe('driftCommand', () => {
       expect(output).toContain('No drift detected');
       expect(output).toContain('Checked: 1 files');
       expect(mockedReadFileSync).toHaveBeenCalledWith(join(process.cwd(), 'specs', 'index.json'), 'utf-8');
+    });
+  });
+
+  describe('FR-500-01 --format and --update', () => {
+    function driftedConfig(): void {
+      const exporter = createMockExporter({ single: () => '# Title\nnew line' });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([createMockModel({ exporters: [exporter] })]) as never);
+      mockDisk('# Title\nold line');
+    }
+
+    const stdout = (): string => logSpy.mock.calls.map(c => String(c[0])).join('\n');
+    const exporterFile = join(process.cwd(), 'docs', 'output', 'test-file.md');
+
+    it('FR-500-01 --format json prints only a JSON document on stdout', async () => {
+      driftedConfig();
+
+      await driftCommand({ format: 'json' });
+
+      expect(JSON.parse(stdout())).toEqual({
+        results: [
+          { file: exporterFile, status: 'drifted' },
+          { file: join(process.cwd(), 'specs', 'index.json'), status: 'ok' },
+        ],
+        summary: { ok: 1, drifted: 1, missing: 0, updated: 0 },
+      });
+    });
+
+    it('FR-500-01 --format diff prints the line changes from the file on disk to the generated content', async () => {
+      driftedConfig();
+
+      await driftCommand({ format: 'diff' });
+
+      expect(stdout()).toBe([
+        `--- ${exporterFile} (on disk)`,
+        `+++ ${exporterFile} (generated)`,
+        ' # Title',
+        '-old line',
+        '+new line',
+      ].join('\n'));
+    });
+
+    it('FR-500-01 --update rewrites the drifted files with their generated content', async () => {
+      driftedConfig();
+
+      await driftCommand({ update: true });
+
+      expect(mockedBatchWriteFiles).toHaveBeenCalledWith([{ path: exporterFile, content: '# Title\nnew line' }]);
+      expect(stdout()).toContain('Rewrote 1 file(s)');
+    });
+
+    it('FR-500-01 does not write anything without --update', async () => {
+      driftedConfig();
+
+      await driftCommand({});
+
+      expect(mockedBatchWriteFiles).not.toHaveBeenCalled();
     });
   });
 

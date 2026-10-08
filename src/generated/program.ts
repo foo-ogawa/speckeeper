@@ -18,9 +18,9 @@ export interface CommandHandlers {
   proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   explainImpact: (options: { adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
-  review: (options: { config?: string; check?: string; target?: string; adapter?: string; model?: string; concurrency?: string; force?: boolean; dryRun?: boolean; showPacket?: boolean; requireJudge?: boolean; allowApiKey?: boolean; maxTargets?: string; prune?: boolean; emit?: string; format?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
+  review: (options: { config?: string; check?: string[]; target?: string[]; adapter?: string; model?: string; concurrency?: string; force?: boolean; dryRun?: boolean; showPacket?: boolean; requireJudge?: boolean; allowApiKey?: boolean; maxTargets?: string; prune?: boolean; emit?: string; format?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   reviewIngest: (dir: string | undefined, options: { config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  reviewRebaseline: (options: { config?: string; reason?: string; check?: string; target?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
+  reviewRebaseline: (options: { config?: string; reason?: string; check?: string[]; target?: string[]; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   agents: (options: { format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
 }
 
@@ -91,7 +91,7 @@ export function createProgram(
     .command("drift")
     .description("Check if generated files have been manually edited.")
     .option("-c, --config <path>", "Path to config file.")
-    .option("-u, --update", "Auto-update if differences are found (not yet implemented).", false)
+    .option("-u, --update", "Rewrite drifted and missing generated files with their expected content.", false)
     .option("-f, --format <format>", "Output format: text, json, diff.", "text")
     .option("--fail-on-drift", "Exit with code 1 if drift is detected (for CI).", false)
     .action(async (opts, cmd) => {
@@ -313,8 +313,8 @@ export function createProgram(
       await handlers.proposeAcceptanceCriteria(specIds, opts, globalOpts);
     });
 
-  program
-    .command("review")
+  const __cmd_review = program.command("review");
+  __cmd_review
     .description("Judge declared review checks per target with an LLM and record the judgments.")
     .option("-c, --config <path>", "Path to config file.")
     .option("--check <id...>", "Judge only these checks (repeatable).")
@@ -347,7 +347,6 @@ export function createProgram(
       await handlers.review(opts, globalOpts);
     });
 
-  const __cmd_review = program.command("review");
   __cmd_review
     .command("ingest")
     .description("Record externally produced review results whose packet hash is current.")
@@ -407,7 +406,8 @@ export function createProgram(
     .action(async (commands: string[], opts: { all?: boolean; includeMeta?: boolean; format?: string }) => {
       if (commands.length === 0 && !opts.all) {
         process.stderr.write(JSON.stringify({ code: "INVALID_ARGS", message: "Specify command IDs or use --all" }) + "\n");
-        process.exit(2);
+        process.exitCode = 2;
+        return;
       }
 
       const format = opts.format || "yaml";
@@ -477,7 +477,7 @@ export function createProgram(
         if (doc.components) filtered.components = doc.components;
         process.stdout.write(JSON.stringify(filtered, null, 2) + "\n");
       }
-      process.exit(0);
+      process.exitCode = 0;
     });
   return program;
 }
