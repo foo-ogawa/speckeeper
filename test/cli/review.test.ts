@@ -5,7 +5,7 @@
  * fake that answers from the packet it receives. Records are written to a
  * temporary project directory.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -162,6 +162,11 @@ let stdoutSpy: ReturnType<typeof vi.spyOn>;
 const stdout = (): string =>
   [...logSpy.mock.calls.map(c => String(c[0])), ...stdoutSpy.mock.calls.map(c => String(c[0]))].join('\n');
 const stderr = (): string => errorSpy.mock.calls.map(c => String(c[0])).join('\n');
+
+// Loading the runtime is a one-off cost; it belongs to no single test's time budget
+beforeAll(async () => {
+  await import('@aaac/runtime');
+}, 60_000);
 
 beforeEach(() => {
   project = { dir: mkdtempSync(join(tmpdir(), 'speckeeper-review-test-')), models: [], specs: [] };
