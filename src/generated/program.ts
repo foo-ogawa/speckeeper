@@ -12,7 +12,7 @@ export interface CommandHandlers {
   new: (type: string | undefined, options: { kind?: string; name?: string; output?: string; template?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   impact: (id: string | undefined, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   insights: (options: { format?: string; projectRoot?: string; config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
+  scaffold: (options: { source: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   convert: (file: string | undefined, options: { output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   auditRequirements: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   proposeTraceLinks: (options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
@@ -20,7 +20,7 @@ export interface CommandHandlers {
   proposeAcceptanceCriteria: (specIds: string[], options: { config?: string; adapter?: string; model?: string; failOn?: string; output?: string; reportFormat?: string; logFile?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   review: (options: { config?: string; check?: string[]; target?: string[]; adapter?: string; model?: string; concurrency?: string; force?: boolean; dryRun?: boolean; showPacket?: boolean; requireJudge?: boolean; allowApiKey?: boolean; maxTargets?: string; prune?: boolean; emit?: string; format?: string; showPrompt?: boolean }, parentOpts: Record<string, unknown>) => Promise<void | string>;
   reviewIngest: (dir: string | undefined, options: { config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  reviewRebaseline: (options: { config?: string; reason?: string; check?: string[]; target?: string[]; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
+  reviewRebaseline: (options: { config?: string; reason: string; check?: string[]; target?: string[]; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   agents: (options: { format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
 }
 
@@ -178,7 +178,7 @@ export function createProgram(
   program
     .command("scaffold")
     .description("Generate _models/ from a Mermaid flowchart definition.")
-    .option("-s, --source <path>", "Path to Markdown file containing Mermaid flowchart.")
+    .requiredOption("-s, --source <path>", "Path to Markdown file containing Mermaid flowchart.")
     .option("-o, --output <path>", "Output directory.", "design/")
     .option("-F, --force", "Overwrite existing files.", false)
     .option("--dry-run", "Preview generated files without writing.", false)
@@ -366,7 +366,7 @@ export function createProgram(
     .command("rebaseline")
     .description("Accept stale records as current without calling the LLM.")
     .option("-c, --config <path>", "Path to config file.")
-    .option("--reason <text>", "Why the change cannot affect the verdict (recorded).")
+    .requiredOption("--reason <text>", "Why the change cannot affect the verdict (recorded).")
     .option("--check <id...>", "Rebaseline only these checks (repeatable).")
     .option("--target <id...>", "Rebaseline only these targets (repeatable).")
     .option("--dry-run", "List the targets to rebaseline and their changed inputs without writing.", false)

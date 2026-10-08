@@ -6,8 +6,10 @@ const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 const minify = process.argv.includes("--minify");
 
 // tsx resolves loader paths via import.meta.url relative to its package
-// directory and cannot be inlined into a single-file bundle.
+// directory and cannot be inlined into a single-file bundle. @aaac/runtime is
+// an optional peer dependency: the LLM commands load it from the project.
 const externalSdks = [
+  "@aaac/runtime",
   "@anthropic-ai/claude-agent-sdk",
   "@anthropic-ai/sdk",
   "@google/adk",

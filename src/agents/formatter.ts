@@ -1,6 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import type { RequirementAuditResult } from "../generated/dsl/handoffs.js";
-import type { AuditRunResult, AuditOptions } from "./types.js";
+import type { AgentTaskResult, AuditRunResult, AuditOptions } from "./types.js";
 
 export type ReportFormat = "json" | "text" | "yaml";
 
@@ -11,7 +10,7 @@ export function computeExitCode(result: AuditRunResult, options: AuditOptions): 
   const severityOrder = ["info", "warning", "error", "critical"] as const;
   const threshold = severityOrder.indexOf(failOn);
 
-  const hasBlocking = result.data.findings.some(
+  const hasBlocking = (result.data.findings ?? []).some(
     (f) => severityOrder.indexOf(f.severity) >= threshold,
   );
 
@@ -26,21 +25,28 @@ export function formatResultText(result: AuditRunResult): string {
   const data = result.data;
   const lines: string[] = [];
 
+  const findings = data.findings ?? [];
+
   lines.push(`Risk Level: ${data.riskLevel.toUpperCase()}`);
   lines.push(`Summary: ${data.summary}`);
   lines.push("");
 
-  if (data.findings.length > 0) {
-    lines.push(`Findings (${data.findings.length}):`);
+  if ("explanation" in data) {
+    lines.push(data.explanation);
+    lines.push("");
+  }
+
+  if (findings.length > 0) {
+    lines.push(`Findings (${findings.length}):`);
     lines.push("");
 
-    for (const finding of data.findings) {
+    for (const finding of findings) {
       const prefix = severityIcon(finding.severity);
       lines.push(`  ${prefix} [${finding.category}] ${finding.message}`);
-      if (finding.location) {
+      if ("location" in finding && finding.location) {
         lines.push(`    Location: ${finding.location}`);
       }
-      if (finding.recommendation) {
+      if ("recommendation" in finding && finding.recommendation) {
         lines.push(`    Recommendation: ${finding.recommendation}`);
       }
       lines.push("");
@@ -51,7 +57,7 @@ export function formatResultText(result: AuditRunResult): string {
     lines.push("Recommended Actions:");
     for (const action of data.recommendedActions) {
       lines.push(`  - [${action.kind}] ${action.title}`);
-      if (action.command) {
+      if ("command" in action && action.command) {
         lines.push(`    $ ${action.command}`);
       }
     }
@@ -90,7 +96,7 @@ export async function writeOutput(content: string, outputPath?: string): Promise
   }
 }
 
-function severityIcon(severity: RequirementAuditResult["findings"][number]["severity"]): string {
+function severityIcon(severity: NonNullable<AgentTaskResult["findings"]>[number]["severity"]): string {
   switch (severity) {
     case "critical": return "✖";
     case "error": return "✖";

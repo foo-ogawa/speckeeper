@@ -17,6 +17,7 @@ function createMockModel(overrides: {
     id,
     name: overrides.name ?? 'TestModel',
     lintAll: vi.fn().mockReturnValue(overrides.lintResults ?? []),
+    getReviewChecks: vi.fn().mockReturnValue([]),
     getExporters: vi.fn().mockReturnValue([]),
     register: vi.fn(),
   };

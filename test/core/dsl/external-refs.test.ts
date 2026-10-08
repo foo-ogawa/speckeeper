@@ -94,18 +94,18 @@ describe('FR-200-03: association with related components and entities', () => {
     expect(inferModelIdFromSpecId('ENT-ORDER')).toBe('entity');
   });
 
-  it('FR-200-03 checks those associations for reference integrity', () => {
+  it('FR-200-03 checks those associations for reference integrity', async () => {
     const declared: SpecEntry[] = [
       { model: { id: 'api-ref', register: () => {} }, data: [apiRefSchema.parse(withAssociations)] },
       { model: { id: 'component', register: () => {} }, data: [{ id: 'COMP-ORDER-API' }] },
       { model: { id: 'entity', register: () => {} }, data: [{ id: 'ENT-ORDER' }] },
     ];
     expect(
-      runDesignLint(declared).filter(r => r.ruleId === COMMON_LINT_RULES.refExists),
+      (await runDesignLint(declared)).filter(r => r.ruleId === COMMON_LINT_RULES.refExists),
     ).toEqual([]);
 
     const missingEntity = declared.slice(0, 2);
-    const dangling = runDesignLint(missingEntity).filter(
+    const dangling = (await runDesignLint(missingEntity)).filter(
       r => r.ruleId === COMMON_LINT_RULES.refExists,
     );
     expect(dangling).toHaveLength(1);

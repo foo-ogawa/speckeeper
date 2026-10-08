@@ -3,7 +3,7 @@ cli_contracts: 0.1.0
 
 info:
   title: speckeeper CLI
-  version: 0.16.26
+  version: 0.17.0
   description: >-
     TypeScript-first specification validation framework — validate design
     consistency, external SSOT integrity, and traceability with type-safe
@@ -833,7 +833,7 @@ command_sets:
                 $ref: '#/components/schemas/RequirementAuditResult'
 
           '11':
-            description: Runtime dependency missing (agent-contracts-runtime).
+            description: Runtime dependency missing (@aaac/runtime).
             stderr:
               format: text
 
@@ -959,7 +959,7 @@ command_sets:
                 $ref: '#/components/schemas/TraceLinkResult'
 
           '11':
-            description: Runtime dependency missing (agent-contracts-runtime).
+            description: Runtime dependency missing (@aaac/runtime).
             stderr:
               format: text
 
@@ -1082,7 +1082,7 @@ command_sets:
                 $ref: '#/components/schemas/ImpactExplainResult'
 
           '11':
-            description: Runtime dependency missing (agent-contracts-runtime).
+            description: Runtime dependency missing (@aaac/runtime).
             stderr:
               format: text
 
@@ -1218,7 +1218,7 @@ command_sets:
                 $ref: '#/components/schemas/AcceptanceCriteriaResult'
 
           '11':
-            description: Runtime dependency missing (agent-contracts-runtime).
+            description: Runtime dependency missing (@aaac/runtime).
             stderr:
               format: text
 

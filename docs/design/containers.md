@@ -10,6 +10,8 @@
 | CONT-006 | Checkers | container | External SSOT consistency checker |
 | CONT-007 | Utils | container | Utilities for file I/O, config loading, ID generation, etc. |
 | CONT-008 | Scaffold | container | Mermaid flowchart-based project scaffold generator |
+| CONT-009 | Review | container | Per-target LLM review checks, judgment records, and the review gate |
+| CONT-010 | LLM Agents | container | LLM-backed commands and the single entry to the LLM runtime (@aaac/runtime) |
 
 ---
 
@@ -82,5 +84,23 @@ Utilities for file I/O, config loading, ID generation, etc.
 **Technology**: TypeScript
 
 Mermaid flowchart-based project scaffold generator
+
+---
+
+## CONT-009: Review
+
+**Type**: container
+**Technology**: TypeScript
+
+Per-target LLM review checks, judgment records, and the review gate
+
+---
+
+## CONT-010: LLM Agents
+
+**Type**: container
+**Technology**: TypeScript + @aaac/runtime
+
+LLM-backed commands and the single entry to the LLM runtime (@aaac/runtime)
 
 ---

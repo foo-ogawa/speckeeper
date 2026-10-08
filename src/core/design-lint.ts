@@ -3,12 +3,15 @@
  *
  * Checks that hold across every model, so they cannot be expressed as a
  * `LintRule` (which sees one spec at a time): ID uniqueness, reference
- * integrity, orphan elements, and the phase gate.
+ * integrity, orphan elements, the phase gate, and the review gate.
  *
  * Results are `LintResult`s, the same shape a model's own rules produce, so the
  * lint command reports both through one path.
  */
 import { buildReferenceGraph, type LintResult, type SpecEntry } from './model.js';
+import type { ReviewSetup } from '../review/checks.js';
+import { REVIEW_LINT_RULES, runReviewGate } from '../review/gate.js';
+import { buildReviewRegistry } from '../review/registry.js';
 import {
   getPhaseIndex,
   isSlotUnresolved,
@@ -27,6 +30,8 @@ export const COMMON_LINT_RULES = {
   orphan: 'orphan',
   /** No TBD is left unresolved once its deadline phase is reached */
   phaseTbd: 'phase-tbd',
+  /** Review records: missing or stale, open blocking findings, orphaned records, judge changes */
+  ...REVIEW_LINT_RULES,
 } as const;
 
 export interface DesignLintOptions {
@@ -35,6 +40,8 @@ export interface DesignLintOptions {
    * against, so the phase gate reports nothing.
    */
   phase?: Phase;
+  /** The review setup; the review gate runs when it is given */
+  review?: ReviewSetup;
 }
 
 /** The slot field the phase gate reads off a spec */
@@ -60,11 +67,14 @@ export function parsePhase(value: string, origin: string): Phase {
 
 /**
  * Run every common lint item over the whole design.
+ *
+ * Async because the review gate builds each target's packet, and a context
+ * provider may be async.
  */
-export function runDesignLint(
+export async function runDesignLint(
   specs: SpecEntry[] | undefined,
   options: DesignLintOptions = {},
-): LintResult[] {
+): Promise<LintResult[]> {
   const graph = buildReferenceGraph(specs);
 
   return [
@@ -72,6 +82,7 @@ export function runDesignLint(
     ...checkReferenceIntegrity(graph.nodes, graph.edges),
     ...checkOrphans(graph.nodes, graph.edges),
     ...checkPhaseGate(specs, options.phase),
+    ...(options.review ? await runReviewGate(options.review, buildReviewRegistry(specs)) : []),
   ];
 }
 

@@ -7,6 +7,7 @@ import { z, ZodType } from 'zod';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import type { ReviewCheck } from '../review/types.js';
 import {
   type ModelLevel,
   type Relation,
@@ -275,6 +276,9 @@ export abstract class Model<TSchema extends ZodType> {
   /** Lint rules (override in subclass) */
   protected lintRules: LintRule<z.infer<TSchema>>[] = [];
   
+  /** Review checks judged per target by an LLM (override in subclass); targets default to one per spec */
+  protected reviewChecks: ReviewCheck[] = [];
+  
   /** Exporters (override in subclass) */
   protected exporters: Exporter<z.infer<TSchema>>[] = [];
   
@@ -517,6 +521,13 @@ export abstract class Model<TSchema extends ZodType> {
    */
   getLintRules(): LintRule<z.infer<TSchema>>[] {
     return this.lintRules;
+  }
+  
+  /**
+   * Get review checks
+   */
+  getReviewChecks(): ReviewCheck[] {
+    return this.reviewChecks;
   }
   
   /**
@@ -840,6 +851,8 @@ export interface ReferenceGraphEdge {
   type: string;
   /** Target ID of the relation */
   to: string;
+  /** The relation's description, when it declares one */
+  description?: string;
 }
 
 /**
@@ -872,7 +885,12 @@ export function buildReferenceGraph(specs: SpecEntry[] | undefined): ReferenceGr
       const { id, relations } = spec as { id: string; relations?: Relation[] };
       nodes.push({ id, model: entry.model.id });
       for (const relation of relations ?? []) {
-        edges.push({ from: id, type: relation.type, to: relation.target });
+        edges.push({
+          from: id,
+          type: relation.type,
+          to: relation.target,
+          ...(relation.description !== undefined ? { description: relation.description } : {}),
+        });
       }
     }
   }
@@ -899,6 +917,8 @@ export interface ReferenceTraversalOptions {
   /** Maximum number of edges from the start spec (1 = directly related only) */
   depth: number;
   direction: ReferenceDirection;
+  /** Follow only the edges this returns true for (every edge when omitted) */
+  edgeFilter?: (edge: ReferenceGraphEdge) => boolean;
 }
 
 /**
@@ -940,6 +960,7 @@ export function traverseReferenceGraph(
     const found = new Map<string, ReferenceGraphEdge>();
 
     for (const edge of graph.edges) {
+      if (options.edgeFilter && !options.edgeFilter(edge)) continue;
       const candidates: string[] = [];
       if (followUpstream && current.has(edge.from)) candidates.push(edge.to);
       if (followDownstream && current.has(edge.to)) candidates.push(edge.from);

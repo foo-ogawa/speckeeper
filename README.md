@@ -147,8 +147,8 @@ npx speckeeper check test --coverage
 # Analyze change impact
 npx speckeeper impact FR-001
 
-# LLM-powered quality audit (optional — requires agent-contracts-runtime + API key)
-npm install --save-dev agent-contracts-runtime
+# LLM-powered quality audit (optional — requires @aaac/runtime + API key)
+npm install --save-dev @aaac/runtime
 npx speckeeper audit-requirements --adapter openai
 ```
 
@@ -181,6 +181,7 @@ npx speckeeper audit-requirements --adapter openai
 | `speckeeper propose-trace-links` | Propose candidate traceability links with confidence scores |
 | `speckeeper explain-impact` | Explain impact analysis output in human-readable form (accepts JSON from `impact` via stdin) |
 | `speckeeper propose-acceptance-criteria` | Propose testable acceptance criteria in Given/When/Then format |
+| `speckeeper review` | Judge declared review checks per spec (or per target) and record the judgments; see [Per-Spec LLM Review](#per-spec-llm-review) |
 
 ### Utility Commands
 
@@ -196,7 +197,7 @@ All LLM commands support these additional options:
 
 LLM-powered commands are read-only by default. `audit-requirements` and `explain-impact` do not modify files or state. `propose-*` commands produce proposals; generated output should be reviewed before use. LLM commands do not replace deterministic gates — they are an additional semantic review layer on top of `lint`, `check`, and `impact`.
 
-All LLM commands require `agent-contracts-runtime` (optional peer dependency) and an adapter key, and support `--show-prompt` to inspect the prompt without calling the LLM.
+All LLM commands require `@aaac/runtime` (optional peer dependency) and an adapter key, and support `--show-prompt` to inspect the prompt without calling the LLM.
 
 ```bash
 # Audit requirement quality
@@ -211,6 +212,77 @@ npx speckeeper impact FR-001 --format json | npx speckeeper explain-impact --ada
 # Inspect the prompt without calling the LLM
 npx speckeeper audit-requirements --show-prompt
 ```
+
+## Per-Spec LLM Review
+
+`speckeeper review` judges each target of a declared check with an LLM and records the judgment in `review/<check>/<target>.yaml`. `speckeeper lint` then gates on the records without calling the LLM, so the usual setup is: judge locally, commit the records, and let CI check them.
+
+### Declaring checks
+
+A check lives in the config (`review.checks`, with `select()`) or on a model next to its `lintRules` (`reviewChecks`, one target per spec by default):
+
+```typescript
+import { z } from 'zod';
+import { defineConfig, defineReviewOutput, relationsContext } from 'speckeeper';
+
+export default defineConfig({
+  models: design.models,
+  specs: design.specs,
+  review: {
+    adapter: 'claude',
+    allowApiKey: false,            // refuse to run on a billed API key (exit 13)
+    contextProviders: [relationsContext({ depth: 2, relationTypes: ['satisfies', 'refines'] })],
+    checks: [{
+      id: 'req-verifiability',
+      description: 'Each acceptance criterion can be verified',
+      select: (registry) => [...registry.models.requirement.keys()].map((id) => ({ id, specIds: [id] })),
+      prompt: { file: 'review/prompts/verifiability.md' },
+      output: defineReviewOutput({ findingExtra: { reason: z.string() } }),
+      modelClass: 'standard',
+    }],
+    gate: { stale: 'error', openFindings: 'error', blocking: ['error'], judgeChange: 'ignore' },
+  },
+});
+```
+
+| Field | Meaning |
+|-------|---------|
+| `select(registry)` | Targets (`{ id, specIds }`); a model's check defaults to one target per spec |
+| `context` | A context provider or its ID; the default `relations` lists the target's specs and the specs reachable over relations, found the way `impact` finds them |
+| `prompt` | Instructions, inline or `{ file }` |
+| `output` | Fields added to the common finding shape with `defineReviewOutput` (`code`, `severity`, `message`, `subject`, `location`, `evidence`, `suggestion` are fixed) |
+| `modelClass` | `fast`, `standard` (default) or `thinking`, resolved by `@aaac/runtime` |
+| `verify` | `{ prompt }`: re-check each finding in a separate call; false positives are kept with `status: false_positive` |
+
+### Running
+
+```bash
+npx speckeeper review --dry-run          # what would be judged, why, and the estimated tokens
+npx speckeeper review                    # judge missing and stale targets
+npx speckeeper review --check req-verifiability --target REQ-012 --force
+npx speckeeper review --show-packet --target REQ-012   # the exact input, no LLM call
+npx speckeeper review --emit packets     # hand packets to someone else …
+npx speckeeper review ingest packets     # … and record their results
+npx speckeeper review rebaseline --reason "fixed a typo in the prompt"
+npx speckeeper review --prune            # remove records of checks or targets that are gone
+```
+
+Each packet (role, check prompt, context, output schema) is hashed. A target is judged again only when its packet hash changed — a prompt, a spec in its context, or a file the context read — or, with `gate.judgeChange: stale`, when the configured model changed. `--dry-run` names the changed inputs and the relation path to a changed spec. `rebaseline` accepts a change that cannot affect the verdict without judging again, and records the reason, the changed inputs and the git HEAD in the record.
+
+Before calling the LLM, `review` checks the credentials: `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` (API key), `CLAUDE_CODE_OAUTH_TOKEN`, or the logged-in Claude Code. Without any (for example in CI) the run is skipped with exit 0; `--require-judge` makes that exit 14. The judge gets no tools and an empty working directory. A finding that names an unknown spec or field, or quotes text that is not in the context, is sent back once for correction and otherwise fails the target.
+
+### Records and the lint gate
+
+Records are written with a fixed key order, so changes show as small diffs. A finding's `status` is `open`, `false_positive` or `dismissed` (with a `statusNote`); a status set by a person carries over to a new judgment when the finding's fingerprint (check, target, code, subject or quote, evidence) matches exactly one finding.
+
+| Code | Reported when | Default |
+|------|---------------|---------|
+| `REVIEW-001` | A target has no record, or its record is stale | error (`gate.stale`) |
+| `REVIEW-002` | A record has an `open` finding of a blocking severity (`gate.blocking`) | error (`gate.openFindings`) |
+| `REVIEW-003` | A record's check or target no longer exists | warning |
+| `REVIEW-004` | A record was judged by another model (`gate.judgeChange: warning`) | warning |
+
+`review` exits 0 whether or not there are findings; `lint` decides. Exit codes: 1 configuration error or a target whose output stayed invalid, 11 `@aaac/runtime` missing, 12 adapter error (records already written are kept), 13 API key refused, 14 judge required but unavailable.
 
 ## Validation Features
 
@@ -581,11 +653,11 @@ Tool capabilities are described in machine-readable form via [cli-contract.yaml]
 | `claude` | runtime default | `ANTHROPIC_API_KEY` |
 | `mock` | — | — |
 
-Default models are defined by `agent-contracts-runtime` and may change between releases. Use `--model` to pin a specific model.
+Default models are defined by `@aaac/runtime` and may change between releases. Use `--model` to pin a specific model, or `AGENT_RUNTIME_MODEL_<CLASS>` (for example `AGENT_RUNTIME_MODEL_STANDARD`) to pin the model a model class resolves to.
 
 ```bash
 # Install the runtime dependency to enable LLM features
-npm install agent-contracts-runtime
+npm install --save-dev @aaac/runtime
 ```
 
 ## Technology Stack
@@ -594,7 +666,7 @@ npm install agent-contracts-runtime
 |-----------|-----------|
 | Language | TypeScript (Node.js) |
 | Schema validation | [Zod](https://github.com/colinhacks/zod) |
-| LLM integration | [agent-contracts-runtime](https://www.npmjs.com/package/agent-contracts-runtime) (optional peer dep) |
+| LLM integration | [@aaac/runtime](https://www.npmjs.com/package/@aaac/runtime) (optional peer dep) |
 | Agent DSL | [agent-contracts](https://www.npmjs.com/package/agent-contracts) — agent/task/workflow definitions |
 | CLI contract | [cli-contracts](https://www.npmjs.com/package/cli-contracts) — machine-readable interface spec |
 | Package manager | npm |

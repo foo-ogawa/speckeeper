@@ -166,9 +166,13 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
 
   const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-  /** Walk the builder chain hanging off `.command(...)` and collect its parameters. */
-  function collectParameters(commandCall: ts.CallExpression, impl: CLICommandImpl): void {
-    let current: ts.Node = commandCall;
+  /**
+   * Walk the builder chain hanging off a command — its `.command(...)` call, or
+   * the variable a parent command is held in — and collect its parameters. A
+   * `.command(...)` further along the chain starts a subcommand, so it ends the walk.
+   */
+  function collectParameters(start: ts.Node, impl: CLICommandImpl): void {
+    let current: ts.Node = start;
     while (
       ts.isPropertyAccessExpression(current.parent) &&
       ts.isCallExpression(current.parent.parent) &&
@@ -176,6 +180,7 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
     ) {
       const call = current.parent.parent;
       const member = current.parent.name.text;
+      if (member === 'command') break;
 
       if (member === 'option' || member === 'requiredOption') {
         const flags = literalValue(call.arguments[0]);
@@ -203,18 +208,30 @@ function parseCommanderCLI(filePath: string): Map<string, CLICommandImpl> {
     }
   }
 
+  /** Variables holding a parent command, keyed by name, valued by its dotted command name */
+  const commandVariables = new Map<string, string>();
+
   function visit(node: ts.Node): void {
     if (ts.isCallExpression(node)) {
       const expr = node.expression;
       if (ts.isPropertyAccessExpression(expr) && expr.name.text === 'command') {
         const args = node.arguments;
         if (args.length > 0 && ts.isStringLiteral(args[0])) {
-          const cmdName = args[0].text.split(' ')[0];
-          const impl: CLICommandImpl = { name: cmdName, options: [], arguments: [] };
+          // A command registered on a parent's variable is named by its path, as the contract names it
+          const parent = ts.isIdentifier(expr.expression) ? commandVariables.get(expr.expression.text) : undefined;
+          const segment = args[0].text.split(' ')[0];
+          const cmdName = parent ? `${parent}.${segment}` : segment;
+          const impl: CLICommandImpl = commands.get(cmdName) ?? { name: cmdName, options: [], arguments: [] };
           commands.set(cmdName, impl);
+          if (ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)) {
+            commandVariables.set(node.parent.name.text, cmdName);
+          }
           collectParameters(node, impl);
         }
       }
+    } else if (ts.isIdentifier(node) && ts.isPropertyAccessExpression(node.parent) && node.parent.expression === node) {
+      const cmdName = commandVariables.get(node.text);
+      if (cmdName) collectParameters(node, commands.get(cmdName)!);
     }
     ts.forEachChild(node, visit);
   }

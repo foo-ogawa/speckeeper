@@ -282,6 +282,81 @@ entries:
           - type: dependsOn
             target: CONT-002
             description: Depends on type definitions for generated models
+      - id: CONT-009
+        name: Review
+        type: container
+        description: Per-target LLM review checks, judgment records, and the review gate
+        technology:
+          name: TypeScript
+        boundaryId: BND-002
+        layerId: LAYER-002
+        relations:
+          - type: implements
+            target: FR-1200
+            description: Implements review check declaration
+          - type: implements
+            target: FR-1201
+            description: Implements context providers
+          - type: implements
+            target: FR-1202
+            description: Implements packet hashing
+          - type: implements
+            target: FR-1203
+            description: Implements judging through the LLM runtime
+          - type: implements
+            target: FR-1204
+            description: Implements the credential policy
+          - type: implements
+            target: FR-1205
+            description: Implements the review output schema
+          - type: implements
+            target: FR-1206
+            description: Implements incremental target selection
+          - type: implements
+            target: FR-1207
+            description: Implements the finding verifier
+          - type: implements
+            target: FR-1208
+            description: Implements the judgment record store
+          - type: implements
+            target: FR-1209
+            description: Implements the review gate
+          - type: implements
+            target: FR-1210
+            description: Implements packet emit and result ingest
+          - type: implements
+            target: FR-1212
+            description: Implements record rebaseline
+          - type: dependsOn
+            target: CONT-010
+            description: Judges packets through the LLM runtime
+          - type: dependsOn
+            target: CONT-005
+            description: Adds the review gate to the common lint items
+      - id: CONT-010
+        name: LLM Agents
+        type: container
+        description: LLM-backed commands and the single entry to the LLM runtime (@aaac/runtime)
+        technology:
+          name: TypeScript + @aaac/runtime
+        boundaryId: BND-002
+        layerId: LAYER-002
+        relations:
+          - type: implements
+            target: FR-1100
+            description: Implements LLM requirement audit
+          - type: implements
+            target: FR-1101
+            description: Implements LLM trace link proposal
+          - type: implements
+            target: FR-1102
+            description: Implements LLM impact explanation
+          - type: implements
+            target: FR-1103
+            description: Implements LLM acceptance criteria proposal
+          - type: implements
+            target: FR-1211
+            description: Implements the single LLM runtime
   - model: boundary
     specs:
       - id: BND-001

@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.16.26
+**Version:** 0.17.0
 
 ## Table of Contents
 
@@ -978,7 +978,7 @@ speckeeper audit-requirements --report-format json --output audit.json
 
   </details>
 
-**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+**Exit 11:** Runtime dependency missing (@aaac/runtime).
 
 - **stderr:** format=`text`
 
@@ -1509,7 +1509,7 @@ speckeeper propose-trace-links --adapter claude --report-format json
 
   </details>
 
-**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+**Exit 11:** Runtime dependency missing (@aaac/runtime).
 
 - **stderr:** format=`text`
 
@@ -2073,7 +2073,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
   </details>
 
-**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+**Exit 11:** Runtime dependency missing (@aaac/runtime).
 
 - **stderr:** format=`text`
 
@@ -2599,7 +2599,7 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 
   </details>
 
-**Exit 11:** Runtime dependency missing (agent-contracts-runtime).
+**Exit 11:** Runtime dependency missing (@aaac/runtime).
 
 - **stderr:** format=`text`
 

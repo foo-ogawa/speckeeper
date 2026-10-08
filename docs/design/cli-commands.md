@@ -13,6 +13,9 @@
 | propose-trace-links | Propose candidate traceability links between specs with confidence scores and rationale |
 | explain-impact | Translate impact analysis JSON (from stdin) into human-readable explanation for PM/executive audiences |
 | propose-acceptance-criteria | Propose testable acceptance criteria in Given/When/Then format for specified specs |
+| review | Judge the declared review checks per target with an LLM and record the judgments; only targets whose record is missing or stale are judged |
+| review.ingest | Record externally produced review results whose packet hash is current |
+| review.rebaseline | Accept stale records as current without calling the LLM, keeping their findings and recording the reason |
 | convert | Convert a TS spec data file to YAML format |
 | impact | Analyze the change impact scope of a specified ID |
 | insights | Export spec relation edges as ExternalInsight JSON |
@@ -261,7 +264,7 @@ speckeeper scaffold [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| -s, --source | option | path |  | - | Path to Markdown file containing mermaid flowchart |
+| -s, --source | option | path | ✓ | - | Path to Markdown file containing mermaid flowchart |
 | -o, --output | option | path |  | design/ | Output directory |
 | -F, --force | option | boolean |  | false | Overwrite existing files |
 | --dry-run | option | boolean |  | false | Preview generated files without writing |
@@ -457,6 +460,127 @@ speckeeper propose-acceptance-criteria --adapter gemini --show-prompt
 | 10 | Completed with blocking findings |
 | 11 | Runtime dependency missing |
 | 12 | LLM provider or adapter error |
+
+---
+
+## CMD-REVIEW: review
+
+Judge the declared review checks per target with an LLM and record the judgments; only targets whose record is missing or stale are judged
+
+### Usage
+
+```bash
+speckeeper review [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -c, --config | option | path |  | - | Path to config file |
+| --check | option | array |  | - | Judge only these checks |
+| --target | option | array |  | - | Judge only these targets |
+| --adapter | option | enum (claude, openai, gemini, mock) |  | - | SDK adapter for LLM execution (default from review.adapter, else claude) |
+| --model | option | string |  | - | LLM model override |
+| --concurrency | option | number |  | 2 | Number of targets judged in parallel |
+| --force | option | boolean |  | false | Judge every selected target, fresh or not |
+| --dry-run | option | boolean |  | false | List the targets to judge and to skip with their reasons and the estimated tokens, without calling the LLM |
+| --show-packet | option | boolean |  | false | Print the packets of the selected targets without calling the LLM |
+| --require-judge | option | boolean |  | false | Exit 14 instead of skipping when no LLM credentials are available |
+| --allow-api-key | option | boolean |  | false | Allow API-key billing for this run even when review.allowApiKey is false |
+| --max-targets | option | number |  | - | Judge at most this many targets in this run |
+| --prune | option | boolean |  | false | Remove records whose check or target no longer exists |
+| --emit | option | path |  | - | Write the packets of the targets to judge into this directory instead of calling the LLM |
+| -f, --format | option | enum (text, json) |  | text | Output format |
+| --show-prompt | option | boolean |  | false | Same as --show-packet (the flag every LLM command carries) |
+
+### Examples
+
+```bash
+speckeeper review
+speckeeper review --dry-run
+speckeeper review --check req-verifiability --target REQ-012 --force
+speckeeper review --emit review-packets
+speckeeper review --prune
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Review completed, or skipped because no LLM credentials are available |
+| 1 | Configuration error, or a target whose output stayed invalid after one correction |
+| 11 | Runtime dependency missing (@aaac/runtime) |
+| 12 | LLM provider or adapter error, including usage limits; records already written are kept |
+| 13 | An API key would be used while review.allowApiKey is false |
+| 14 | --require-judge was given and no LLM credentials are available |
+
+---
+
+## CMD-REVIEW-INGEST: review.ingest
+
+Record externally produced review results whose packet hash is current
+
+### Usage
+
+```bash
+speckeeper review.ingest [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| <dir> | argument | path | ✓ | - | Directory holding the results |
+| -c, --config | option | path |  | - | Path to config file |
+
+### Examples
+
+```bash
+speckeeper review ingest review-packets
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Every result was recorded |
+| 1 | A result was rejected, or a configuration error |
+
+---
+
+## CMD-REVIEW-REBASELINE: review.rebaseline
+
+Accept stale records as current without calling the LLM, keeping their findings and recording the reason
+
+### Usage
+
+```bash
+speckeeper review.rebaseline [options]
+```
+
+### Parameters
+
+| Name | Kind | Type | Required | Default | Description |
+|------|------|------|----------|---------|-------------|
+| -c, --config | option | path |  | - | Path to config file |
+| --reason | option | string | ✓ | - | Why the change cannot affect the verdict (recorded) |
+| --check | option | array |  | - | Rebaseline only these checks |
+| --target | option | array |  | - | Rebaseline only these targets |
+| --dry-run | option | boolean |  | false | List the targets to rebaseline and their changed inputs without writing |
+
+### Examples
+
+```bash
+speckeeper review rebaseline --reason "fix a typo in the prompt" --check req-verifiability
+```
+
+### Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Rebaseline completed |
+| 1 | Configuration error |
 
 ---
 

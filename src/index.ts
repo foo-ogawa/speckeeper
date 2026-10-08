@@ -11,6 +11,7 @@ export {
   buildRegistryFromConfig,
   getSpecsFromConfig,
   findModelTypeFromConfig,
+  traverseReferenceGraph,
   // Re-exported from relation.ts
   RELATION_TYPES,
   RELATION_CONSTRAINTS,
@@ -34,6 +35,11 @@ export type {
   SpecEntry,
   SpecModule,
   MergedDesign,
+  ReferenceGraph,
+  ReferenceGraphEdge,
+  ReferenceGraphNode,
+  ReferenceDirection,
+  ReachedSpec,
   LookupKeyConfig,
   DeepValidationConfig,
   DeepValidationRule,
@@ -52,6 +58,9 @@ export {
 
 export * from './core/model-registry.js';
 export * from './core/config-api.js';
+
+// Review (per-target LLM judgments)
+export * from './review/index.js';
 
 // Utils
 export * from './utils/index.js';

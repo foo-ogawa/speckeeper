@@ -56,6 +56,19 @@
 | FR-1102 | LLM-Powered Impact Explanation | should | llm |
 | FR-1103 | LLM-Powered Acceptance Criteria Proposal | should | llm |
 | FR-1104 | TypeScript to YAML Conversion | should | conversion |
+| FR-1200 | Review Check Declaration | should | review |
+| FR-1201 | Review Context Provider | should | review |
+| FR-1202 | Review Packet Hash | should | review |
+| FR-1203 | Review Judge Execution | should | review |
+| FR-1204 | Review Credential Policy | should | review |
+| FR-1205 | Review Output Schema | should | review |
+| FR-1206 | Incremental Review Selection | should | review |
+| FR-1207 | Review Verifier | could | review |
+| FR-1208 | Judgment Record Store | should | review |
+| FR-1209 | Review Gate in Lint | should | review |
+| FR-1210 | Manual Review Emit and Ingest | could | review |
+| FR-1211 | Single LLM Runtime | should | llm |
+| FR-1212 | Review Rebaseline | should | review |
 
 ---
 
@@ -906,3 +919,198 @@ YAML input lowers participation barriers for non-developers (NFR-005) and enable
 - **FR-1104-02**: Output defaults to same filename with .yaml extension [test]
 - **FR-1104-03**: --output allows specifying a custom output path [test]
 - **FR-1104-04**: --dry-run previews conversion without writing files [test]
+
+---
+
+## FR-1200: Review Check Declaration
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Declare per-target LLM review checks with target selection, context provider, prompt, output schema, model class, and optional verifier
+
+### Rationale
+
+Project-wide LLM audits (FR-1100) cannot scale to large designs, cannot be tied to individual specs, and leave no record that lint or CI can consume
+
+### Acceptance Criteria
+
+- **FR-1200-01**: Checks are declared in config review.checks or in a Model's reviewChecks [test]
+- **FR-1200-02**: A check's select() returns targets with their spec IDs; default is one target per spec of the model [test]
+- **FR-1200-03**: A check's output is built with defineReviewOutput; projects can add only extra and findingExtra fields [test]
+
+---
+
+## FR-1201: Review Context Provider
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Build the LLM context for one target and report the spec IDs and files it read
+
+### Acceptance Criteria
+
+- **FR-1201-01**: build() may be sync or async and returns body, inputs, and optional files [test]
+- **FR-1201-02**: The built-in relations provider reuses the impact traversal over the same reference graph, with configurable depth, relation types, and edge filter, in a stable order [test]
+
+---
+
+## FR-1202: Review Packet Hash
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Hash the packet from check id, prompt, output JSON Schema, context body, file contents, and verifier prompt, excluding the model
+
+### Acceptance Criteria
+
+- **FR-1202-01**: Identical specs and config produce identical hashes across OS, time, and concurrency [test]
+- **FR-1202-02**: --show-packet prints the packet without calling the LLM [test]
+- **FR-1202-03**: The judge signature (adapter, model, verifier model) is recorded separately from the packet hash [test]
+
+---
+
+## FR-1203: Review Judge Execution
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Run each packet through @aaac/runtime runTask with a read-only reviewer agent, no tools, and the check's output schema
+
+### Acceptance Criteria
+
+- **FR-1203-01**: The adapter is created with tools [] and an empty temporary cwd [test]
+- **FR-1203-02**: Schema mismatches get one follow-up correction; persistent mismatches are reported as failures [test]
+- **FR-1203-03**: On usage-limit or rate-limit responses, no new calls start and completed records are kept [test]
+- **FR-1203-04**: Token usage from TaskRunResult is stored in the record [test]
+
+---
+
+## FR-1204: Review Credential Policy
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Classify adapter credentials before calling the LLM, skip the run when no credentials are available, and optionally refuse API-key billing
+
+### Rationale
+
+CI and other environments without credentials must not fail on review, while local runs must not silently fall back to unintended API-key billing
+
+### Acceptance Criteria
+
+- **FR-1204-01**: With CI set and no credential variables, review exits 0 without touching records and reports the skip [test]
+- **FR-1204-02**: --require-judge turns an unavailable judge into exit code 14 [test]
+- **FR-1204-03**: With allowApiKey false and an API key present, review exits 13 without calling the LLM [test]
+
+---
+
+## FR-1205: Review Output Schema
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Provide a common finding shape (code, severity, message, subject, location, evidence, suggestion) owned by speckeeper, let projects add fields only through defineReviewOutput, and treat unknown IDs or quotes not found in the packet as a schema mismatch
+
+### Acceptance Criteria
+
+- **FR-1205-01**: Severity uses the lint scale (error, warning, info) [test]
+- **FR-1205-02**: Unknown spec IDs in subject or evidence are handled as a schema mismatch (one follow-up, then target failure) [test]
+- **FR-1205-03**: A location.quote not contained in the packet context after whitespace normalization is handled as a schema mismatch [test]
+
+---
+
+## FR-1206: Incremental Review Selection
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Judge only targets whose record is missing or stale (packet hash changed, or judge signature changed under judgeChange stale) using the same staleness function as the gate; support --force, --check, --target, and --dry-run
+
+### Acceptance Criteria
+
+- **FR-1206-01**: An unchanged target is skipped without calling the LLM [test]
+- **FR-1206-02**: --dry-run lists targets to run and to skip with the changed inputs as reasons, and estimates token usage from previous records [test]
+- **FR-1206-03**: --max-targets caps one run in a stable order so that split runs never judge a target twice [test]
+
+---
+
+## FR-1207: Review Verifier
+
+**Type**: functional | **Priority**: could | **Category**: review
+
+Optionally re-check each finding in a separate call and mark false positives without deleting them
+
+### Acceptance Criteria
+
+- **FR-1207-01**: Findings judged false_positive keep their text and carry status false_positive and the verifier rationale [test]
+
+---
+
+## FR-1208: Judgment Record Store
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Store one deterministic YAML record per check and target, and carry finding status across re-judgments
+
+### Acceptance Criteria
+
+- **FR-1208-01**: Records are written with stable key order and sorting [test]
+- **FR-1208-02**: speckeeper computes each finding's fingerprint from check, target, code, subject (or normalized quote), and sorted evidence, never from message [test]
+- **FR-1208-03**: dismissed requires statusNote [test]
+- **FR-1208-04**: Records store per-input hashes (prompt, schema, each spec, each file) used only to explain staleness [test]
+- **FR-1208-05**: Status carries over only for one-to-one fingerprint matches; other findings become open [test]
+
+---
+
+## FR-1209: Review Gate in Lint
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Add REVIEW-001 (missing or stale record), REVIEW-002 (open blocking finding), REVIEW-003 (orphaned record), and REVIEW-004 (judge change) to the common lint items when review is configured
+
+### Acceptance Criteria
+
+- **FR-1209-01**: lint evaluates the gate without network access or LLM credentials [test]
+- **FR-1209-02**: Gate severities are configurable as error, warning, or off [test]
+- **FR-1209-03**: REVIEW-003 warns on records whose check or target no longer exists; review --prune removes them [test]
+- **FR-1209-04**: gate.judgeChange ignore, warning, and stale respectively skip, report REVIEW-004 for, and mark stale records whose judge signature differs from the configured one; review uses the same staleness function [test]
+
+---
+
+## FR-1210: Manual Review Emit and Ingest
+
+**Type**: functional | **Priority**: could | **Category**: review
+
+Emit packets for external judging and ingest schema-valid results whose packet hash still matches
+
+### Acceptance Criteria
+
+- **FR-1210-01**: ingest rejects results whose packet hash differs from the current one [test]
+
+---
+
+## FR-1211: Single LLM Runtime
+
+**Type**: functional | **Priority**: should | **Category**: llm
+
+Run all LLM features through @aaac/runtime and declare it and the Claude Agent SDK as optional peerDependencies
+
+### Rationale
+
+agent-contracts-runtime is deprecated in favor of @aaac/runtime; two runtimes would split adapter, retry, and credential handling
+
+### Acceptance Criteria
+
+- **FR-1211-01**: FR-1100 to FR-1103 commands execute via @aaac/runtime executeTask [test]
+- **FR-1211-02**: package.json declares @aaac/runtime as an optional peer dependency [inspection]
+
+---
+
+## FR-1212: Review Rebaseline
+
+**Type**: functional | **Priority**: should | **Category**: review
+
+Accept stale records as current without calling the LLM, keeping findings and recording the reason
+
+### Rationale
+
+A change to a widely shared input (prompt wording, a commonly included spec) otherwise forces every target to be judged again even when the change cannot affect the verdict
+
+### Acceptance Criteria
+
+- **FR-1212-01**: rebaseline updates packetHash and inputHashes, keeps findings and status, and appends from, to, changedInputs, reason, at, gitHead, and gitDirty without any personal identity [test]
+- **FR-1212-02**: rebaseline requires --reason and skips targets that have no record [test]

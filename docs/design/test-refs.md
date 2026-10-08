@@ -44,8 +44,9 @@
 | TEST-062 | Repository invariant verification test (retired checker locations, TypeScript settings, suite wiring) | vitest | 5 |
 | TEST-063 | Insights command verification test (ExternalInsight JSON export) | vitest | 2 |
 | TEST-064 | Drift verification test over the machine-readable artifacts (specs/) | vitest | 1 |
-| TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 3 |
+| TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 5 |
 | TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
+| TEST-082 | Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline) | vitest | 14 |
 
 ---
 
@@ -1091,7 +1092,9 @@
 
 - FR-1100
 - FR-1101
+- FR-1102
 - FR-1103
+- FR-1211
 
 ### Test Case Patterns
 
@@ -1103,7 +1106,10 @@
 | FR-1101-01 | `FR-1101-01 analyses every declared spec and lists the relations already present` | Trace link analysis spans every declared spec |
 | FR-1101-02 | `FR-1101-02 requires source, target, relation type and confidence on every proposed link` | The proposed link schema requires the four fields |
 | FR-1101-03 | `FR-1101-03 propose-trace-links --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1102-02 | `FR-1102-02 reports an explanation that has no findings, and shows the explanation` | The text report carries the explanation, with or without findings |
 | FR-1102-03 | `FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
+| FR-1211-01 | `FR-1211-01 audit-requirements executes its task through @aaac/runtime executeTask` | The LLM command runs on @aaac/runtime executeTask |
+| FR-1211-01 | `FR-1211-01 --log-file reaches the runtime from the command line` | The progress log option reaches the runtime |
 | FR-1103-01 | `FR-1103-01 narrows the prompt to the specs named on the command line` | Only the named specs reach the prompt |
 | FR-1103-03 | `FR-1103-03 propose-acceptance-criteria --show-prompt prints the prompt and calls no LLM` | show-prompt returns the prompt and reaches no runtime |
 
@@ -1127,5 +1133,80 @@
 | NFR-001-01 | `NFR-001-01 runs lint, build and drift within the budget at the declared requirement scale` | lint, build and drift stay within the declared budget |
 | NFR-001-02 | `NFR-001-02 runs check within the budget at the declared file scale` | check stays within the declared budget at the file scale |
 | NFR-001-03 | `NFR-001-03 builds within the budget from an empty output directory` | A cold build stays within the declared budget |
+
+---
+
+## TEST-082: Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline)
+
+### Test Source
+
+- **Path**: `test/cli/review.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- FR-1200
+- FR-1201
+- FR-1202
+- FR-1203
+- FR-1204
+- FR-1205
+- FR-1206
+- FR-1207
+- FR-1208
+- FR-1209
+- FR-1210
+- FR-1212
+- NFR-016
+- NFR-017
+
+### Implemented Command
+
+- CMD-REVIEW
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| FR-1200-01 | `FR-1200-01 plans checks declared in config review\.checks and in a model\\` | plans checks declared in config review.checks and in a model\ |
+| FR-1200-02 | `FR-1200-02 defaults a model check to one target per spec, and a select\(\) target may span several specs` | defaults a model check to one target per spec, and a select() target may span several specs |
+| FR-1200-02 | `FR-1200-02 rejects a config check without select\(\) and a target naming an unknown spec` | rejects a config check without select() and a target naming an unknown spec |
+| FR-1200-03 | `FR-1200-03 lets defineReviewOutput add only extra fields, and records them under extra` | lets defineReviewOutput add only extra fields, and records them under extra |
+| FR-1201-01 | `FR-1201-01 accepts an async provider and hashes the files it reports` | accepts an async provider and hashes the files it reports |
+| FR-1201-02 | `FR-1201-02 the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order` | the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order |
+| FR-1202-01 | `FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency` | the same specs and config give the same hash regardless of order, line endings and concurrency |
+| NFR-017-01 | `FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency` | the same specs and config give the same hash regardless of order, line endings and concurrency |
+| FR-1202-02 | `FR-1202-02 --show-packet prints the packet without calling the LLM` | --show-packet prints the packet without calling the LLM |
+| FR-1202-03 | `FR-1202-03 records the judge signature apart from the packet hash, which does not depend on the model` | records the judge signature apart from the packet hash, which does not depend on the model |
+| FR-1203-01 | `FR-1203-01 creates each adapter without tools and with an empty temporary working directory` | creates each adapter without tools and with an empty temporary working directory |
+| FR-1203-02 | `FR-1203-02 corrects a malformed answer once, and reports a target whose answer stays malformed` | corrects a malformed answer once, and reports a target whose answer stays malformed |
+| FR-1203-03 | `FR-1203-03 stops starting calls after an adapter error and keeps the records already written` | stops starting calls after an adapter error and keeps the records already written |
+| FR-1203-04 | `FR-1203-04 stores the token usage the runtime reports` | stores the token usage the runtime reports |
+| FR-1204-01 | `FR-1204-01 skips with exit 0 and touches no record when CI has no credentials` | skips with exit 0 and touches no record when CI has no credentials |
+| FR-1204-01 | `FR-1204-01 skips when the logged-in Claude Code turns out not to be logged in` | skips when the logged-in Claude Code turns out not to be logged in |
+| FR-1204-02 | `FR-1204-02 --require-judge turns an unavailable judge into exit 14` | --require-judge turns an unavailable judge into exit 14 |
+| FR-1204-03 | `FR-1204-03 refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given` | refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given |
+| FR-1205-01 | `FR-1205-01 accepts the lint severities and rejects any other` | accepts the lint severities and rejects any other |
+| FR-1205-02 | `FR-1205-02 treats an unknown spec ID or field path in subject or evidence as a schema mismatch` | treats an unknown spec ID or field path in subject or evidence as a schema mismatch |
+| FR-1205-03 | `FR-1205-03 accepts a quote found in the context after collapsing whitespace, and rejects one that is not there` | accepts a quote found in the context after collapsing whitespace, and rejects one that is not there |
+| FR-1206-01 | `FR-1206-01 skips an unchanged target without calling the LLM` | skips an unchanged target without calling the LLM |
+| FR-1206-02 | `FR-1206-02 --dry-run gives the changed inputs with the relation path, and estimates tokens from recorded usage` | --dry-run gives the changed inputs with the relation path, and estimates tokens from recorded usage |
+| FR-1206-03 | `FR-1206-03 --max-targets splits a run in a stable order without judging a target twice` | --max-targets splits a run in a stable order without judging a target twice |
+| FR-1207-01 | `FR-1207-01 keeps a false positive with its text, status and the verifier rationale` | keeps a false positive with its text, status and the verifier rationale |
+| FR-1208-01 | `FR-1208-01 writes records with a fixed key order and sorted lists` | writes records with a fixed key order and sorted lists |
+| FR-1208-02 | `FR-1208-02 makes the fingerprint from check, target, code, subject or quote, and sorted evidence, never the message` | makes the fingerprint from check, target, code, subject or quote, and sorted evidence, never the message |
+| FR-1208-03 | `FR-1208-03 a dismissed finding needs a statusNote` | a dismissed finding needs a statusNote |
+| FR-1208-04 | `FR-1208-04 stores per-input hashes for the prompt, the schema, each spec and each file` | stores per-input hashes for the prompt, the schema, each spec and each file |
+| FR-1208-05 | `FR-1208-05 carries a status over only for a one-to-one fingerprint match` | carries a status over only for a one-to-one fingerprint match |
+| FR-1208-05 | `FR-1208-05 keeps a person\\` | keeps a person\ |
+| FR-1209-01 | `FR-1209-01 NFR-016-01 evaluates missing, stale and open-finding records with no credential and no LLM` | evaluates missing, stale and open-finding records with no credential and no LLM |
+| NFR-016-01 | `FR-1209-01 NFR-016-01 evaluates missing, stale and open-finding records with no credential and no LLM` | evaluates missing, stale and open-finding records with no credential and no LLM |
+| FR-1209-02 | `FR-1209-02 lets the gate severities be error, warning or off` | lets the gate severities be error, warning or off |
+| FR-1209-03 | `FR-1209-03 warns on records whose check or target is gone, and review --prune removes them` | warns on records whose check or target is gone, and review --prune removes them |
+| FR-1209-04 | `FR-1209-04 judgeChange ignore, warning and stale treat a record judged by another model in turn` | judgeChange ignore, warning and stale treat a record judged by another model in turn |
+| FR-1209-01 | `FR-1209-01 lists the review rule IDs among the common lint items` | lists the review rule IDs among the common lint items |
+| FR-1210-01 | `FR-1210-01 records a result for the current packet and rejects one whose packet hash is no longer current` | records a result for the current packet and rejects one whose packet hash is no longer current |
+| FR-1212-01 | `FR-1212-01 replaces the hashes, keeps the findings, and records the change without a personal identity` | replaces the hashes, keeps the findings, and records the change without a personal identity |
+| FR-1212-02 | `FR-1212-02 needs --reason and leaves targets without a record alone` | needs --reason and leaves targets without a record alone |
 
 ---

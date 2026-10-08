@@ -8,6 +8,7 @@ import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
 import { getSpecsFromConfig, type SpecEntry } from '../core/model.js';
 import { parsePhase, runDesignLint } from '../core/design-lint.js';
+import { resolveReviewSetup, type ReviewSetup } from '../review/checks.js';
 import type { Phase } from '../types/common.js';
 
 // ============================================================================
@@ -74,7 +75,8 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
     console.error('');
 
     console.error(chalk.blue('  Running lint checks...'));
-    const result = runModelLint(models, specs, { ...options, gatePhase });
+    const review = resolveReviewSetup(config.review, models, process.cwd()) ?? undefined;
+    const result = await runModelLint(models, specs, { ...options, gatePhase, review });
 
     console.error('');
     outputLintResults(result, options);
@@ -104,11 +106,11 @@ function resolveGatePhase(optionPhase: string | undefined, configPhase: Phase | 
   return undefined;
 }
 
-/** Options a lint run needs on top of the resolved gate phase */
-type LintRunOptions = LintCommandOptions & { gatePhase?: Phase };
+/** Options a lint run needs on top of the resolved gate phase and review setup */
+type LintRunOptions = LintCommandOptions & { gatePhase?: Phase; review?: ReviewSetup };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function runModelLint(models: any[], specs: SpecEntry[] | undefined, options: LintRunOptions): LintResult {
+async function runModelLint(models: any[], specs: SpecEntry[] | undefined, options: LintRunOptions): Promise<LintResult> {
   const issues: LintIssue[] = [];
 
   for (const model of models) {
@@ -129,7 +131,7 @@ function runModelLint(models: any[], specs: SpecEntry[] | undefined, options: Li
     }
   }
 
-  for (const result of runDesignLint(specs, { phase: options.gatePhase })) {
+  for (const result of await runDesignLint(specs, { phase: options.gatePhase, review: options.review })) {
     issues.push({
       rule: result.ruleId,
       severity: result.severity,

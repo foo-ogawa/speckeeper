@@ -1316,7 +1316,9 @@ specs:
     verifiesRequirements:
       - FR-1100
       - FR-1101
+      - FR-1102
       - FR-1103
+      - FR-1211
     testCasePatterns:
       - acceptanceCriteriaId: FR-1100-01
         pattern: FR-1100-01 builds the prompt from every registered spec
@@ -1336,9 +1338,18 @@ specs:
       - acceptanceCriteriaId: FR-1101-03
         pattern: FR-1101-03 propose-trace-links --show-prompt prints the prompt and calls no LLM
         description: show-prompt returns the prompt and reaches no runtime
+      - acceptanceCriteriaId: FR-1102-02
+        pattern: FR-1102-02 reports an explanation that has no findings, and shows the explanation
+        description: The text report carries the explanation, with or without findings
       - acceptanceCriteriaId: FR-1102-03
         pattern: FR-1102-03 explain-impact --show-prompt prints the prompt and calls no LLM
         description: show-prompt returns the prompt and reaches no runtime
+      - acceptanceCriteriaId: FR-1211-01
+        pattern: FR-1211-01 audit-requirements executes its task through @aaac/runtime executeTask
+        description: The LLM command runs on @aaac/runtime executeTask
+      - acceptanceCriteriaId: FR-1211-01
+        pattern: FR-1211-01 --log-file reaches the runtime from the command line
+        description: The progress log option reaches the runtime
       - acceptanceCriteriaId: FR-1103-01
         pattern: FR-1103-01 narrows the prompt to the specs named on the command line
         description: Only the named specs reach the prompt
@@ -1353,8 +1364,14 @@ specs:
         target: FR-1101
         description: Verifies acceptance criteria for FR-1101
       - type: verifies
+        target: FR-1102
+        description: Verifies acceptance criteria for FR-1102
+      - type: verifies
         target: FR-1103
         description: Verifies acceptance criteria for FR-1103
+      - type: verifies
+        target: FR-1211
+        description: Verifies acceptance criteria for FR-1211
   - id: TEST-081
     description: Command performance verification test at the declared requirement, file and entity scale
     source:
@@ -1376,4 +1393,188 @@ specs:
       - type: verifies
         target: NFR-001
         description: Verifies acceptance criteria for NFR-001
-
+  - id: TEST-082
+    description: Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline)
+    source:
+      path: test/cli/review.test.ts
+      framework: vitest
+    implementsCommand: CMD-REVIEW
+    verifiesRequirements:
+      - FR-1200
+      - FR-1201
+      - FR-1202
+      - FR-1203
+      - FR-1204
+      - FR-1205
+      - FR-1206
+      - FR-1207
+      - FR-1208
+      - FR-1209
+      - FR-1210
+      - FR-1212
+      - NFR-016
+      - NFR-017
+    testCasePatterns:
+      - acceptanceCriteriaId: FR-1200-01
+        pattern: 'FR-1200-01 plans checks declared in config review\.checks and in a model\\'
+        description: 'plans checks declared in config review.checks and in a model\'
+      - acceptanceCriteriaId: FR-1200-02
+        pattern: 'FR-1200-02 defaults a model check to one target per spec, and a select\(\) target may span several specs'
+        description: 'defaults a model check to one target per spec, and a select() target may span several specs'
+      - acceptanceCriteriaId: FR-1200-02
+        pattern: 'FR-1200-02 rejects a config check without select\(\) and a target naming an unknown spec'
+        description: 'rejects a config check without select() and a target naming an unknown spec'
+      - acceptanceCriteriaId: FR-1200-03
+        pattern: 'FR-1200-03 lets defineReviewOutput add only extra fields, and records them under extra'
+        description: 'lets defineReviewOutput add only extra fields, and records them under extra'
+      - acceptanceCriteriaId: FR-1201-01
+        pattern: 'FR-1201-01 accepts an async provider and hashes the files it reports'
+        description: 'accepts an async provider and hashes the files it reports'
+      - acceptanceCriteriaId: FR-1201-02
+        pattern: 'FR-1201-02 the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order'
+        description: 'the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order'
+      - acceptanceCriteriaId: FR-1202-01
+        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency'
+        description: 'the same specs and config give the same hash regardless of order, line endings and concurrency'
+      - acceptanceCriteriaId: NFR-017-01
+        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency'
+        description: 'the same specs and config give the same hash regardless of order, line endings and concurrency'
+      - acceptanceCriteriaId: FR-1202-02
+        pattern: 'FR-1202-02 --show-packet prints the packet without calling the LLM'
+        description: '--show-packet prints the packet without calling the LLM'
+      - acceptanceCriteriaId: FR-1202-03
+        pattern: 'FR-1202-03 records the judge signature apart from the packet hash, which does not depend on the model'
+        description: 'records the judge signature apart from the packet hash, which does not depend on the model'
+      - acceptanceCriteriaId: FR-1203-01
+        pattern: 'FR-1203-01 creates each adapter without tools and with an empty temporary working directory'
+        description: 'creates each adapter without tools and with an empty temporary working directory'
+      - acceptanceCriteriaId: FR-1203-02
+        pattern: 'FR-1203-02 corrects a malformed answer once, and reports a target whose answer stays malformed'
+        description: 'corrects a malformed answer once, and reports a target whose answer stays malformed'
+      - acceptanceCriteriaId: FR-1203-03
+        pattern: 'FR-1203-03 stops starting calls after an adapter error and keeps the records already written'
+        description: 'stops starting calls after an adapter error and keeps the records already written'
+      - acceptanceCriteriaId: FR-1203-04
+        pattern: 'FR-1203-04 stores the token usage the runtime reports'
+        description: 'stores the token usage the runtime reports'
+      - acceptanceCriteriaId: FR-1204-01
+        pattern: 'FR-1204-01 skips with exit 0 and touches no record when CI has no credentials'
+        description: 'skips with exit 0 and touches no record when CI has no credentials'
+      - acceptanceCriteriaId: FR-1204-01
+        pattern: 'FR-1204-01 skips when the logged-in Claude Code turns out not to be logged in'
+        description: 'skips when the logged-in Claude Code turns out not to be logged in'
+      - acceptanceCriteriaId: FR-1204-02
+        pattern: 'FR-1204-02 --require-judge turns an unavailable judge into exit 14'
+        description: '--require-judge turns an unavailable judge into exit 14'
+      - acceptanceCriteriaId: FR-1204-03
+        pattern: 'FR-1204-03 refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given'
+        description: 'refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given'
+      - acceptanceCriteriaId: FR-1205-01
+        pattern: 'FR-1205-01 accepts the lint severities and rejects any other'
+        description: 'accepts the lint severities and rejects any other'
+      - acceptanceCriteriaId: FR-1205-02
+        pattern: 'FR-1205-02 treats an unknown spec ID or field path in subject or evidence as a schema mismatch'
+        description: 'treats an unknown spec ID or field path in subject or evidence as a schema mismatch'
+      - acceptanceCriteriaId: FR-1205-03
+        pattern: 'FR-1205-03 accepts a quote found in the context after collapsing whitespace, and rejects one that is not there'
+        description: 'accepts a quote found in the context after collapsing whitespace, and rejects one that is not there'
+      - acceptanceCriteriaId: FR-1206-01
+        pattern: 'FR-1206-01 skips an unchanged target without calling the LLM'
+        description: 'skips an unchanged target without calling the LLM'
+      - acceptanceCriteriaId: FR-1206-02
+        pattern: 'FR-1206-02 --dry-run gives the changed inputs with the relation path, and estimates tokens from recorded usage'
+        description: '--dry-run gives the changed inputs with the relation path, and estimates tokens from recorded usage'
+      - acceptanceCriteriaId: FR-1206-03
+        pattern: 'FR-1206-03 --max-targets splits a run in a stable order without judging a target twice'
+        description: '--max-targets splits a run in a stable order without judging a target twice'
+      - acceptanceCriteriaId: FR-1207-01
+        pattern: 'FR-1207-01 keeps a false positive with its text, status and the verifier rationale'
+        description: 'keeps a false positive with its text, status and the verifier rationale'
+      - acceptanceCriteriaId: FR-1208-01
+        pattern: 'FR-1208-01 writes records with a fixed key order and sorted lists'
+        description: 'writes records with a fixed key order and sorted lists'
+      - acceptanceCriteriaId: FR-1208-02
+        pattern: 'FR-1208-02 makes the fingerprint from check, target, code, subject or quote, and sorted evidence, never the message'
+        description: 'makes the fingerprint from check, target, code, subject or quote, and sorted evidence, never the message'
+      - acceptanceCriteriaId: FR-1208-03
+        pattern: 'FR-1208-03 a dismissed finding needs a statusNote'
+        description: 'a dismissed finding needs a statusNote'
+      - acceptanceCriteriaId: FR-1208-04
+        pattern: 'FR-1208-04 stores per-input hashes for the prompt, the schema, each spec and each file'
+        description: 'stores per-input hashes for the prompt, the schema, each spec and each file'
+      - acceptanceCriteriaId: FR-1208-05
+        pattern: 'FR-1208-05 carries a status over only for a one-to-one fingerprint match'
+        description: 'carries a status over only for a one-to-one fingerprint match'
+      - acceptanceCriteriaId: FR-1208-05
+        pattern: 'FR-1208-05 keeps a person\\'
+        description: 'keeps a person\'
+      - acceptanceCriteriaId: FR-1209-01
+        pattern: 'FR-1209-01 NFR-016-01 evaluates missing, stale and open-finding records with no credential and no LLM'
+        description: 'evaluates missing, stale and open-finding records with no credential and no LLM'
+      - acceptanceCriteriaId: NFR-016-01
+        pattern: 'FR-1209-01 NFR-016-01 evaluates missing, stale and open-finding records with no credential and no LLM'
+        description: 'evaluates missing, stale and open-finding records with no credential and no LLM'
+      - acceptanceCriteriaId: FR-1209-02
+        pattern: 'FR-1209-02 lets the gate severities be error, warning or off'
+        description: 'lets the gate severities be error, warning or off'
+      - acceptanceCriteriaId: FR-1209-03
+        pattern: 'FR-1209-03 warns on records whose check or target is gone, and review --prune removes them'
+        description: 'warns on records whose check or target is gone, and review --prune removes them'
+      - acceptanceCriteriaId: FR-1209-04
+        pattern: 'FR-1209-04 judgeChange ignore, warning and stale treat a record judged by another model in turn'
+        description: 'judgeChange ignore, warning and stale treat a record judged by another model in turn'
+      - acceptanceCriteriaId: FR-1209-01
+        pattern: 'FR-1209-01 lists the review rule IDs among the common lint items'
+        description: 'lists the review rule IDs among the common lint items'
+      - acceptanceCriteriaId: FR-1210-01
+        pattern: 'FR-1210-01 records a result for the current packet and rejects one whose packet hash is no longer current'
+        description: 'records a result for the current packet and rejects one whose packet hash is no longer current'
+      - acceptanceCriteriaId: FR-1212-01
+        pattern: 'FR-1212-01 replaces the hashes, keeps the findings, and records the change without a personal identity'
+        description: 'replaces the hashes, keeps the findings, and records the change without a personal identity'
+      - acceptanceCriteriaId: FR-1212-02
+        pattern: 'FR-1212-02 needs --reason and leaves targets without a record alone'
+        description: 'needs --reason and leaves targets without a record alone'
+    relations:
+      - type: verifies
+        target: FR-1200
+        description: Verifies acceptance criteria for FR-1200
+      - type: verifies
+        target: FR-1201
+        description: Verifies acceptance criteria for FR-1201
+      - type: verifies
+        target: FR-1202
+        description: Verifies acceptance criteria for FR-1202
+      - type: verifies
+        target: FR-1203
+        description: Verifies acceptance criteria for FR-1203
+      - type: verifies
+        target: FR-1204
+        description: Verifies acceptance criteria for FR-1204
+      - type: verifies
+        target: FR-1205
+        description: Verifies acceptance criteria for FR-1205
+      - type: verifies
+        target: FR-1206
+        description: Verifies acceptance criteria for FR-1206
+      - type: verifies
+        target: FR-1207
+        description: Verifies acceptance criteria for FR-1207
+      - type: verifies
+        target: FR-1208
+        description: Verifies acceptance criteria for FR-1208
+      - type: verifies
+        target: FR-1209
+        description: Verifies acceptance criteria for FR-1209
+      - type: verifies
+        target: FR-1210
+        description: Verifies acceptance criteria for FR-1210
+      - type: verifies
+        target: FR-1212
+        description: Verifies acceptance criteria for FR-1212
+      - type: verifies
+        target: NFR-016
+        description: Verifies acceptance criteria for NFR-016
+      - type: verifies
+        target: NFR-017
+        description: Verifies acceptance criteria for NFR-017

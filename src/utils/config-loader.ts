@@ -61,6 +61,9 @@ export interface SpeckeeperConfig {
   // Spec data entries (from design/index.ts via mergeSpecs())
   specs?: import('../core/model.js').SpecEntry[];
   
+  // Per-target LLM review
+  review?: import('../core/config-api.js').SpeckeeperConfigInput['review'];
+  
   // Coverage configuration
   coverage?: {
     transitiveRelations?: string[];

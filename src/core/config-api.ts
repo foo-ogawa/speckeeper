@@ -16,6 +16,7 @@ import type {
   ReferenceDefinition,
 } from '../types/meta-model.js';
 import type { Phase } from '../types/common.js';
+import type { ReviewConfigInput } from '../review/types.js';
 import { registerModelDefinitions } from './model-registry.js';
 
 // ============================================================================
@@ -124,6 +125,8 @@ export interface SpeckeeperConfigInput {
   artifacts?: Record<string, ArtifactConfig>;
   /** Global source definitions for spec ID scanning */
   sources?: SourceConfig[];
+  /** Per-target LLM review: checks, record directory, adapter, and the lint gate */
+  review?: ReviewConfigInput;
   /** Coverage configuration */
   coverage?: {
     /** Relation types that enable transitive coverage (e.g. ['satisfies']) */
