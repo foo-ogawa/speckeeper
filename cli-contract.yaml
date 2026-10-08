@@ -286,7 +286,7 @@ command_sets:
 
           - name: update
             aliases: [u]
-            description: Auto-update if differences are found (not yet implemented).
+            description: Rewrite drifted and missing generated files with their expected content.
             schema:
               type: boolean
               default: false

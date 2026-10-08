@@ -32,13 +32,14 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[], specData
 
 describe('impactCommand', () => {
   let logSpy: ReturnType<typeof vi.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
       throw new Error(`process.exit(${code})`);
     }) as never);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -56,9 +57,9 @@ describe('impactCommand', () => {
 
       await impactCommand('FR-001', {});
 
-      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
-      expect(output).toContain('FR-001');
-      expect(output).toContain('Analyzing impact');
+      const progress = errorSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(progress).toContain('FR-001');
+      expect(progress).toContain('Analyzing impact');
     });
   });
 
@@ -106,9 +107,50 @@ describe('impactCommand', () => {
 
       await impactCommand('FR-001', { depth: '5' } as never);
 
-      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
-      expect(output).toContain('Depth');
-      expect(output).toContain('5');
+      const progress = errorSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(progress).toContain('Depth');
+      expect(progress).toContain('5');
+    });
+  });
+
+  describe('FR-701-03 relations are the input of impact analysis', () => {
+    const specs = [
+      { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] },
+      { id: 'CMP-001', relations: [{ type: 'implements', target: 'FR-001' }] },
+      { id: 'FR-003', note: 'FR-001' },
+      { id: 'UC-001' },
+    ];
+
+    async function impactedIds(options: Record<string, unknown>): Promise<string[]> {
+      mockedLoadConfig.mockResolvedValue(createMockConfig([createMockModel()], specs) as never);
+      await impactCommand('FR-001', { format: 'json', ...options } as never);
+      const stdout = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      return (JSON.parse(stdout) as { impactedNodes: { id: string }[] }).impactedNodes.map(n => n.id);
+    }
+
+    it('FR-701-03 follows relations in both directions by default and ignores IDs written in other fields', async () => {
+      expect(await impactedIds({})).toEqual(['CMP-001', 'UC-001']);
+    });
+
+    it('FR-701-03 --direction upstream follows only the relations the target declares', async () => {
+      expect(await impactedIds({ direction: 'upstream' })).toEqual(['UC-001']);
+    });
+
+    it('FR-701-03 --direction downstream follows only the relations declared to the target', async () => {
+      expect(await impactedIds({ direction: 'downstream' })).toEqual(['CMP-001']);
+    });
+
+    it('FR-701-03 reports each element at its shortest depth', async () => {
+      mockedLoadConfig.mockResolvedValue(createMockConfig([createMockModel()], [
+        { id: 'FR-001', relations: [{ type: 'refines', target: 'FR-002' }, { type: 'refines', target: 'FR-003' }] },
+        { id: 'FR-002', relations: [{ type: 'refines', target: 'FR-003' }] },
+        { id: 'FR-003' },
+      ]) as never);
+      await impactCommand('FR-001', { format: 'json' } as never);
+      const result = JSON.parse(logSpy.mock.calls.map(c => String(c[0])).join('\n')) as {
+        impactedNodes: { id: string; depth: number }[];
+      };
+      expect(result.impactedNodes.map(n => [n.id, n.depth])).toEqual([['FR-002', 1], ['FR-003', 1]]);
     });
   });
 

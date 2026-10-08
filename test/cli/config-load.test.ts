@@ -137,7 +137,7 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
 
     expect(result.stderr).not.toContain('Failed to load config');
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('custom-design/');
+    expect(result.stderr).toContain('custom-design/');
   }, 90_000);
 
   it('loads the project scaffolded by init, whose config imports the design modules', () => {
@@ -156,6 +156,6 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
 
     expect(result.stderr).not.toContain('Failed to load config');
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Loaded:');
+    expect(result.stderr).toContain('Loaded:');
   }, 120_000);
 });

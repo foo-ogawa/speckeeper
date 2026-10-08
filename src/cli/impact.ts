@@ -6,7 +6,12 @@
 
 import chalk from 'chalk';
 import { loadConfig } from '../utils/config-loader.js';
-import { buildRegistryFromConfig, findModelTypeFromConfig } from '../core/model.js';
+import {
+  buildReferenceGraph,
+  traverseReferenceGraph,
+  type ReferenceDirection,
+  type ReferenceGraph,
+} from '../core/model.js';
 
 // ============================================================================
 // Types
@@ -15,7 +20,7 @@ import { buildRegistryFromConfig, findModelTypeFromConfig } from '../core/model.
 export interface ImpactCommandOptions {
   config?: string;
   depth?: string;
-  direction?: 'upstream' | 'downstream' | 'both';
+  direction?: ReferenceDirection;
   format?: 'text' | 'json' | 'mermaid';
 }
 
@@ -37,34 +42,35 @@ export interface ImpactResult {
 // ============================================================================
 
 export async function impactCommand(targetId: string, options: ImpactCommandOptions): Promise<void> {
-  console.log(chalk.blue('speckeeper impact'));
-  console.log('');
+  console.error(chalk.blue('speckeeper impact'));
+  console.error('');
   
   if (!targetId) {
     console.error(chalk.red('Error: ID is required'));
-    console.log(chalk.gray('  Usage: speckeeper impact <id>'));
+    console.error(chalk.gray('  Usage: speckeeper impact <id>'));
     process.exit(1);
   }
   
   const config = await loadConfig(options.config);
   const maxDepth = options.depth ? parseInt(options.depth, 10) : 3;
+  const direction = options.direction ?? 'both';
   
-  console.log(chalk.gray(`  Target: ${targetId}`));
-  console.log(chalk.gray(`  Depth:  ${maxDepth}`));
-  console.log('');
+  console.error(chalk.gray(`  Target:    ${targetId}`));
+  console.error(chalk.gray(`  Depth:     ${maxDepth}`));
+  console.error(chalk.gray(`  Direction: ${direction}`));
+  console.error('');
   
   try {
-    const specs = config.specs;
-    const registry = buildRegistryFromConfig(specs);
+    const graph = buildReferenceGraph(config.specs);
     
-    const targetType = findModelTypeFromConfig(specs, targetId);
-    if (!targetType) {
+    const target = graph.nodes.find(node => node.id === targetId);
+    if (!target) {
       console.error(chalk.red(`  Error: Target '${targetId}' not found`));
       process.exit(1);
     }
     
-    console.log(chalk.blue('  Analyzing impact...'));
-    const result = analyzeImpact(registry, targetId, targetType, maxDepth);
+    console.error(chalk.blue('  Analyzing impact...'));
+    const result = analyzeImpact(graph, targetId, target.model, maxDepth, direction);
     
     outputImpactResults(result, options);
     
@@ -79,38 +85,19 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
 // ============================================================================
 
 function analyzeImpact(
-  registry: Record<string, Map<string, unknown>>,
+  graph: ReferenceGraph,
   targetId: string,
   targetType: string,
-  maxDepth: number
+  maxDepth: number,
+  direction: ReferenceDirection,
 ): ImpactResult {
-  const impactedNodes: ImpactNode[] = [];
-  const visited = new Set<string>([targetId]);
-  
-  function findReferences(id: string, depth: number): void {
-    if (depth > maxDepth) return;
-    
-    for (const [type, map] of Object.entries(registry)) {
-      for (const [itemId, item] of map) {
-        if (visited.has(itemId)) continue;
-        
-        const itemStr = JSON.stringify(item);
-        if (itemStr.includes(`"${id}"`)) {
-          visited.add(itemId);
-          impactedNodes.push({
-            id: itemId,
-            type,
-            depth,
-            impactType: depth === 1 ? 'direct' : 'indirect',
-          });
-          
-          findReferences(itemId, depth + 1);
-        }
-      }
-    }
-  }
-  
-  findReferences(targetId, 1);
+  const impactedNodes = traverseReferenceGraph(graph, targetId, { depth: maxDepth, direction })
+    .map((reached): ImpactNode => ({
+      id: reached.id,
+      type: reached.model,
+      depth: reached.depth,
+      impactType: reached.depth === 1 ? 'direct' : 'indirect',
+    }));
   
   return {
     target: targetId,
@@ -124,7 +111,7 @@ function analyzeImpact(
 // ============================================================================
 
 function outputImpactResults(result: ImpactResult, options: ImpactCommandOptions): void {
-  console.log('');
+  console.error('');
   
   if (options.format === 'json') {
     console.log(JSON.stringify(result, null, 2));
