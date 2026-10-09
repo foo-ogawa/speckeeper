@@ -70,7 +70,14 @@ const JudgmentRecordSchema = z.object({
   inputHashes: InputHashesSchema,
   judge: JudgeSignatureSchema,
   judgedAt: z.string(),
-  usage: z.object({ inputTokens: z.number(), outputTokens: z.number() }).strict().optional(),
+  usage: z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    /** Input read from the prompt cache, not counted in inputTokens */
+    cacheReadTokens: z.number().optional(),
+    /** Input written to the prompt cache, not counted in inputTokens */
+    cacheCreationTokens: z.number().optional(),
+  }).strict().optional(),
   /** Fields the check's output definition adds to the output as a whole */
   extra: z.record(z.string(), z.unknown()).optional(),
   findings: z.array(RecordedFindingSchema),
@@ -136,7 +143,14 @@ export function writeRecord(path: string, record: JudgmentRecord): void {
       ...(valid.judge.verifyModel !== undefined ? { verifyModel: valid.judge.verifyModel } : {}),
     },
     judgedAt: valid.judgedAt,
-    ...(valid.usage ? { usage: { inputTokens: valid.usage.inputTokens, outputTokens: valid.usage.outputTokens } } : {}),
+    ...(valid.usage ? {
+      usage: {
+        inputTokens: valid.usage.inputTokens,
+        outputTokens: valid.usage.outputTokens,
+        ...(valid.usage.cacheReadTokens !== undefined ? { cacheReadTokens: valid.usage.cacheReadTokens } : {}),
+        ...(valid.usage.cacheCreationTokens !== undefined ? { cacheCreationTokens: valid.usage.cacheCreationTokens } : {}),
+      },
+    } : {}),
     ...(valid.extra && Object.keys(valid.extra).length > 0 ? { extra: sortedRecord(valid.extra) } : {}),
     findings: [...valid.findings].sort(compareFindings).map(orderFinding),
     ...(valid.rebaselined && valid.rebaselined.length > 0 ? { rebaselined: valid.rebaselined } : {}),

@@ -7,7 +7,7 @@
 import chalk from 'chalk';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { findConfigFile, loadConfig } from '../utils/config-loader.js';
@@ -29,7 +29,12 @@ import {
   answerToFindings,
   assembleRecord,
   classifyCredentials,
+  currentHost,
+  hostProblem,
   judgeTargets,
+  probeJudge,
+  type HostInfo,
+  type JudgeConnection,
   resolveJudgeSignature,
   type AdapterFactory,
 } from '../review/judge.js';
@@ -39,6 +44,8 @@ import { buildReviewRegistry } from '../review/registry.js';
 import type { ReviewAdapterName, ReviewRegistry } from '../review/types.js';
 
 const EXIT_API_KEY_REFUSED = 13;
+/** Upper limit of one judge call when review.timeoutSeconds is not set */
+const DEFAULT_TIMEOUT_SECONDS = 600;
 const EXIT_JUDGE_UNAVAILABLE = 14;
 
 export interface ReviewCommandOptions {
@@ -65,9 +72,11 @@ export interface ReviewCommandOptions {
 export interface ReviewEnvironment {
   env: NodeJS.ProcessEnv;
   cwd: string;
-  loadRuntime: () => Promise<Pick<LlmRuntime, 'runTask' | 'createModelResolver' | 'createAdapter'>>;
+  loadRuntime: () => Promise<Pick<LlmRuntime, 'runTask' | 'createModelResolver' | 'createAdapter' | 'adapterErrorKind'>>;
   /** Overrides the runtime's adapter factory */
   createAdapter?: AdapterFactory;
+  /** Overrides the machine the judge would start on */
+  host?: HostInfo;
   now?: () => Date;
 }
 
@@ -134,23 +143,43 @@ async function runReview(opts: ReviewCommandOptions, environment: ReviewEnvironm
     return EXIT_API_KEY_REFUSED;
   }
 
+  const claudeExecutable = setup.config.claudeExecutable !== undefined
+    ? resolve(environment.cwd, setup.config.claudeExecutable)
+    : undefined;
+  const problem = hostProblem(adapter, claudeExecutable, environment.host ?? currentHost());
+  if (problem) {
+    console.error(chalk.red(`review: ${problem}`));
+    return EXIT_ADAPTER_ERROR;
+  }
+
   const runtime = runtimeForJudge ?? await environment.loadRuntime();
-  console.error(chalk.gray(`  Judging ${toRun.length} target(s) with ${adapter} (${credentials})...`));
-  const result = await judgeTargets(toRun, {
+  const connection: JudgeConnection = {
     runtime,
     createAdapter: environment.createAdapter ?? runtime.createAdapter,
     adapter,
     model: opts.model,
-    concurrency: parsePositive(opts.concurrency ?? '2', '--concurrency'),
     credentials,
+    timeoutMs: (setup.config.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * 1000,
+    ...(claudeExecutable ? { claudeExecutable } : {}),
+  };
+
+  if (credentials !== 'none') {
+    const probe = await probeJudge(connection);
+    if (!probe.ok) {
+      if (probe.kind === 'authentication') return skipJudge(probe.message, opts.requireJudge ?? false);
+      console.error(chalk.red(`review: the judge could not be reached before judging: ${probe.message}`));
+      return EXIT_ADAPTER_ERROR;
+    }
+  }
+
+  console.error(chalk.gray(`  Judging ${toRun.length} target(s) with ${adapter} (${credentials})...`));
+  const result = await judgeTargets(toRun, {
+    ...connection,
+    concurrency: parsePositive(opts.concurrency ?? '2', '--concurrency'),
     registry,
     env: environment.env,
     now: environment.now,
   });
-
-  if (result.unavailable !== undefined) {
-    return skipJudge(`the logged-in Claude Code could not be used (${result.unavailable})`, opts.requireJudge ?? false);
-  }
 
   report(json, {
     judged: result.written.map(t => ({ check: t.check.id, target: t.target.id })),
@@ -190,8 +219,9 @@ export async function reviewIngestCommand(
 
     let recorded = 0;
     const rejected: string[] = [];
-    if (!existsSync(dir)) throw new ReviewConfigError(`review ingest: ${dir} does not exist`);
-    for (const { check, target, path } of listCheckFiles(dir, '.result.yaml')) {
+    const resultDir = resolve(environment.cwd, dir);
+    if (!existsSync(resultDir)) throw new ReviewConfigError(`review ingest: ${resultDir} does not exist`);
+    for (const { check, target, path } of listCheckFiles(resultDir, '.result.yaml')) {
       const planned = byKey.get(`${check}/${target}`);
       if (!planned) {
         rejected.push(`${path}: check "${check}" has no target "${target}"`);
@@ -351,8 +381,13 @@ function skipJudge(reason: string, requireJudge: boolean): number {
     console.error(chalk.red(`review: ${reason}, and --require-judge was given`));
     return EXIT_JUDGE_UNAVAILABLE;
   }
-  console.error(chalk.yellow(`review skipped: ${reason}. Records were not touched.`));
+  console.error(chalk.yellow(`review skipped: ${sentence(reason)} Records were not touched.`));
   return 0;
+}
+
+/** Text ending in exactly one period */
+function sentence(text: string): string {
+  return `${text.replace(/\.+$/, '')}.`;
 }
 
 function report(json: boolean, data: unknown, text: string): void {
@@ -370,7 +405,7 @@ function prune(plan: ReviewPlan, setup: ReviewSetup, dryRun: boolean, json: bool
 }
 
 function emit(toRun: PlannedTarget[], dir: string, cwd: string, json: boolean): number {
-  const root = join(cwd, dir);
+  const root = resolve(cwd, dir);
   const packets = toRun.map(t => {
     const packet = `${t.check.id}/${t.target.id}.packet.md`;
     const result = `${t.check.id}/${t.target.id}.result.yaml`;
@@ -401,6 +436,9 @@ function dryRun(
   };
 
   const estimate = estimateTokens(toRun, all);
+  const approximated = estimate.approximated > 0
+    ? ` (${estimate.approximated} target(s) of a check with no recorded usage are estimated from the packet text; the actual usage can differ widely)`
+    : '';
   const run = toRun.map(t => ({ check: t.check.id, target: t.target.id, reasons: reasonsOf(t) }));
   const skip = selected.filter(t => !running.has(t)).map(t => ({
     check: t.check.id,
@@ -408,8 +446,8 @@ function dryRun(
     reasons: [t.state === 'fresh' && !force ? 'current' : 'beyond --max-targets'],
   }));
 
-  report(json, { run, skip, estimatedTokens: estimate }, [
-    `  Would judge ${run.length} target(s), ≈ ${estimate} tokens:`,
+  report(json, { run, skip, estimatedTokens: estimate.tokens, approximatedTargets: estimate.approximated }, [
+    `  Would judge ${run.length} target(s), ≈ ${estimate.tokens} tokens${approximated}:`,
     ...run.map(r => `    ${r.check} / ${r.target}: ${r.reasons.join('; ')}`),
     `  Would skip ${skip.length} target(s):`,
     ...skip.map(r => chalk.gray(`    ${r.check} / ${r.target}: ${r.reasons.join('; ')}`)),
@@ -419,18 +457,44 @@ function dryRun(
 
 /**
  * Tokens a run would use: per check, the average recorded usage over every
- * record of that check, or the packet length (about 4 characters a token)
- * when the check has no recorded usage.
+ * record of that check (cached input included), or an estimate from the packet
+ * text when the check has no recorded usage. Returns how many targets were
+ * estimated from the text.
  */
-function estimateTokens(toRun: PlannedTarget[], all: PlannedTarget[]): number {
+function estimateTokens(toRun: PlannedTarget[], all: PlannedTarget[]): { tokens: number; approximated: number } {
   const average = new Map<string, number>();
   for (const checkId of new Set(toRun.map(t => t.check.id))) {
     const usages = all
       .filter(t => t.check.id === checkId)
-      .flatMap(t => (t.record?.usage ? [t.record.usage.inputTokens + t.record.usage.outputTokens] : []));
+      .flatMap(t => (t.record?.usage ? [totalTokens(t.record.usage)] : []));
     if (usages.length > 0) average.set(checkId, usages.reduce((a, b) => a + b, 0) / usages.length);
   }
-  return Math.round(toRun.reduce((sum, t) => sum + (average.get(t.check.id) ?? t.packet.text.length / 4), 0));
+  let tokens = 0;
+  let approximated = 0;
+  for (const t of toRun) {
+    const recorded = average.get(t.check.id);
+    if (recorded === undefined) approximated++;
+    tokens += recorded ?? textTokens(t.packet.text);
+  }
+  return { tokens: Math.round(tokens), approximated };
+}
+
+function totalTokens(usage: NonNullable<JudgmentRecord['usage']>): number {
+  return usage.inputTokens + usage.outputTokens + (usage.cacheReadTokens ?? 0) + (usage.cacheCreationTokens ?? 0);
+}
+
+/**
+ * Rough token count of a text: about four ASCII characters a token, and about
+ * one token for each other character (CJK text runs close to one a character).
+ */
+function textTokens(text: string): number {
+  let ascii = 0;
+  let other = 0;
+  for (const char of text) {
+    if (char.charCodeAt(0) < 0x80) ascii++;
+    else other++;
+  }
+  return ascii / 4 + other;
 }
 
 /** Prompt and context files a target's packet was built from, relative to the project root */
