@@ -50,7 +50,7 @@ jobs:
         run: npm run build
       - name: Bundle
         if: steps.need.outputs.publish == 'true'
-        run: npm run bundle:min
+        run: npm run bundle
       - name: Run tests
         if: steps.need.outputs.publish == 'true'
         run: npm run test:ci

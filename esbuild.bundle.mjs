@@ -3,7 +3,6 @@ import { build } from "esbuild";
 import { readFileSync, statSync } from "node:fs";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-const minify = process.argv.includes("--minify");
 
 // tsx resolves loader paths via import.meta.url relative to its package
 // directory and cannot be inlined into a single-file bundle. @aaac/runtime is
@@ -48,7 +47,7 @@ const result = await build({
   platform: "node",
   target: "node20",
   outfile: "dist/speckeeper.bundle.mjs",
-  minify,
+  minify: true,
   sourcemap: true,
   external: externalSdks,
   mainFields: ["module", "main"],
