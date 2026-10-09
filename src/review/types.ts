@@ -118,5 +118,12 @@ export interface ReviewConfigInput {
   adapter?: ReviewAdapterName;
   /** When false, refuse to judge with an API key (exit 13). Default true */
   allowApiKey?: boolean;
+  /** Upper limit of one judge call in seconds, including its one correction. Default 600 */
+  timeoutSeconds?: number;
+  /**
+   * Claude Code executable the claude adapter runs, instead of the one the
+   * Claude Agent SDK selects for Node's own architecture. Relative to the project root.
+   */
+  claudeExecutable?: string;
   gate?: ReviewGateConfig;
 }

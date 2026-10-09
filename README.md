@@ -231,6 +231,7 @@ export default defineConfig({
   review: {
     adapter: 'claude',
     allowApiKey: false,            // refuse to run on a billed API key (exit 13)
+    timeoutSeconds: 600,           // upper limit of one judge call (default 600)
     contextProviders: [relationsContext({ depth: 2, relationTypes: ['satisfies', 'refines'] })],
     checks: [{
       id: 'req-verifiability',
@@ -274,7 +275,9 @@ npx speckeeper review --prune            # remove records of checks or targets t
 
 Each packet (role, check prompt, context, output schema) is hashed. A target is judged again only when its packet hash changed — a prompt, a spec in its context, or a file the context read — or, with `gate.judgeChange: stale`, when the configured model changed. `--dry-run` names the changed inputs and the relation path to a changed spec. `rebaseline` accepts a change that cannot affect the verdict without judging again, and records the reason, the changed inputs and the git HEAD in the record.
 
-Before calling the LLM, `review` checks the credentials: `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` (API key), `CLAUDE_CODE_OAUTH_TOKEN`, or the logged-in Claude Code. Without any (for example in CI) the run is skipped with exit 0; `--require-judge` makes that exit 14. The judge gets no tools and an empty working directory. A finding that names an unknown spec or field, or quotes text that is not in the context, is sent back once for correction and otherwise fails the target.
+Before calling the LLM, `review` checks the credentials: `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` (API key), `CLAUDE_CODE_OAUTH_TOKEN`, or the logged-in Claude Code. Without any (for example in CI) the run is skipped with exit 0; `--require-judge` makes that exit 14. It then makes one short call to the judge before judging any target: rejected credentials, such as an expired login, are handled the same way (exit 0, or 14 with `--require-judge`) and the message says how to log in again (run `claude` and enter `/login`, or set `CLAUDE_CODE_OAUTH_TOKEN`); a judge that does not answer stops the run with exit 12. The judge gets no tools and an empty working directory, and each call has a time limit (`review.timeoutSeconds`, default 600): a judge that does not answer in time is stopped together with its process, the run ends with exit 12, and the records already written are kept.
+
+**Where the judge runs.** The `claude` adapter runs Claude Code through the Claude Agent SDK, which picks the Claude Code build for the CPU architecture Node.js runs as. On an Apple silicon Mac, an x64 Node.js (for example an Intel Homebrew Node) makes it pick the x64 build, which hangs at start under Rosetta. `review` stops before judging in that case and says so; use an arm64 Node.js and install the dependencies again with it, or set `review.claudeExecutable` to a Claude Code executable to run instead (relative to the project root). `--dry-run`, `--show-packet` and `--emit` do not call the judge and are not affected. A finding that names an unknown spec or field, or quotes text that is not in the context, is sent back once for correction and otherwise fails the target.
 
 ### Records and the lint gate
 

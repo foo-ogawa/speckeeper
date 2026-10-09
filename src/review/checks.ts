@@ -75,6 +75,13 @@ export function resolveReviewSetup(
   ];
   if (!config && declared.length === 0) return null;
 
+  if (config?.timeoutSeconds !== undefined && !(Number.isFinite(config.timeoutSeconds) && config.timeoutSeconds > 0)) {
+    throw new ReviewConfigError(`review.timeoutSeconds must be a positive number of seconds, got ${String(config.timeoutSeconds)}`);
+  }
+  if (config?.claudeExecutable !== undefined && config.claudeExecutable.trim() === '') {
+    throw new ReviewConfigError('review.claudeExecutable must be a path to a Claude Code executable');
+  }
+
   const providers = new Map<string, ContextProvider>([['relations', relationsContext()]]);
   const userProviderIds = new Set<string>();
   for (const provider of config?.contextProviders ?? []) {

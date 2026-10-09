@@ -1419,6 +1419,39 @@ specs:
       - NFR-016
       - NFR-017
     testCasePatterns:
+      - acceptanceCriteriaId: FR-1210-01
+        pattern: 'FR-1210-01 writes and reads an absolute --emit directory where it points, not under the project'
+        description: 'writes and reads an absolute --emit directory where it points, not under the project'
+      - acceptanceCriteriaId: FR-1210-01
+        pattern: 'FR-1210-01 reads a relative ingest directory from the project root, as --emit writes it'
+        description: 'reads a relative ingest directory from the project root, as --emit writes it'
+      - acceptanceCriteriaId: FR-1203-04
+        pattern: 'FR-1203-04 records the cached input too, and --dry-run estimates from the whole usage'
+        description: 'records the cached input too, and --dry-run estimates from the whole usage'
+      - acceptanceCriteriaId: FR-1206-02
+        pattern: 'FR-1206-02 estimates a check without records from the text, counting a non-ASCII character as a token, and says so'
+        description: 'estimates a check without records from the text, counting a non-ASCII character as a token, and says so'
+      - acceptanceCriteriaId: FR-1204-04
+        pattern: 'FR-1204-04 finds an expired login before judging, says how to log in again, and skips'
+        description: 'finds an expired login before judging, says how to log in again, and skips'
+      - acceptanceCriteriaId: FR-1204-04
+        pattern: 'FR-1204-04 tells how to log in again when the login is rejected while judging'
+        description: 'tells how to log in again when the login is rejected while judging'
+      - acceptanceCriteriaId: FR-1203-05
+        pattern: 'FR-1203-05 stops a judge that does not answer within the limit, keeps the records written, and exits 12'
+        description: 'stops a judge that does not answer within the limit, keeps the records written, and exits 12'
+      - acceptanceCriteriaId: FR-1203-05
+        pattern: 'FR-1203-05 stops before judging when the judge does not answer the check call'
+        description: 'stops before judging when the judge does not answer the check call'
+      - acceptanceCriteriaId: FR-1203-05
+        pattern: 'FR-1203-05 rejects a time limit that is not a positive number'
+        description: 'rejects a time limit that is not a positive number'
+      - acceptanceCriteriaId: FR-1203-06
+        pattern: 'FR-1203-06 stops before judging when Node runs as x64 on Apple silicon, and says how to fix it'
+        description: 'stops before judging when Node runs as x64 on Apple silicon, and says how to fix it'
+      - acceptanceCriteriaId: FR-1203-07
+        pattern: 'FR-1203-07 runs the configured Claude Code executable, also on Apple silicon with an x64 Node'
+        description: 'runs the configured Claude Code executable, also on Apple silicon with an x64 Node'
       - acceptanceCriteriaId: FR-1213-01
         pattern: 'FR-1213-01 lists the rules in the packet and makes the record stale when a rule changes'
         description: 'lists the rules in the packet and makes the record stale when a rule changes'
@@ -1500,9 +1533,6 @@ specs:
       - acceptanceCriteriaId: FR-1204-01
         pattern: 'FR-1204-01 skips with exit 0 and touches no record when CI has no credentials'
         description: 'skips with exit 0 and touches no record when CI has no credentials'
-      - acceptanceCriteriaId: FR-1204-01
-        pattern: 'FR-1204-01 skips when the logged-in Claude Code turns out not to be logged in'
-        description: 'skips when the logged-in Claude Code turns out not to be logged in'
       - acceptanceCriteriaId: FR-1204-02
         pattern: 'FR-1204-02 --require-judge turns an unavailable judge into exit 14'
         description: '--require-judge turns an unavailable judge into exit 14'

@@ -1170,6 +1170,17 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
+| FR-1210-01 | `FR-1210-01 writes and reads an absolute --emit directory where it points, not under the project` | writes and reads an absolute --emit directory where it points, not under the project |
+| FR-1210-01 | `FR-1210-01 reads a relative ingest directory from the project root, as --emit writes it` | reads a relative ingest directory from the project root, as --emit writes it |
+| FR-1203-04 | `FR-1203-04 records the cached input too, and --dry-run estimates from the whole usage` | records the cached input too, and --dry-run estimates from the whole usage |
+| FR-1206-02 | `FR-1206-02 estimates a check without records from the text, counting a non-ASCII character as a token, and says so` | estimates a check without records from the text, counting a non-ASCII character as a token, and says so |
+| FR-1204-04 | `FR-1204-04 finds an expired login before judging, says how to log in again, and skips` | finds an expired login before judging, says how to log in again, and skips |
+| FR-1204-04 | `FR-1204-04 tells how to log in again when the login is rejected while judging` | tells how to log in again when the login is rejected while judging |
+| FR-1203-05 | `FR-1203-05 stops a judge that does not answer within the limit, keeps the records written, and exits 12` | stops a judge that does not answer within the limit, keeps the records written, and exits 12 |
+| FR-1203-05 | `FR-1203-05 stops before judging when the judge does not answer the check call` | stops before judging when the judge does not answer the check call |
+| FR-1203-05 | `FR-1203-05 rejects a time limit that is not a positive number` | rejects a time limit that is not a positive number |
+| FR-1203-06 | `FR-1203-06 stops before judging when Node runs as x64 on Apple silicon, and says how to fix it` | stops before judging when Node runs as x64 on Apple silicon, and says how to fix it |
+| FR-1203-07 | `FR-1203-07 runs the configured Claude Code executable, also on Apple silicon with an x64 Node` | runs the configured Claude Code executable, also on Apple silicon with an x64 Node |
 | FR-1213-01 | `FR-1213-01 lists the rules in the packet and makes the record stale when a rule changes` | lists the rules in the packet and makes the record stale when a rule changes |
 | FR-1213-01 | `FR-1213-01 rejects empty rules, a malformed rule and a code declared twice` | rejects empty rules, a malformed rule and a code declared twice |
 | FR-1213-02 | `FR-1213-02 treats a code that is not a declared rule as a schema mismatch` | treats a code that is not a declared rule as a schema mismatch |
@@ -1197,7 +1208,6 @@
 | FR-1203-03 | `FR-1203-03 stops starting calls after an adapter error and keeps the records already written` | stops starting calls after an adapter error and keeps the records already written |
 | FR-1203-04 | `FR-1203-04 stores the token usage the runtime reports` | stores the token usage the runtime reports |
 | FR-1204-01 | `FR-1204-01 skips with exit 0 and touches no record when CI has no credentials` | skips with exit 0 and touches no record when CI has no credentials |
-| FR-1204-01 | `FR-1204-01 skips when the logged-in Claude Code turns out not to be logged in` | skips when the logged-in Claude Code turns out not to be logged in |
 | FR-1204-02 | `FR-1204-02 --require-judge turns an unavailable judge into exit 14` | --require-judge turns an unavailable judge into exit 14 |
 | FR-1204-03 | `FR-1204-03 refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given` | refuses API-key billing with exit 13 when allowApiKey is false, unless --allow-api-key is given |
 | FR-1205-01 | `FR-1205-01 accepts the lint severities and rejects any other` | accepts the lint severities and rejects any other |

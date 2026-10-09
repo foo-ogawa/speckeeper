@@ -19,6 +19,8 @@ import { buildReviewRegistry } from '../../src/review/registry.js';
 import { buildPacket } from '../../src/review/packet.js';
 import { resolveReviewSetup } from '../../src/review/checks.js';
 import { carryOverStatus, findingFingerprint, readRecord, writeRecord, type RecordedFinding } from '../../src/review/record.js';
+import type { HostInfo } from '../../src/review/judge.js';
+import { AdapterError } from '@aaac/runtime';
 import { runDesignLint, COMMON_LINT_RULES } from '../../src/core/design-lint.js';
 
 vi.mock('../../src/utils/config-loader.js', () => ({ loadConfig: vi.fn(), findConfigFile: vi.fn(() => null) }));
@@ -108,20 +110,45 @@ interface Call {
 
 type Answer = (call: Call) => unknown | Promise<unknown>;
 
-function fakeJudge(answer: Answer, usage: { inputTokens: number; outputTokens: number } | null = { inputTokens: 100, outputTokens: 20 }) {
+/** An answer that never comes: the judge hangs until its signal stops it, as a judge that cannot start does */
+const HANG = Symbol('hang');
+
+/** What the judge answers to the short call made before judging */
+type ProbeAnswer = () => unknown;
+
+function fakeJudge(
+  answer: Answer,
+  usage: { inputTokens: number; outputTokens: number; cacheReadTokens?: number; cacheCreationTokens?: number } | null = { inputTokens: 100, outputTokens: 20 },
+  probe: ProbeAnswer = () => 'OK',
+) {
   const created: Array<{ name: string; options: Record<string, unknown>; cwdEntries: string[] }> = [];
   const calls: Call[] = [];
+  const probes: string[] = [];
   const createAdapter = vi.fn(async (name: string, options?: Record<string, unknown>) => {
     created.push({ name, options: options ?? {}, cwdEntries: readdirSync(String(options?.cwd)) });
+    const signal = options?.signal as AbortSignal;
     let first: Call | undefined;
-    const respond = async (call: Call): Promise<string> => {
-      calls.push(call);
-      const result = await answer(call);
+    const settle = async (result: unknown): Promise<string> => {
+      if (result === HANG) {
+        await new Promise((_, reject) => {
+          const stop = () => reject(new AdapterError('aborted', 'Claude Code process aborted by user'));
+          if (signal.aborted) stop();
+          else signal.addEventListener('abort', stop, { once: true });
+        });
+      }
       if (result instanceof Error) throw result;
       return typeof result === 'string' ? result : JSON.stringify(result);
     };
+    const respond = async (call: Call): Promise<string> => {
+      calls.push(call);
+      return settle(await answer(call));
+    };
     return {
       async send(prompt: string) {
+        if (prompt === 'Reply with OK.') {
+          probes.push(String(options?.model ?? ''));
+          return settle(probe());
+        }
         first = {
           target: /## Target: (\S+)/.exec(prompt)?.[1] ?? '',
           prompt,
@@ -136,17 +163,22 @@ function fakeJudge(answer: Answer, usage: { inputTokens: number; outputTokens: n
       ...(usage ? { getLastTokenUsage: () => usage } : {}),
     };
   });
-  return { createAdapter, created, calls };
+  return { createAdapter, created, calls, probes };
 }
 
 const noFindings: Answer = () => ({ findings: [] });
 
-function environment(judge: ReturnType<typeof fakeJudge>, env: NodeJS.ProcessEnv = { CLAUDE_CODE_OAUTH_TOKEN: 'token' }) {
+function environment(
+  judge: ReturnType<typeof fakeJudge>,
+  env: NodeJS.ProcessEnv = { CLAUDE_CODE_OAUTH_TOKEN: 'token' },
+  host: HostInfo = { platform: 'linux', arch: 'x64', appleSilicon: false },
+) {
   return {
     env,
     cwd: project.dir,
     loadRuntime: () => import('@aaac/runtime'),
     createAdapter: judge.createAdapter as never,
+    host,
     now: () => new Date('2026-10-09T10:00:00Z'),
   };
 }
@@ -382,7 +414,9 @@ describe('FR-1203 review judge execution', () => {
 
     await reviewCommand({}, environment(judge));
 
-    expect(judge.created).toHaveLength(2);
+    // The check call before judging, then one adapter per target
+    expect(judge.probes).toHaveLength(1);
+    expect(judge.created).toHaveLength(3);
     for (const { name, options, cwdEntries } of judge.created) {
       expect(name).toBe('claude');
       expect(options.tools).toEqual([]);
@@ -482,14 +516,31 @@ describe('FR-1204 review credential policy', () => {
     expect(existsSync(join(project.dir, 'review'))).toBe(false);
   });
 
-  it('FR-1204-01 skips when the logged-in Claude Code turns out not to be logged in', async () => {
-    const judge = fakeJudge(() => new Error('Invalid API key · Please run /login'));
+  it('FR-1204-04 finds an expired login before judging, says how to log in again, and skips', async () => {
+    const expired = () => new AdapterError('authentication', 'Claude Code returned an error result: Failed to authenticate: OAuth session expired and could not be refreshed.');
+    const judge = fakeJudge(noFindings, undefined, expired);
 
     expect(await reviewCommand({}, environment(judge, {}))).toBe(0);
 
-    expect(judge.calls).toHaveLength(1);
-    expect(stderr()).toContain('the logged-in Claude Code could not be used');
+    expect(judge.calls).toEqual([]);
+    expect(stderr()).toContain('review skipped: the claude credentials were rejected');
+    expect(stderr()).toContain('OAuth session expired');
+    expect(stderr()).toContain('run `claude` and enter `/login`');
+    expect(stderr()).toContain('CLAUDE_CODE_OAUTH_TOKEN');
+    expect(stderr()).not.toContain('..');
     expect(existsSync(join(project.dir, 'review'))).toBe(false);
+
+    expect(await reviewCommand({ requireJudge: true }, environment(fakeJudge(noFindings, undefined, expired), {}))).toBe(14);
+  });
+
+  it('FR-1204-04 tells how to log in again when the login is rejected while judging', async () => {
+    const judge = fakeJudge(() => new AdapterError('authentication', 'Failed to authenticate. API Error: 401'));
+
+    expect(await reviewCommand({ concurrency: '1' }, environment(judge, {}))).toBe(12);
+
+    expect(stdout()).toContain('the claude credentials were rejected');
+    expect(stdout()).toContain('Failed to authenticate. API Error: 401');
+    expect(stdout()).toContain('run `claude` and enter `/login`');
   });
 
   it('FR-1204-02 --require-judge turns an unavailable judge into exit 14', async () => {
@@ -512,6 +563,146 @@ describe('FR-1204 review credential policy', () => {
 // ============================================================================
 // Output schema
 // ============================================================================
+
+describe('FR-1203 a judge that does not start or answer', () => {
+  it('FR-1203-05 stops a judge that does not answer within the limit, keeps the records written, and exits 12', async () => {
+    useProject({
+      models: [requirementModel([verifiability])],
+      specs: design({ requirements: ['REQ-001', 'REQ-002'].map(id => ({ id, description: id })) }),
+      review: { timeoutSeconds: 0.2 },
+    });
+    const judge = fakeJudge(({ target }) => (target === 'REQ-002' ? HANG : { findings: [] }));
+
+    expect(await reviewCommand({ concurrency: '1' }, environment(judge))).toBe(12);
+
+    expect(stdout()).toContain('the judge did not answer within 0.2 s and was stopped');
+    expect(existsSync(recordFile('req-verifiability', 'REQ-001'))).toBe(true);
+    expect(existsSync(recordFile('req-verifiability', 'REQ-002'))).toBe(false);
+    const hung = judge.created[judge.created.length - 1].options.signal as AbortSignal;
+    expect(hung.aborted).toBe(true);
+  });
+
+  it('FR-1203-05 stops before judging when the judge does not answer the check call', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design(), review: { timeoutSeconds: 0.2 } });
+    const judge = fakeJudge(noFindings, undefined, () => HANG);
+
+    expect(await reviewCommand({}, environment(judge))).toBe(12);
+
+    expect(stderr()).toContain('the judge could not be reached before judging: the judge did not answer within 0.2 s');
+    expect(judge.calls).toEqual([]);
+    expect(existsSync(join(project.dir, 'review'))).toBe(false);
+  });
+
+  it('FR-1203-05 rejects a time limit that is not a positive number', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design(), review: { timeoutSeconds: 0 } });
+
+    expect(await reviewCommand({ dryRun: true }, environment(fakeJudge(noFindings)))).toBe(1);
+    expect(stderr()).toContain('review.timeoutSeconds must be a positive number');
+  });
+
+  it('FR-1203-06 stops before judging when Node runs as x64 on Apple silicon, and says how to fix it', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+    const rosetta: HostInfo = { platform: 'darwin', arch: 'x64', appleSilicon: true };
+    const judge = fakeJudge(noFindings);
+
+    expect(await reviewCommand({}, environment(judge, undefined, rosetta))).toBe(12);
+
+    expect(judge.createAdapter).not.toHaveBeenCalled();
+    expect(stderr()).toContain('Node.js runs as x64 on an Apple silicon Mac');
+    expect(stderr()).toContain('Use an arm64 Node.js');
+
+    expect(await reviewCommand({ dryRun: true }, environment(fakeJudge(noFindings), undefined, rosetta))).toBe(0);
+    expect(await reviewCommand({ showPacket: true }, environment(fakeJudge(noFindings), undefined, rosetta))).toBe(0);
+    for (const host of [
+      { platform: 'darwin', arch: 'arm64', appleSilicon: true },
+      { platform: 'darwin', arch: 'x64', appleSilicon: false },
+    ] as HostInfo[]) {
+      expect(await reviewCommand({ target: ['REQ-001'], force: true }, environment(fakeJudge(noFindings), undefined, host))).toBe(0);
+    }
+  });
+
+  it('FR-1203-07 runs the configured Claude Code executable, also on Apple silicon with an x64 Node', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design(), review: { claudeExecutable: 'tools/claude' } });
+    const judge = fakeJudge(noFindings);
+
+    expect(await reviewCommand({ target: ['REQ-001'] }, environment(judge, undefined, { platform: 'darwin', arch: 'x64', appleSilicon: true }))).toBe(0);
+
+    expect(judge.created.map(c => c.options.pathToClaudeCodeExecutable)).toEqual([
+      join(project.dir, 'tools', 'claude'),
+      join(project.dir, 'tools', 'claude'),
+    ]);
+  });
+});
+
+describe('review --emit and ingest paths, and the token estimate', () => {
+  it('FR-1210-01 writes and reads an absolute --emit directory where it points, not under the project', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+    const outside = mkdtempSync(join(tmpdir(), 'speckeeper-emit-'));
+    try {
+      expect(await reviewCommand({ emit: outside, target: ['REQ-001'] }, environment(fakeJudge(noFindings)))).toBe(0);
+
+      expect(existsSync(join(outside, 'index.yaml'))).toBe(true);
+      expect(existsSync(join(project.dir, outside))).toBe(false);
+      const [entry] = (YAML.parse(readFileSync(join(outside, 'index.yaml'), 'utf-8')) as {
+        packets: Array<{ packetHash: string; result: string }>;
+      }).packets;
+      writeFileSync(join(outside, entry.result), YAML.stringify({ packetHash: entry.packetHash, output: { findings: [] } }));
+
+      expect(await reviewIngestCommand(outside, {}, { cwd: project.dir })).toBe(0);
+      expect(existsSync(recordFile('req-verifiability', 'REQ-001'))).toBe(true);
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it('FR-1210-01 reads a relative ingest directory from the project root, as --emit writes it', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+    await reviewCommand({ emit: 'packets', target: ['REQ-001'] }, environment(fakeJudge(noFindings)));
+    const [entry] = (YAML.parse(readFileSync(join(project.dir, 'packets', 'index.yaml'), 'utf-8')) as {
+      packets: Array<{ packetHash: string; result: string }>;
+    }).packets;
+    writeFileSync(join(project.dir, 'packets', entry.result), YAML.stringify({ packetHash: entry.packetHash, output: { findings: [] } }));
+
+    expect(await reviewIngestCommand('packets', {}, { cwd: project.dir })).toBe(0);
+    expect(existsSync(recordFile('req-verifiability', 'REQ-001'))).toBe(true);
+  });
+
+  it('FR-1203-04 records the cached input too, and --dry-run estimates from the whole usage', async () => {
+    useProject({ models: [requirementModel([verifiability])], specs: design() });
+    const cached = { inputTokens: 4, outputTokens: 400, cacheReadTokens: 3000, cacheCreationTokens: 600 };
+    await reviewCommand({ target: ['REQ-001'] }, environment(fakeJudge(noFindings, cached)));
+
+    expect(readRecord(recordFile('req-verifiability', 'REQ-001'))!.usage).toEqual(cached);
+
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true, format: 'json', target: ['REQ-002'] }, environment(fakeJudge(noFindings)));
+    expect(JSON.parse(stdout())).toMatchObject({ estimatedTokens: 4004, approximatedTargets: 0 });
+  });
+
+  it('FR-1206-02 estimates a check without records from the text, counting a non-ASCII character as a token, and says so', async () => {
+    const japanese = 'システムは帳票を出力する。'.repeat(40);
+    useProject({
+      models: [requirementModel([verifiability])],
+      specs: design({ requirements: [{ id: 'REQ-001', description: japanese }], usecases: [] }),
+    });
+
+    const estimate = async (description: string) => {
+      project.specs = design({ requirements: [{ id: 'REQ-001', description }], usecases: [] });
+      logSpy.mockClear();
+      await reviewCommand({ dryRun: true, format: 'json' }, environment(fakeJudge(noFindings)));
+      return JSON.parse(stdout()) as { estimatedTokens: number; approximatedTargets: number };
+    };
+    const ascii = await estimate('a'.repeat(japanese.length));
+    const result = await estimate(japanese);
+    expect(result.approximatedTargets).toBe(1);
+    // Each Japanese character counts as a token, each ASCII character as a quarter
+    expect(result.estimatedTokens - ascii.estimatedTokens).toBe(Math.round(japanese.length * 0.75));
+
+    logSpy.mockClear();
+    await reviewCommand({ dryRun: true }, environment(fakeJudge(noFindings)));
+    expect(stdout()).toContain('1 target(s) of a check with no recorded usage are estimated from the packet text');
+  });
+});
 
 describe('FR-1205 review output schema', () => {
   beforeEach(() => {

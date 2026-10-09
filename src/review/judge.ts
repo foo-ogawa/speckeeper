@@ -1,10 +1,12 @@
 /**
  * Judging packets with an LLM through @aaac/runtime.
  */
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { z } from 'zod';
+import type { AdapterErrorKind } from '@aaac/runtime';
 import type { LlmRuntime } from '../agents/orchestrator.js';
 import type { PlannedTarget, ResolvedCheck } from './checks.js';
 import { buildJudgeSchema, COMMON_FINDING_FIELDS, type ReviewOutput } from './output.js';
@@ -90,14 +92,22 @@ const VerdictSchema = z.object({
 /** The adapter factory of the runtime; tests substitute their own */
 export type AdapterFactory = LlmRuntime['createAdapter'];
 
-export interface JudgeRunOptions {
-  runtime: Pick<LlmRuntime, 'runTask' | 'createModelResolver'>;
+/** How the judge is reached: the runtime, the adapter, and the limits of each call */
+export interface JudgeConnection {
+  runtime: Pick<LlmRuntime, 'runTask' | 'createModelResolver' | 'adapterErrorKind'>;
   createAdapter: AdapterFactory;
   adapter: ReviewAdapterName;
   /** Model override (--model) */
   model?: string;
-  concurrency: number;
   credentials: CredentialMode;
+  /** Upper limit of one judge call, including its one correction */
+  timeoutMs: number;
+  /** Claude Code executable for the claude adapter (absolute path) */
+  claudeExecutable?: string;
+}
+
+export interface JudgeRunOptions extends JudgeConnection {
+  concurrency: number;
   registry: ReviewRegistry;
   /** Environment the model resolver reads */
   env: NodeJS.ProcessEnv;
@@ -111,8 +121,6 @@ export interface JudgeRunResult {
   failed: Array<{ target: PlannedTarget; reason: string }>;
   /** Set when an adapter call failed; no call was started after it */
   adapterError?: string;
-  /** Set when the logged-in Claude Code turned out not to be logged in; nothing was judged */
-  unavailable?: string;
 }
 
 /** An adapter call failed (network, authentication, usage limit, ...) */
@@ -162,23 +170,6 @@ export async function judgeTargets(targets: PlannedTarget[], options: JudgeRunOp
 
   try {
     let next = 0;
-    if (options.credentials === 'local-login' && targets.length > 0) {
-      // The login is only known to work once a call succeeds, so the first
-      // target runs alone: a login failure then judges nothing at all.
-      next = 1;
-      try {
-        await judgeOne(targets[0]);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (isAuthenticationFailure(message)) {
-          result.unavailable = message;
-          return result;
-        }
-        result.adapterError = message;
-        return result;
-      }
-    }
-
     const worker = async (): Promise<void> => {
       while (result.adapterError === undefined && next < targets.length) {
         const planned = targets[next++];
@@ -196,15 +187,6 @@ export async function judgeTargets(targets: PlannedTarget[], options: JudgeRunOp
   }
 }
 
-/**
- * Whether an adapter error says the logged-in Claude Code is not logged in.
- * The runtime reports it as an ordinary adapter error, so the message is the
- * only signal.
- */
-function isAuthenticationFailure(message: string): boolean {
-  return /not logged in|\/login|invalid api key|authentication|unauthori[sz]ed|\b401\b/i.test(message);
-}
-
 async function judgeTarget(
   planned: PlannedTarget,
   judge: JudgeSignature,
@@ -213,7 +195,7 @@ async function judgeTarget(
   stopped: () => boolean,
 ): Promise<JudgmentRecord> {
   const { check, target, packet } = planned;
-  const usage: Usage = { reported: false, inputTokens: 0, outputTokens: 0 };
+  const usage: Usage = { reported: false, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const run = <S extends z.ZodType>(model: string | undefined, task: JudgeTask<S>): Promise<z.infer<S>> => {
     if (stopped()) throw new Stopped();
     return runJudgeTask(options, emptyDir, model, usage, task);
@@ -248,8 +230,12 @@ async function judgeTarget(
   }
 
   const judgedAt = (options.now?.() ?? new Date()).toISOString();
-  return assembleRecord(planned, answer, findings, judge, judgedAt,
-    usage.reported ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : undefined);
+  return assembleRecord(planned, answer, findings, judge, judgedAt, usage.reported ? {
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    ...(usage.cacheReadTokens > 0 ? { cacheReadTokens: usage.cacheReadTokens } : {}),
+    ...(usage.cacheCreationTokens > 0 ? { cacheCreationTokens: usage.cacheCreationTokens } : {}),
+  } : undefined);
 }
 
 /**
@@ -291,7 +277,7 @@ export function assembleRecord(
   findings: RecordedFinding[],
   judge: JudgeSignature,
   judgedAt: string,
-  usage?: { inputTokens: number; outputTokens: number },
+  usage?: JudgmentRecord['usage'],
 ): JudgmentRecord {
   const extra = Object.fromEntries(Object.entries(answer).filter(([key]) => key !== 'findings'));
   return {
@@ -328,11 +314,120 @@ function verificationRequest(prompt: string, contextBody: string, finding: Recor
   ].join('\n');
 }
 
+/**
+ * An adapter with no tools, an empty working directory, and a time limit: the
+ * judge sees nothing but its request, and a judge that does not answer within
+ * the limit is stopped together with its process.
+ */
+function createJudgeAdapter(connection: JudgeConnection, emptyDir: string, model: string | undefined, timeoutMs: number) {
+  return connection.createAdapter(connection.adapter, {
+    ...(model !== undefined ? { model } : {}),
+    tools: [],
+    cwd: emptyDir,
+    permissionMode: 'default',
+    signal: AbortSignal.timeout(timeoutMs),
+    ...(connection.adapter === 'claude' && connection.claudeExecutable
+      ? { pathToClaudeCodeExecutable: connection.claudeExecutable }
+      : {}),
+  });
+}
+
+/** What a failed judge call means for the person running review, with how to fix it */
+function describeFailure(connection: JudgeConnection, kind: AdapterErrorKind, message: string, timeoutMs: number): string {
+  switch (kind) {
+    case 'aborted':
+      return `the judge did not answer within ${timeoutMs / 1000} s and was stopped (review.timeoutSeconds sets the limit)`;
+    case 'authentication':
+      return `the ${connection.adapter} credentials were rejected: ${message.replace(/\.+$/, '')}. ${credentialFix(connection)}`;
+    default:
+      return message;
+  }
+}
+
+/** How to get working credentials for the adapter */
+export function credentialFix(connection: Pick<JudgeConnection, 'adapter' | 'credentials'>): string {
+  if (connection.adapter === 'claude' && connection.credentials !== 'api-key') {
+    return 'Log in again (run `claude` and enter `/login`), or set CLAUDE_CODE_OAUTH_TOKEN (create one with `claude setup-token`).';
+  }
+  const variables = connection.adapter === 'claude' ? ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'] : API_KEY_VARIABLES[connection.adapter as 'openai' | 'gemini'];
+  return `Check ${variables.join(' / ')}.`;
+}
+
+/** Upper limit of the check call that precedes judging */
+const PROBE_TIMEOUT_MS = 60_000;
+
+export type ProbeResult =
+  | { ok: true }
+  | { ok: false; kind: AdapterErrorKind; message: string };
+
+/**
+ * Make one short call before judging, so that a judge that cannot start or a
+ * login that has expired is reported before any target is judged.
+ */
+export async function probeJudge(connection: JudgeConnection): Promise<ProbeResult> {
+  const emptyDir = mkdtempSync(join(tmpdir(), 'speckeeper-review-'));
+  const timeoutMs = Math.min(PROBE_TIMEOUT_MS, connection.timeoutMs);
+  try {
+    const model = connection.runtime
+      .createModelResolver({ fallbackAdapter: connection.adapter, fallbackModel: connection.model, pinnedAdapter: connection.adapter })
+      .resolve('fast').model;
+    const adapter = await createJudgeAdapter(connection, emptyDir, model, timeoutMs);
+    await adapter.send('Reply with OK.', { readonly: true });
+    return { ok: true };
+  } catch (error) {
+    const kind = connection.runtime.adapterErrorKind(error);
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, kind, message: describeFailure(connection, kind, message, timeoutMs) };
+  } finally {
+    rmSync(emptyDir, { recursive: true, force: true });
+  }
+}
+
+/** The machine review runs on, as far as starting the judge depends on it */
+export interface HostInfo {
+  platform: NodeJS.Platform;
+  /** CPU architecture Node.js runs as */
+  arch: string;
+  /** Whether the CPU is Apple silicon (also when Node.js runs as x64 under Rosetta) */
+  appleSilicon: boolean;
+}
+
+export function currentHost(): HostInfo {
+  let appleSilicon = false;
+  if (process.platform === 'darwin') {
+    try {
+      appleSilicon = execFileSync('sysctl', ['-n', 'hw.optional.arm64'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() === '1';
+    } catch {
+      // sysctl without the key (an Intel Mac) means it is not Apple silicon
+    }
+  }
+  return { platform: process.platform, arch: process.arch, appleSilicon };
+}
+
+/**
+ * Why the judge cannot start on this machine, or undefined. The Claude Agent
+ * SDK runs the Claude Code build for Node's own architecture, and the x64
+ * build hangs at start under Rosetta on Apple silicon.
+ */
+export function hostProblem(adapter: ReviewAdapterName, claudeExecutable: string | undefined, host: HostInfo): string | undefined {
+  if (adapter !== 'claude' || claudeExecutable || host.platform !== 'darwin' || host.arch !== 'x64' || !host.appleSilicon) {
+    return undefined;
+  }
+  return 'Node.js runs as x64 on an Apple silicon Mac, so the Claude Agent SDK starts the x64 build of Claude Code, '
+    + 'which hangs under Rosetta. Use an arm64 Node.js and install the dependencies again with it '
+    + '(for example `nvm install 22`, then `rm -rf node_modules && npm ci`), '
+    + 'or set review.claudeExecutable to an arm64 Claude Code.';
+}
+
 /** Token usage summed over a target's calls; recorded only when the runtime reported any */
 interface Usage {
   reported: boolean;
   inputTokens: number;
   outputTokens: number;
+  /** Input read from the prompt cache (not included in inputTokens) */
+  cacheReadTokens: number;
+  /** Input written to the prompt cache (not included in inputTokens) */
+  cacheCreationTokens: number;
 }
 
 interface JudgeTask<S extends z.ZodType> {
@@ -354,12 +449,7 @@ async function runJudgeTask<S extends z.ZodType>(
   const handoff = `${task.taskId}-output`;
   let run;
   try {
-    const adapter = await options.createAdapter(options.adapter, {
-      ...(model !== undefined ? { model } : {}),
-      tools: [],
-      cwd: emptyDir,
-      permissionMode: 'default',
-    });
+    const adapter = await createJudgeAdapter(options, emptyDir, model, options.timeoutMs);
     run = await options.runtime.runTask(adapter, task.taskId, { user_request: task.request }, {
       maxFollowUps: 1,
       maxRetries: 0,
@@ -386,6 +476,8 @@ async function runJudgeTask<S extends z.ZodType>(
     usage.reported = true;
     usage.inputTokens += run.tokenUsage.inputTokens;
     usage.outputTokens += run.tokenUsage.outputTokens;
+    usage.cacheReadTokens += run.tokenUsage.cacheReadTokens ?? 0;
+    usage.cacheCreationTokens += run.tokenUsage.cacheCreationTokens ?? 0;
   }
 
   const outcome = run.outcome;
@@ -394,7 +486,7 @@ async function runJudgeTask<S extends z.ZodType>(
       // The runtime validated the data against this schema; parsing again types it
       return task.schema.parse(outcome.data);
     case 'error':
-      throw new AdapterFailure(outcome.message);
+      throw new AdapterFailure(describeFailure(options, outcome.kind ?? 'other', outcome.message, options.timeoutMs));
     case 'validation_error':
       throw new InvalidAnswer(`the answer did not match the output schema after one correction: ${z.prettifyError(outcome.errors)}`);
     case 'escalation':

@@ -979,7 +979,10 @@ Run each packet through @aaac/runtime runTask with a read-only reviewer agent, n
 - **FR-1203-01**: The adapter is created with tools [] and an empty temporary cwd [test]
 - **FR-1203-02**: Schema mismatches get one follow-up correction; persistent mismatches are reported as failures [test]
 - **FR-1203-03**: On usage-limit or rate-limit responses, no new calls start and completed records are kept [test]
-- **FR-1203-04**: Token usage from TaskRunResult is stored in the record [test]
+- **FR-1203-04**: Token usage from TaskRunResult, including input read from and written to the prompt cache, is stored in the record [test]
+- **FR-1203-05**: Every judge call, and a short check call made before judging, has a time limit (review.timeoutSeconds, default 600); a judge that does not answer is stopped with its process and reported as an adapter error (exit 12), and records already written are kept [test]
+- **FR-1203-06**: On an Apple silicon Mac with an x64 Node.js, review stops before judging with the reason and the fix, unless review.claudeExecutable is set; --dry-run, --show-packet and --emit are not stopped [test]
+- **FR-1203-07**: review.claudeExecutable sets the Claude Code executable the claude adapter runs [test]
 
 ---
 
@@ -998,6 +1001,7 @@ CI and other environments without credentials must not fail on review, while loc
 - **FR-1204-01**: With CI set and no credential variables, review exits 0 without touching records and reports the skip [test]
 - **FR-1204-02**: --require-judge turns an unavailable judge into exit code 14 [test]
 - **FR-1204-03**: With allowApiKey false and an API key present, review exits 13 without calling the LLM [test]
+- **FR-1204-04**: Rejected credentials (such as an expired login) are found by the check call before judging and handled like missing credentials (exit 0, or 14 with --require-judge), with how to log in again; a rejection while judging is an adapter error that also says how to log in again [test]
 
 ---
 
@@ -1024,7 +1028,7 @@ Judge only targets whose record is missing or stale (packet hash changed, or jud
 ### Acceptance Criteria
 
 - **FR-1206-01**: An unchanged target is skipped without calling the LLM [test]
-- **FR-1206-02**: --dry-run lists targets to run and to skip with the changed inputs as reasons, and estimates token usage from previous records [test]
+- **FR-1206-02**: --dry-run lists targets to run and to skip with the changed inputs as reasons, and estimates token usage from previous records (cached input included); a check without records is estimated from the packet text by character kind and the output says so [test]
 - **FR-1206-03**: --max-targets caps one run in a stable order so that split runs never judge a target twice [test]
 
 ---
@@ -1080,7 +1084,7 @@ Emit packets for external judging and ingest schema-valid results whose packet h
 
 ### Acceptance Criteria
 
-- **FR-1210-01**: ingest rejects results whose packet hash differs from the current one [test]
+- **FR-1210-01**: ingest rejects results whose packet hash differs from the current one; --emit and ingest take a directory relative to the project root, or an absolute one as is [test]
 
 ---
 
