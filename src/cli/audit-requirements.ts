@@ -52,16 +52,18 @@ export async function commandAuditRequirements(
     await writeOutput(content, opts.output);
 
     const exitCode = computeExitCode(result, auditOpts);
-    if (exitCode !== 0) process.exit(exitCode);
+    process.exitCode = exitCode;
   } catch (err: unknown) {
     const exitCode = (err as { exitCode?: number }).exitCode;
     if (exitCode === EXIT_RUNTIME_MISSING) {
       console.error(chalk.red((err as Error).message));
-      process.exit(EXIT_RUNTIME_MISSING);
+      process.exitCode = EXIT_RUNTIME_MISSING;
+      return;
     }
     if (exitCode === EXIT_ADAPTER_ERROR) {
       console.error(chalk.red((err as Error).message));
-      process.exit(EXIT_ADAPTER_ERROR);
+      process.exitCode = EXIT_ADAPTER_ERROR;
+      return;
     }
     throw err;
   }

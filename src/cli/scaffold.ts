@@ -30,7 +30,8 @@ export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<
   const sourcePath = resolve(options.source);
   if (!existsSync(sourcePath)) {
     console.error(chalk.red(`  Error: Source file not found: ${sourcePath}`));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const markdown = readFileSync(sourcePath, 'utf-8');
@@ -38,7 +39,8 @@ export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<
   const flowchart = parseMarkdownFlowchart(markdown);
   if (!flowchart) {
     console.error(chalk.red('  Error: No mermaid flowchart found in the source file'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   console.log(chalk.gray(`  Parsed: ${flowchart.nodes.size} nodes, ${flowchart.edges.length} edges`));
@@ -53,7 +55,8 @@ export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<
   if (speckeeperNodes.length === 0) {
     console.error(chalk.red(`  Error: No nodes with class "${SPECKEEPER_CLASS}" found`));
     console.log(chalk.gray('  Add `classDef speckeeper ...` and `class NODE1,NODE2 speckeeper` to your flowchart'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   console.log(chalk.gray(`  speckeeper-managed nodes: ${speckeeperNodes.map(n => n.id).join(', ')}`));

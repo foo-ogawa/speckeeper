@@ -37,17 +37,17 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[]) {
 }
 
 describe('newCommand', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   describe('FR-104-01 orchestration: outputs model types header when no type given', () => {
@@ -66,11 +66,9 @@ describe('newCommand', () => {
     it('exits with error when unknown type specified', async () => {
       const model = createMockModel();
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
-      exitSpy.mockImplementation(((code: number) => {
-        throw new Error(`process.exit(${code})`);
-      }) as never);
 
-      await expect(newCommand({ type: 'nonexistent-type' } as never)).rejects.toThrow('process.exit(1)');
+      await newCommand({ type: 'nonexistent-type' } as never);
+      expect(process.exitCode).toBe(1);
     });
   });
 

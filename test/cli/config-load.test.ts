@@ -158,4 +158,42 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('Loaded:');
   }, 120_000);
+
+  it('writes the whole -f json report into a pipe when lint fails', () => {
+    // Uses the models scaffolded by init in the test above. A report larger than
+    // a pipe buffer loses its tail when the process ends before stdout drains.
+    const requirements = Array.from({ length: 1000 }, (_, i) => {
+      const id = `REQ-${String(i + 1).padStart(4, '0')}`;
+      return `  { id: '${id}', name: 'R${i + 1}', type: 'functional', priority: 'must', description: 'd', acceptanceCriteria: [] },`;
+    });
+    writeFileSync(
+      join(projectDir, 'failing-design.ts'),
+      [
+        "import { defineSpecs, mergeSpecs } from 'speckeeper';",
+        "import type { Requirement } from './design/_models/requirement.ts';",
+        "import { RequirementModel } from './design/_models/requirement.ts';",
+        'const requirements: Requirement[] = [',
+        ...requirements,
+        '];',
+        'export default mergeSpecs(defineSpecs([RequirementModel.instance, requirements]));',
+        '',
+      ].join('\n'),
+    );
+    writeConfig(
+      'speckeeper.config.ts',
+      "import { defineConfig } from 'speckeeper';\n" +
+        "import design from './failing-design.ts';\n" +
+        "export default defineConfig({ models: design.models, specs: design.specs });\n",
+    );
+
+    const result = spawnSync(process.execPath, [bundlePath, 'lint', '-f', 'json'], {
+      cwd: projectDir,
+      encoding: 'utf8',
+      timeout: 60_000,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stdout.length).toBeGreaterThan(65_536);
+    expect(JSON.parse(result.stdout).errors).toBeGreaterThan(0);
+  }, 90_000);
 });

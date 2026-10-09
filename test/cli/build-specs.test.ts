@@ -127,6 +127,7 @@ describe('FR-302, FR-800: build writes machine-readable artifacts to specs/', ()
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -240,11 +241,10 @@ describe('FR-302, FR-800: build writes machine-readable artifacts to specs/', ()
       attributes: [{ name: 'status', type: 'enum', required: true }],
     };
     mockedLoadConfig.mockResolvedValue(configWith([brokenEntity]) as never);
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
 
     await buildCommand({});
 
-    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(process.exitCode).toBe(1);
     expect(vi.mocked(console.error).mock.calls.flat().join(' ')).toContain('Build failed');
     expect(existsSync(join(tempDir, 'specs', 'schemas', 'entities'))).toBe(false);
   });

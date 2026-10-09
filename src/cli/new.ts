@@ -52,7 +52,8 @@ export async function newCommand(options: NewCommandOptions): Promise<void> {
   if (!model) {
     console.error(chalk.red(`  Error: Unknown model type '${options.type}'`));
     console.log(chalk.gray('  Run `speckeeper new` to see available types'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   
   // Generate ID if not provided
@@ -74,7 +75,8 @@ export async function newCommand(options: NewCommandOptions): Promise<void> {
   
   if (existsSync(outputFile)) {
     console.error(chalk.red(`  Error: File already exists: ${outputFile}`));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   
   writeFileSync(outputFile, template);

@@ -1,6 +1,6 @@
 {
   "name": "speckeeper",
-  "version": "0.18.2",
+  "version": "0.18.3",
   "description": "TypeScript-first specification validation framework with external SSOT integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -39,7 +39,6 @@
   "scripts": {
     "build": "tsup",
     "bundle": "node esbuild.bundle.mjs",
-    "bundle:min": "node esbuild.bundle.mjs --minify",
     "build:docs": "npm run build && embedoc build",
     "dev": "tsup --watch",
     "lint": "eslint",
@@ -47,7 +46,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm run bundle:min && npm run test:run",
+    "prepublishOnly": "npm run build && npm run bundle && npm run test:run",
     "docs": "embedoc build",
     "docs:watch": "embedoc watch",
     "dsl:generate": "npx agent-runtime generate --config dsl/agent-runtime.config.yaml",

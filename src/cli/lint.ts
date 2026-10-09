@@ -58,7 +58,8 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
     gatePhase = resolveGatePhase(options.phase, config.lint?.phaseGate?.currentPhase);
   } catch (error) {
     console.error(chalk.red('Lint failed:'), error instanceof Error ? error.message : error);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   if (gatePhase) {
@@ -82,12 +83,12 @@ export async function lintCommand(options: LintCommandOptions): Promise<void> {
     outputLintResults(result, options);
     
     if (result.errors > 0 || (options.strict && result.warnings > 0)) {
-      process.exit(1);
+      process.exitCode = 1;
     }
     
   } catch (error) {
     console.error(chalk.red('Lint failed:'), error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

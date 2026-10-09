@@ -63,6 +63,7 @@ describe('FR-605: verification logic lives in the _models/ definitions', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   it('FR-605-02 the registered models declare the verification logic themselves', () => {
@@ -110,7 +111,6 @@ describe('FR-605: verification logic lives in the _models/ definitions', () => {
     vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       logs.push(args.map(String).join(' '));
     });
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
 
     await checkCommand('external-ssot', { config: join(repoRoot, 'speckeeper.config.ts') });
 
@@ -122,7 +122,7 @@ describe('FR-605: verification logic lives in the _models/ definitions', () => {
 
     // Exact equality: nothing is reported that a model-declared checker did not produce.
     expect(reported).toEqual(expected);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 });
 
@@ -133,6 +133,7 @@ describe('FR-1017: source path comes from the checker config, else a hardcoded d
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   it('FR-1017-01 uses the path each spec configures', () => {

@@ -48,7 +48,8 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
   if (!targetId) {
     console.error(chalk.red('Error: ID is required'));
     console.error(chalk.gray('  Usage: speckeeper impact <id>'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   
   const config = await loadConfig(options.config);
@@ -66,7 +67,8 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
     const target = graph.nodes.find(node => node.id === targetId);
     if (!target) {
       console.error(chalk.red(`  Error: Target '${targetId}' not found`));
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
     
     console.error(chalk.blue('  Analyzing impact...'));
@@ -76,7 +78,7 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
     
   } catch (error) {
     console.error(chalk.red('Impact analysis failed:'), error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

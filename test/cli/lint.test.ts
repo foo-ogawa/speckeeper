@@ -42,17 +42,17 @@ function createMockConfig(overrides: {
 }
 
 describe('lintCommand', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   describe('FR-401-01 orchestration: error-severity lint results trigger exit(1)', () => {
@@ -67,7 +67,7 @@ describe('lintCommand', () => {
       await lintCommand({});
 
       expect(model.lintAll).toHaveBeenCalledWith([{ id: 'SPEC-001' }]);
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('Duplicate ID: SPEC-001');
     });
@@ -84,7 +84,7 @@ describe('lintCommand', () => {
 
       await lintCommand({});
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('Referenced target not found');
     });
@@ -102,7 +102,7 @@ describe('lintCommand', () => {
       await lintCommand({});
 
       expect(model.lintAll).toHaveBeenCalled();
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('Custom rule warning');
     });
@@ -115,7 +115,7 @@ describe('lintCommand', () => {
 
       await lintCommand({});
 
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
       const output = logSpy.mock.calls.map(c => c[0]).join('\n');
       expect(output).toContain('No issues found');
     });
@@ -171,10 +171,10 @@ describe('lintCommand', () => {
       mockedLoadConfig.mockResolvedValue(createMockConfig({ models: [model] }) as never);
 
       await lintCommand({});
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
 
       await lintCommand({ strict: true });
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
     });
 
     it('filters out info-severity issues when strict is NOT set', async () => {
@@ -221,7 +221,7 @@ describe('lintCommand', () => {
 
       expect(output()).toContain('id-unique');
       expect(output()).toContain('FR-001');
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
     });
 
     it('FR-400-01 verifies reference integrity and fails the run', async () => {
@@ -236,7 +236,7 @@ describe('lintCommand', () => {
 
       expect(output()).toContain('ref-exists');
       expect(output()).toContain('UC-404');
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
     });
 
     it('FR-400-01 verifies orphan elements and the phase gate', async () => {
@@ -254,7 +254,7 @@ describe('lintCommand', () => {
       expect(output()).toContain('orphan');
       expect(output()).toContain('phase-tbd');
       expect(output()).toContain('timeout');
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
     });
 
     it('FR-400-01 reports no common lint issue for a consistent design', async () => {
@@ -269,7 +269,7 @@ describe('lintCommand', () => {
       await lintCommand({ strict: true, phase: 'OPS' });
 
       expect(output()).toContain('No issues found');
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
 
     it('FR-400-01 rejects a phase that is not a known phase', async () => {
@@ -279,7 +279,7 @@ describe('lintCommand', () => {
 
       await lintCommand({ phase: 'NOPE' });
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
     });
   });
 
@@ -300,7 +300,7 @@ describe('lintCommand', () => {
 
       await lintCommand({});
 
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 });
