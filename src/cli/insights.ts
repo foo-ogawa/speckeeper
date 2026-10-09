@@ -18,7 +18,8 @@ export async function insightsCommand(options: InsightsCommandOptions): Promise<
 
   if (format !== 'json') {
     console.error(`Unsupported format: ${format}. Only "json" is supported.`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   try {
@@ -27,6 +28,6 @@ export async function insightsCommand(options: InsightsCommandOptions): Promise<
     console.log(JSON.stringify(insight));
   } catch (error) {
     console.error('Insights export failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }

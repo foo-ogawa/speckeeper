@@ -57,17 +57,17 @@ function createMockConfig(models: ReturnType<typeof createMockModel>[]) {
 }
 
 describe('checkCommand', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   describe('FR-602-01 check runs for all models with external SSOT', () => {
@@ -84,7 +84,7 @@ describe('checkCommand', () => {
 
       expect(model.getExternalSourcePath).toHaveBeenCalled();
       expect(model.check).toHaveBeenCalled();
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 
@@ -96,7 +96,7 @@ describe('checkCommand', () => {
       await checkCommand('all', {});
 
       expect(model.check).not.toHaveBeenCalled();
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 
@@ -116,7 +116,7 @@ describe('checkCommand', () => {
 
       await checkCommand('all', {});
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('Missing field');
       expect(output).toContain('Deprecated field');
@@ -131,7 +131,7 @@ describe('checkCommand', () => {
 
       await checkCommand('external-ssot', {});
 
-      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(process.exitCode).toBe(1);
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('External source not found');
     });
@@ -156,7 +156,7 @@ describe('checkCommand', () => {
 
       expect(model.getCoverageChecker).toHaveBeenCalled();
       expect(model.checkCoverage).toHaveBeenCalled();
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 
@@ -166,7 +166,7 @@ describe('checkCommand', () => {
 
       await checkCommand('all', {});
 
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 });

@@ -85,12 +85,12 @@ export async function driftCommand(options: DriftCommandOptions): Promise<void> 
     
     const hasDrift = stale.length > 0;
     if (hasDrift && options.failOnDrift) {
-      process.exit(1);
+      process.exitCode = 1;
     }
     
   } catch (error) {
     console.error(chalk.red('Drift check failed:'), error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

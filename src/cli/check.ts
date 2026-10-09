@@ -277,12 +277,12 @@ export async function checkCommand(
 
     const hasErrors = results.some(r => !r.success);
     if (hasErrors) {
-      process.exit(1);
+      process.exitCode = 1;
     }
 
   } catch (error) {
     console.error(chalk.red('Check failed:'), error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

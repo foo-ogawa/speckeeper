@@ -93,9 +93,7 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
-      throw new Error(`process.exit(${code})`);
-    }) as never);
+    process.exitCode = undefined;
 
     entitiesDoc = join(tempDir, 'docs', 'design', 'entities.md');
     entitySchema = join(tempDir, 'specs', 'schemas', 'entities', 'E-900.json');
@@ -108,6 +106,7 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -129,7 +128,8 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
     tampered.properties = {};
     writeFileSync(entitySchema, JSON.stringify(tampered, null, 2) + '\n');
 
-    await expect(driftCommand({ failOnDrift: true })).rejects.toThrow('process.exit(1)');
+    await driftCommand({ failOnDrift: true });
+    expect(process.exitCode).toBe(1);
 
     expect(output()).toContain('1 file(s) have drifted');
     expect(output()).toContain(entitySchema);
@@ -138,7 +138,8 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
   it('FR-500-01 detects a hand-edited reference graph in specs/index.json', async () => {
     writeFileSync(referenceGraph, JSON.stringify({ nodes: [], edges: [] }) + '\n');
 
-    await expect(driftCommand({ failOnDrift: true })).rejects.toThrow('process.exit(1)');
+    await driftCommand({ failOnDrift: true });
+    expect(process.exitCode).toBe(1);
 
     expect(output()).toContain('1 file(s) have drifted');
     expect(output()).toContain(referenceGraph);
@@ -147,7 +148,8 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
   it('FR-500-01 detects a deleted machine-readable artifact', async () => {
     unlinkSync(referenceGraph);
 
-    await expect(driftCommand({ failOnDrift: true })).rejects.toThrow('process.exit(1)');
+    await driftCommand({ failOnDrift: true });
+    expect(process.exitCode).toBe(1);
 
     expect(output()).toContain('1 file(s) are missing');
     expect(output()).toContain(referenceGraph);
@@ -156,7 +158,8 @@ describe('FR-500: drift covers docs/, specs/ and the aggregated reference graph'
   it('FR-500-01 detects a hand-edited markdown document under docs/', async () => {
     writeFileSync(entitiesDoc, '# Entities\n\nhand written\n');
 
-    await expect(driftCommand({ failOnDrift: true })).rejects.toThrow('process.exit(1)');
+    await driftCommand({ failOnDrift: true });
+    expect(process.exitCode).toBe(1);
 
     expect(output()).toContain('1 file(s) have drifted');
     expect(output()).toContain(entitiesDoc);

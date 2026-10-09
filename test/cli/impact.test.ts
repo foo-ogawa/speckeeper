@@ -35,15 +35,14 @@ describe('impactCommand', () => {
   let errorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
-      throw new Error(`process.exit(${code})`);
-    }) as never);
+    process.exitCode = undefined;
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   describe('FR-700-01 orchestration: impact command completes for a known target', () => {
@@ -158,7 +157,8 @@ describe('impactCommand', () => {
     it('exits with code 1 when target ID is not found in registry', async () => {
       mockedLoadConfig.mockResolvedValue(createMockConfig([], []) as never);
 
-      await expect(impactCommand('NONEXIST-999', {})).rejects.toThrow('process.exit(1)');
+      await impactCommand('NONEXIST-999', {});
+      expect(process.exitCode).toBe(1);
     });
   });
 });

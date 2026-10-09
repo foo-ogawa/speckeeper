@@ -50,7 +50,6 @@ function createMockModel() {
 describe('FR-602-02: check filters the scanned sources by type', () => {
   let tempDir: string;
   let logSpy: ReturnType<typeof vi.spyOn>;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -63,7 +62,7 @@ describe('FR-602-02: check filters the scanned sources by type', () => {
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
 
     const model = createMockModel();
     mockedLoadConfig.mockResolvedValue({
@@ -86,6 +85,7 @@ describe('FR-602-02: check filters the scanned sources by type', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -98,7 +98,7 @@ describe('FR-602-02: check filters the scanned sources by type', () => {
 
     expect(output()).toContain(`Spec ID "${DDL_SPEC_ID}" not found in any configured source`);
     expect(output()).not.toContain(`Spec ID "${OPENAPI_SPEC_ID}" not found`);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 
   it('FR-602-02 scans only the DDL source when the type is ddl', async () => {
@@ -106,21 +106,20 @@ describe('FR-602-02: check filters the scanned sources by type', () => {
 
     expect(output()).toContain(`Spec ID "${OPENAPI_SPEC_ID}" not found in any configured source`);
     expect(output()).not.toContain(`Spec ID "${DDL_SPEC_ID}" not found`);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 
   it('FR-602-01 scans every source when the type is all', async () => {
     await checkCommand('all', { verbose: true });
 
     expect(output()).not.toContain('not found in any configured source');
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 });
 
 describe('FR-1003, FR-1010, FR-1013: check warns about spec IDs absent from a source', () => {
   let tempDir: string;
   let logSpy: ReturnType<typeof vi.spyOn>;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   /** Spec IDs the artifacts do carry, alongside one they do not */
   const ABSENT_OPERATION = 'API-999';
@@ -137,11 +136,12 @@ describe('FR-1003, FR-1010, FR-1013: check warns about spec IDs absent from a so
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -191,14 +191,13 @@ describe('FR-1003, FR-1010, FR-1013: check warns about spec IDs absent from a so
     await checkCommand('ddl', {});
 
     expect(output()).toContain(`Spec ID "${ABSENT_TABLE}" not found in any configured source`);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 });
 
 describe('FR-604: check --coverage fails when it measures nothing or too little', () => {
   let tempDir: string;
   let logSpy: ReturnType<typeof vi.spyOn>;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -209,11 +208,12 @@ describe('FR-604: check --coverage fails when it measures nothing or too little'
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -242,7 +242,7 @@ describe('FR-604: check --coverage fails when it measures nothing or too little'
     await checkCommand('test', { coverage: true });
 
     expect(output()).toContain('No source of type "test" is configured');
-    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(process.exitCode).toBe(1);
   });
 
   it('fails when transitive coverage is below the default 80% threshold', async () => {
@@ -252,7 +252,7 @@ describe('FR-604: check --coverage fails when it measures nothing or too little'
 
     expect(output()).toContain('Transitive coverage 33% is below the 80% threshold (1/3)');
     expect(output()).not.toContain('All coverage checks passed');
-    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(process.exitCode).toBe(1);
   });
 
   it('passes when transitive coverage meets the configured threshold', async () => {
@@ -261,6 +261,6 @@ describe('FR-604: check --coverage fails when it measures nothing or too little'
     await checkCommand('openapi', { coverage: true });
 
     expect(output()).toContain('All coverage checks passed (≥33%)');
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 });

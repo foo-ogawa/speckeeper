@@ -36,7 +36,6 @@ paths:
 describe('FR-201-01: external SSOT paths come from the config', () => {
   let tempDir: string;
   let logSpy: ReturnType<typeof vi.spyOn>;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   /** Declare the config with the paths typed as the named config surface */
   function configWithPaths(paths: ExternalSsotPaths) {
@@ -60,11 +59,12 @@ describe('FR-201-01: external SSOT paths come from the config', () => {
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -78,7 +78,7 @@ describe('FR-201-01: external SSOT paths come from the config', () => {
     await checkCommand('openapi', { verbose: true });
 
     expect(output()).not.toContain(`Spec ID "${SPEC_ID}" not found in any configured source`);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 
   it('FR-201-01 finds nothing when the config points at a path the SSOT is not on', async () => {
@@ -106,6 +106,6 @@ describe('FR-201-01: external SSOT paths come from the config', () => {
     await checkCommand('openapi', { verbose: true });
 
     expect(output()).not.toContain(`Spec ID "${SPEC_ID}" not found in any configured source`);
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
   });
 });

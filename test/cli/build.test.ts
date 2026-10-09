@@ -53,17 +53,17 @@ function createMockConfig(
 }
 
 describe('buildCommand', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    process.exitCode = undefined;
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   describe('FR-300-01 orchestration: exporters are invoked and files are written', () => {
@@ -83,7 +83,7 @@ describe('buildCommand', () => {
       const writtenFiles = mockedBatchWrite.mock.calls[0][0] as Array<{ path: string; content: string }>;
       expect(writtenFiles.length).toBeGreaterThan(0);
       expect(writtenFiles[0].content).toBe('# Doc');
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
     });
   });
 
@@ -113,7 +113,7 @@ describe('buildCommand', () => {
 
       await buildCommand({});
 
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
       const writtenFiles = mockedBatchWrite.mock.calls[0][0] as Array<{ path: string }>;
       expect(writtenFiles.map(f => f.path)).toEqual([join(process.cwd(), 'specs', 'index.json')]);
     });
@@ -128,7 +128,7 @@ describe('buildCommand', () => {
 
       await buildCommand({});
 
-      expect(exitSpy).not.toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
       expect(mockedBatchWrite).not.toHaveBeenCalled();
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
       expect(output).toContain('No files to generate');

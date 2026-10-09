@@ -19,12 +19,14 @@ export async function runConvert(file: string, options: ConvertOptions = {}): Pr
 
   if (!existsSync(filePath)) {
     console.error(chalk.red(`  Error: File not found: ${filePath}`));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   if (!filePath.endsWith('.ts') && !filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     console.error(chalk.red('  Error: Source file must be a .ts, .js, or .mjs file'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   console.log(chalk.cyan('speckeeper convert'));
@@ -38,13 +40,15 @@ export async function runConvert(file: string, options: ConvertOptions = {}): Pr
   } catch (err) {
     console.error(chalk.red(`  Error: Failed to import ${filePath}`));
     console.error(chalk.gray(`  ${err instanceof Error ? err.message : String(err)}`));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   if (!specModule?.entries || !Array.isArray(specModule.entries)) {
     console.error(chalk.red('  Error: File does not export a valid SpecModule (missing entries array)'));
     console.error(chalk.gray('  The file must export a SpecModule via defineSpecs()'));
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const yamlData = specModule.entries.length === 1

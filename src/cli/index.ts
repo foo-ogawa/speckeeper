@@ -145,15 +145,15 @@ const handlers: CommandHandlers = {
     }),
   review: async (opts) => {
     const exitCode = await reviewCommand(opts);
-    if (exitCode !== 0) process.exit(exitCode);
+    process.exitCode = exitCode;
   },
   reviewIngest: async (dir, opts) => {
     const exitCode = await reviewIngestCommand(dir!, opts);
-    if (exitCode !== 0) process.exit(exitCode);
+    process.exitCode = exitCode;
   },
   reviewRebaseline: async (opts) => {
     const exitCode = await reviewRebaselineCommand(opts);
-    if (exitCode !== 0) process.exit(exitCode);
+    process.exitCode = exitCode;
   },
   agents: async (opts) => {
     const YAML = await import('yaml');
@@ -166,7 +166,7 @@ const handlers: CommandHandlers = {
       }
     } catch (err) {
       console.error(`Failed to output DSL: ${(err as Error).message}`);
-      process.exit(1);
+      process.exitCode = 1;
     }
   },
 };
@@ -175,5 +175,5 @@ createProgram(handlers, getVersion())
   .parseAsync()
   .catch((error: unknown) => {
     console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    process.exit((error as { exitCode?: number }).exitCode ?? 1);
+    process.exitCode = (error as { exitCode?: number }).exitCode ?? 1;
   });

@@ -25,9 +25,7 @@ describe('FR-701, FR-800: insightsCommand', () => {
   let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
-      throw new Error(`process.exit(${code})`);
-    }) as never);
+    process.exitCode = undefined;
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     mockedCreate.mockClear();
@@ -35,6 +33,7 @@ describe('FR-701, FR-800: insightsCommand', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   it('outputs ExternalInsight JSON to stdout', async () => {
@@ -48,8 +47,7 @@ describe('FR-701, FR-800: insightsCommand', () => {
   });
 
   it('exits with code 1 for unsupported format', async () => {
-    await expect(
-      insightsCommand({ format: 'text' as 'json' }),
-    ).rejects.toThrow('process.exit(1)');
+    await insightsCommand({ format: 'text' as 'json' });
+    expect(process.exitCode).toBe(1);
   });
 });
