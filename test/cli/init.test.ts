@@ -10,7 +10,8 @@ import { mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'node
 import { execSync, spawnSync } from 'node:child_process';
 
 const testDir = join(process.cwd(), '.test-init');
-const speckeeperCmd = join(process.cwd(), 'bin/speckeeper.js');
+// The CLI as published: the bundle package.json's bin points at
+const speckeeperCmd = join(process.cwd(), 'dist', 'speckeeper.bundle.mjs');
 
 /**
  * Install this repository's speckeeper into the generated project the way a
