@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { build } from "esbuild";
-import { readFileSync, statSync } from "node:fs";
+import { chmodSync, readFileSync, statSync } from "node:fs";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -64,6 +64,8 @@ const result = await build({
 });
 
 if (result.errors.length > 0) process.exit(1);
+// The bundle is the package bin; npx runs it from the repository as an executable.
+chmodSync("dist/speckeeper.bundle.mjs", 0o755);
 const stat = statSync("dist/speckeeper.bundle.mjs");
 const sizeKB = (stat.size / 1024).toFixed(1);
 const sizeMB = (stat.size / 1024 / 1024).toFixed(2);
