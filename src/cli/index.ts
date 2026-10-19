@@ -57,7 +57,6 @@ import type { DriftCommandOptions } from './drift.js';
 import type { CheckCommandOptions } from './check.js';
 import type { ImpactCommandOptions } from './impact.js';
 import type { InsightsCommandOptions } from './insights.js';
-import type { ScaffoldCommandOptions } from './scaffold.js';
 
 function getVersion(): string {
   try {
@@ -95,7 +94,7 @@ const handlers: CommandHandlers = {
     await insightsCommand(opts as InsightsCommandOptions);
   },
   scaffold: async (opts) => {
-    await scaffoldCommand(opts as ScaffoldCommandOptions);
+    await scaffoldCommand(opts);
   },
   convert: async (file, opts) => {
     await runConvert(file!, opts);
