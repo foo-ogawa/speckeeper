@@ -558,7 +558,7 @@ FR-001 (Requirement)
 
 The levels are the `modelLevel` of the models (L0 business, L1 requirements, L2 design, L3 detailed design and implementation); a relation that touches a model without a level is not checked.
 
-See [Model Entity Catalog](./docs/model_entity_catalog.md) for full details on relation types and level constraints.
+See [FR-701 in the framework specification](./docs/framework_requirements_spec.md#fr-701-inter-model-relations) for the level model and the cycle rules.
 
 ## Customizing Models
 

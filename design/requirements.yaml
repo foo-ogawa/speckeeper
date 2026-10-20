@@ -977,6 +977,8 @@ entries:
 
           | `verifies` | any | L0,L1 | - | Tests verify business/requirements |
 
+          | `verifiedBy` | any | L2,L3 | - | Spec is verified by test code |
+
           | `dependsOn` | any | any | A.level >= B.level | Same level or concrete→abstract |
 
           | `uses` | any | any | - | Runtime reference (no level constraint) |

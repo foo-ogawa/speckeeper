@@ -846,6 +846,7 @@ Business+Domain → Requirements → Design (Policy) → Detailed Design/Impleme
 | `satisfies` | L1,L2,L3 | L0,L1 | A.level >= B.level | Design satisfies business/requirements |
 | `refines` | L1,L2,L3 | L0,L1 | A.level > B.level | Requirements refine business, design refines requirements |
 | `verifies` | any | L0,L1 | - | Tests verify business/requirements |
+| `verifiedBy` | any | L2,L3 | - | Spec is verified by test code |
 | `dependsOn` | any | any | A.level >= B.level | Same level or concrete→abstract |
 | `uses` | any | any | - | Runtime reference (no level constraint) |
 | `includes` | any | any | same level | Inclusion within same level |

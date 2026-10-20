@@ -351,15 +351,7 @@ Defines the abstraction level of a model:
 
 ### Relation Types
 
-| Type | Direction Constraint | Description |
-|------|----------------------|-------------|
-| `implements` | spec→external | Spec is implemented as external artifact (OpenAPI, DDL) |
-| `satisfies` | L1→L0 | Satisfies a use case |
-| `refines` | Same level or lower | Refinement |
-| `verifiedBy` | spec→test | Spec is verified by external test code |
-| `verifies` | test→implementation | Test verifies implementation code (external, no checker generated) |
-| `dependsOn` | None | Dependency |
-| `relatedTo` | None | Association |
+Each relation type allows only some levels for its source and target, and `speckeeper lint` reports a relation that joins other levels (`relation-level`). The levels each type allows are listed in the README's [Relation Types](../README.md#relation-types).
 
 ---
 
