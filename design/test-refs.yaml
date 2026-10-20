@@ -275,8 +275,8 @@ specs:
     implementsCommand: CMD-NEW
     testCasePatterns:
       - acceptanceCriteriaId: FR-104-01
-        pattern: FR-104-01.*available model types header
-        description: Outputs model types header when type omitted
+        pattern: FR-104-01.*model types the config registers
+        description: Element types are the models the config registers
     relations:
       - type: verifies
         target: FR-104

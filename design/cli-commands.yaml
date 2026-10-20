@@ -285,24 +285,9 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: enum
-        description: Element type to create
-        required: true
-        choices:
-          - requirement
-          - usecase
-          - entity
-          - component
-          - screen
-          - flow
-          - error-case
-          - term
-      - kind: option
-        name: kind
-        alias: k
         type: string
-        description: Sub-kind (e.g., functional, non-functional for requirements)
-        required: false
+        description: Element type to create, the ID of a model the config registers
+        required: true
       - kind: option
         name: name
         alias: n
@@ -316,12 +301,6 @@ specs:
         description: Output directory path
         required: false
       - kind: option
-        name: template
-        alias: t
-        type: path
-        description: Path to template file
-        required: false
-      - kind: option
         name: dry-run
         type: boolean
         description: Preview generated file content without writing
@@ -331,7 +310,7 @@ specs:
     relatedRequirements:
       - FR-104
     examples:
-      - speckeeper new requirement --kind functional --name "User Login"
+      - speckeeper new requirement --name "User Login"
       - speckeeper new entity --dry-run
     exitCodes:
       - code: 0

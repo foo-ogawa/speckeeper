@@ -180,6 +180,20 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
     expect(result.stderr).toContain('Loaded:');
   }, 120_000);
 
+  it('FR-104-07 creates an element of a model the project scaffolded by init registers', () => {
+    // Uses the project scaffolded by init in the test above, which declares REQ-001.
+    const result = spawnSync(
+      process.execPath,
+      [bundlePath, 'new', 'requirement', '--name', 'User Login', '--dry-run'],
+      { cwd: projectDir, encoding: 'utf8', timeout: 60_000 },
+    );
+
+    expect(result.stderr).not.toContain('Unknown model type');
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('id: "REQ-002"');
+    expect(result.stdout).toContain('name: "User Login"');
+  }, 90_000);
+
   it('writes the whole -f json report into a pipe when lint fails', () => {
     // Uses the models scaffolded by init in the test above. A report larger than
     // a pipe buffer loses its tail when the process ends before stdout drains.

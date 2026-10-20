@@ -69,14 +69,12 @@ export type CheckExitResult =
   | { exitCode: 1; stdout: unknown };
 
 export interface NewArgs {
-  type: "requirement" | "usecase" | "entity" | "component" | "screen" | "flow" | "error-case" | "term";
+  type: string;
 }
 
 export interface NewOptions {
-  kind?: string;
   name?: string;
   output?: string;
-  template?: string;
   dryRun?: boolean;
 }
 

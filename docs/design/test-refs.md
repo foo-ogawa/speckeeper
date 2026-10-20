@@ -301,7 +301,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
-| FR-104-01 | `FR-104-01.*available model types header` | Outputs model types header when type omitted |
+| FR-104-01 | `FR-104-01.*model types the config registers` | Element types are the models the config registers |
 
 ---
 

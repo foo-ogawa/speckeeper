@@ -224,17 +224,15 @@ speckeeper new [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | enum (requirement, usecase, entity, component, screen, flow, error-case, term) | ✓ | - | Element type to create |
-| -k, --kind | option | string |  | - | Sub-kind (e.g., functional, non-functional for requirements) |
+| <type> | argument | string | ✓ | - | Element type to create, the ID of a model the config registers |
 | -n, --name | option | string |  | - | Name of the element |
 | -o, --output | option | path |  | - | Output directory path |
-| -t, --template | option | path |  | - | Path to template file |
 | --dry-run | option | boolean |  | false | Preview generated file content without writing |
 
 ### Examples
 
 ```bash
-speckeeper new requirement --kind functional --name "User Login"
+speckeeper new requirement --name "User Login"
 speckeeper new entity --dry-run
 ```
 

@@ -79,7 +79,7 @@ const handlers: CommandHandlers = {
     await checkCommand(type, opts);
   },
   new: async (type, opts) => {
-    await newCommand({ type, output: opts.output, dryRun: opts.dryRun });
+    await newCommand(type, opts);
   },
   impact: async (id, opts) => {
     await impactCommand(id, opts);

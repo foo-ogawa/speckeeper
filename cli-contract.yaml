@@ -404,19 +404,11 @@ command_sets:
             index: 0
             required: true
             description: >-
-              Element type to create.
+              Element type to create: the ID of a model the config registers.
             schema:
               type: string
-              enum: [requirement, usecase, entity, component, screen, flow, error-case, term]
 
         options:
-          - name: kind
-            aliases: [k]
-            description: Sub-kind (e.g. functional, non-functional for requirements).
-            value_name: kind
-            schema:
-              type: string
-
           - name: name
             aliases: [n]
             description: Name of the element.
@@ -431,17 +423,6 @@ command_sets:
             schema:
               type: string
 
-          - name: template
-            aliases: [t]
-            description: Path to template file.
-            value_name: path
-            schema:
-              type: string
-            file:
-              mode: read
-              exists: true
-              encoding: utf-8
-
           - name: dry-run
             description: Preview generated file content without writing.
             schema:
@@ -455,7 +436,7 @@ command_sets:
               format: text
 
           '1':
-            description: Creation failed.
+            description: Creation failed (the type is not a model the config registers, or the file exists).
             stderr:
               format: text
 

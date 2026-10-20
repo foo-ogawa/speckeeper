@@ -299,12 +299,6 @@ export const commandDefinitions = {
     },
     "options": [
       {
-        "name": "kind",
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
         "name": "name",
         "schema": {
           "type": "string"
@@ -314,17 +308,6 @@ export const commandDefinitions = {
         "name": "output",
         "schema": {
           "type": "string"
-        }
-      },
-      {
-        "name": "template",
-        "schema": {
-          "type": "string"
-        },
-        "file": {
-          "mode": "read",
-          "exists": true,
-          "encoding": "utf-8"
         }
       },
       {

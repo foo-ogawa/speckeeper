@@ -284,16 +284,14 @@ speckeeper new entity
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | Yes | Element type to create. |
+| `type` | Yes | Element type to create: the ID of a model the config registers. |
 
 #### Options
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
-| `--kind` | -k | No |  | Sub-kind (e.g. functional, non-functional for requirements). |
 | `--name` | -n | No |  | Name of the element. |
 | `--output` | -o | No |  | Output directory path. |
-| `--template` | -t | No |  | Path to template file. |
 | `--dry-run` |  | No | `false` | Preview generated file content without writing. |
 
 #### Exit Codes
@@ -302,7 +300,7 @@ speckeeper new entity
 
 - **stdout:** format=`text`
 
-**Exit 1:** Creation failed.
+**Exit 1:** Creation failed (the type is not a model the config registers, or the file exists).
 
 - **stderr:** format=`text`
 

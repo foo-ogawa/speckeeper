@@ -9,7 +9,7 @@ export interface CommandHandlers {
   lint: (options: { config?: string; phase?: string; strict?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   drift: (options: { config?: string; update?: boolean; format?: string; failOnDrift?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   check: (type: string | undefined, options: { config?: string; strict?: boolean; verbose?: boolean; coverage?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
-  new: (type: string, options: { kind?: string; name?: string; output?: string; template?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
+  new: (type: string, options: { name?: string; output?: string; dryRun?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   impact: (id: string, options: { config?: string; depth?: string; direction?: string; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   insights: (options: { format?: string; projectRoot?: string; config?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   scaffold: (options: { source?: string; output?: string; force?: boolean; dryRun?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
@@ -136,11 +136,9 @@ export function createProgram(
   program
     .command("new")
     .description("Create a new element with auto-generated ID.")
-    .argument("<type>", "Element type to create.")
-    .option("-k, --kind <kind>", "Sub-kind (e.g. functional, non-functional for requirements).")
+    .argument("<type>", "Element type to create: the ID of a model the config registers.")
     .option("-n, --name <name>", "Name of the element.")
     .option("-o, --output <path>", "Output directory path.")
-    .option("-t, --template <path>", "Path to template file.")
     .option("--dry-run", "Preview generated file content without writing.", false)
     .action(async (type, opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();
