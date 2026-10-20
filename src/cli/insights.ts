@@ -7,20 +7,13 @@
 import { createSpeckeeperInsightProvider } from '../external/insight-provider.js';
 
 export interface InsightsCommandOptions {
-  format?: 'json';
+  format?: string;
   projectRoot?: string;
   config?: string;
 }
 
 export async function insightsCommand(options: InsightsCommandOptions): Promise<void> {
   const projectRoot = options.projectRoot ?? process.cwd();
-  const format = options.format ?? 'json';
-
-  if (format !== 'json') {
-    console.error(`Unsupported format: ${format}. Only "json" is supported.`);
-    process.exitCode = 1;
-    return;
-  }
 
   try {
     const provider = createSpeckeeperInsightProvider(options.config);

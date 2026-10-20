@@ -1651,3 +1651,21 @@ specs:
       - type: verifies
         target: NFR-017
         description: Verifies acceptance criteria for NFR-017
+  - id: TEST-083
+    description: Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs)
+    source:
+      path: test/cli/declared-values.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - NFR-014
+    testCasePatterns:
+      - acceptanceCriteriaId: NFR-014-02
+        pattern: NFR-014-02 .* rejects a value it does not declare with the input-error exit
+        description: Every value the contract restricts is rejected outside its declaration
+      - acceptanceCriteriaId: NFR-014-02
+        pattern: NFR-014-02 .* ends with (exit 1|the input-error exit 2)
+        description: The CLI ends an undeclared value with the contract's input-error exit
+    relations:
+      - type: verifies
+        target: NFR-014
+        description: Verifies acceptance criteria for NFR-014

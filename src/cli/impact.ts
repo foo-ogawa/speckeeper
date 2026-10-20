@@ -20,8 +20,8 @@ import {
 export interface ImpactCommandOptions {
   config?: string;
   depth?: string;
-  direction?: ReferenceDirection;
-  format?: 'text' | 'json' | 'mermaid';
+  direction?: string;
+  format?: string;
 }
 
 export interface ImpactNode {
@@ -53,8 +53,9 @@ export async function impactCommand(targetId: string, options: ImpactCommandOpti
   }
   
   const config = await loadConfig(options.config);
-  const maxDepth = options.depth ? parseInt(options.depth, 10) : 3;
-  const direction = options.direction ?? 'both';
+  const maxDepth = Number(options.depth ?? 3);
+  const direction: ReferenceDirection =
+    options.direction === 'upstream' || options.direction === 'downstream' ? options.direction : 'both';
   
   console.error(chalk.gray(`  Target:    ${targetId}`));
   console.error(chalk.gray(`  Depth:     ${maxDepth}`));

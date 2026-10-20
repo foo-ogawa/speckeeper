@@ -1064,7 +1064,7 @@ command_sets:
               format: text
 
           '2':
-            description: No input on stdin.
+            description: Input error (no input on stdin, or an invalid argument).
             stderr:
               format: text
 

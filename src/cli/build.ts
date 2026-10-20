@@ -21,9 +21,8 @@ import {
 export interface BuildCommandOptions {
   config?: string;
   output?: string;
-  format?: 'markdown' | 'json' | 'both';
+  format?: string;
   verbose?: boolean;
-  clean?: boolean;
 }
 
 // ============================================================================

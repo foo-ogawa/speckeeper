@@ -47,6 +47,7 @@
 | TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 5 |
 | TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
 | TEST-082 | Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline) | vitest | 15 |
+| TEST-083 | Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs) | vitest | 1 |
 
 ---
 
@@ -1232,5 +1233,25 @@
 | FR-1210-01 | `FR-1210-01 records a result for the current packet and rejects one whose packet hash is no longer current` | records a result for the current packet and rejects one whose packet hash is no longer current |
 | FR-1212-01 | `FR-1212-01 replaces the hashes, keeps the findings, and records the change without a personal identity` | replaces the hashes, keeps the findings, and records the change without a personal identity |
 | FR-1212-02 | `FR-1212-02 needs --reason and leaves targets without a record alone` | needs --reason and leaves targets without a record alone |
+
+---
+
+## TEST-083: Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs)
+
+### Test Source
+
+- **Path**: `test/cli/declared-values.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- NFR-014
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| NFR-014-02 | `NFR-014-02 .* rejects a value it does not declare with the input-error exit` | Every value the contract restricts is rejected outside its declaration |
+| NFR-014-02 | `NFR-014-02 .* ends with (exit 1|the input-error exit 2)` | The CLI ends an undeclared value with the contract's input-error exit |
 
 ---

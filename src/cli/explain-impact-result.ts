@@ -8,15 +8,15 @@ import {
   EXIT_RUNTIME_MISSING,
   EXIT_ADAPTER_ERROR,
 } from "../agents/index.js";
-import type { AuditConfig, AuditOptions, ReportFormat } from "../agents/index.js";
+import type { AuditConfig, AuditOptions } from "../agents/index.js";
 
 export interface CommandExplainImpactOptions {
   adapter?: string;
   model?: string;
   showPrompt?: boolean;
-  failOn?: "warning" | "error" | "critical";
+  failOn?: string;
   output?: string;
-  reportFormat?: ReportFormat;
+  reportFormat?: string;
   logFile?: string;
 }
 

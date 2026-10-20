@@ -1817,7 +1817,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 - **stderr:** format=`text`
 
-**Exit 2:** No input on stdin.
+**Exit 2:** Input error (no input on stdin, or an invalid argument).
 
 - **stderr:** format=`text`
 

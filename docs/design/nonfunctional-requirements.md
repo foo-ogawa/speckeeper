@@ -223,6 +223,7 @@ To ensure specification, DSL contract, and generated implementation stay synchro
 ### Acceptance Criteria
 
 - **NFR-014-01**: All command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code (parameters, subcommands, exit codes) [test]
+- **NFR-014-02**: The CLI rejects an option or argument value outside the values cli-contract.yaml declares for it (enum, integer, minimum) before the command runs, and ends with the contract's input-error exit (2 where the command declares it, 1 otherwise) [test]
 
 ---
 

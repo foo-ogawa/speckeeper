@@ -19,7 +19,6 @@ import type { SourceConfig } from '../core/config-api.js';
 
 export interface CheckCommandOptions {
   config?: string;
-  type?: 'openapi' | 'ddl' | 'iac' | 'all';
   verbose?: boolean;
   coverage?: boolean;
 }
@@ -50,7 +49,7 @@ export async function checkCommand(
 
   const cwd = process.cwd();
   const config = await loadConfig(options.config);
-  const checkType = type || options.type || 'all';
+  const checkType = type ?? 'all';
 
   console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
   console.log(chalk.gray(`  Type:   ${checkType}`));

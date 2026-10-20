@@ -1,14 +1,12 @@
 import { writeFile } from "node:fs/promises";
 import type { AgentTaskResult, AuditRunResult, AuditOptions } from "./types.js";
 
-export type ReportFormat = "json" | "text" | "yaml";
-
 export function computeExitCode(result: AuditRunResult, options: AuditOptions): number {
   if (result.status !== "success" || !result.data) return 1;
 
   const failOn = options.failOn ?? "error";
   const severityOrder = ["info", "warning", "error", "critical"] as const;
-  const threshold = severityOrder.indexOf(failOn);
+  const threshold = severityOrder.findIndex((severity) => severity === failOn);
 
   const hasBlocking = (result.data.findings ?? []).some(
     (f) => severityOrder.indexOf(f.severity) >= threshold,
@@ -80,12 +78,11 @@ export function formatResultYaml(result: AuditRunResult): string {
   return toSimpleYaml(result.data);
 }
 
-export function formatResult(result: AuditRunResult, format: ReportFormat): string {
-  switch (format) {
-    case "json": return formatResultJson(result);
-    case "yaml": return formatResultYaml(result);
-    case "text": return formatResultText(result);
-  }
+/** The report in a --report-format: json, yaml or text */
+export function formatResult(result: AuditRunResult, format: string): string {
+  if (format === "json") return formatResultJson(result);
+  if (format === "yaml") return formatResultYaml(result);
+  return formatResultText(result);
 }
 
 export async function writeOutput(content: string, outputPath?: string): Promise<void> {

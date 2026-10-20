@@ -118,6 +118,21 @@ docsDir: custom-docs
     });
   });
 
+  describe('loadConfig resolves a relative config path against the working directory', () => {
+    it.each([
+      ['a TypeScript config', 'relative.config.ts', "export default { srcDir: 'from-relative' };\n"],
+      ['a TypeScript config written with ./', './relative.config.ts', "export default { srcDir: 'from-relative' };\n"],
+      ['a JavaScript config', 'relative.config.js', "export default { srcDir: 'from-relative' };\n"],
+      ['a YAML config', 'relative.config.yaml', 'srcDir: from-relative\n'],
+    ])('loads %s given as %s', async (_kind, given, content) => {
+      writeFileSync(join(testDir, given), content);
+
+      const config = await loadConfig(given, testDir);
+
+      expect(config.srcDir).toBe('from-relative');
+    });
+  });
+
   describe('findConfigFile', () => {
     it('should find YAML config', () => {
       writeFileSync(join(testDir, 'speckeeper.config.yaml'), 'srcDir: src');

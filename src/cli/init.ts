@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export interface InitOptions {
   force?: boolean;
-  format?: 'ts' | 'yaml';
+  format?: string;
 }
 
 const __filename = fileURLToPath(import.meta.url);

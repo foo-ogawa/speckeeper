@@ -917,6 +917,10 @@
       "model": "test-ref"
     },
     {
+      "id": "TEST-083",
+      "model": "test-ref"
+    },
+    {
       "id": "UC-001",
       "model": "usecase"
     },
@@ -2784,6 +2788,12 @@
       "type": "verifies",
       "to": "NFR-017",
       "description": "Verifies acceptance criteria for NFR-017"
+    },
+    {
+      "from": "TEST-083",
+      "type": "verifies",
+      "to": "NFR-014",
+      "description": "Verifies acceptance criteria for NFR-014"
     },
     {
       "from": "UC-001",

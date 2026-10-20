@@ -25,10 +25,7 @@ export interface ScaffoldCommandOptions {
 
 export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<void> {
   if (!options.source) throw new Error('scaffold needs --source');
-  const specFormat = options.format ?? 'ts';
-  if (specFormat !== 'ts' && specFormat !== 'yaml') {
-    throw new Error(`--format must be ts or yaml, got "${specFormat}"`);
-  }
+  const specFormat = options.format === 'yaml' ? 'yaml' : 'ts';
 
   console.log(chalk.blue('speckeeper scaffold'));
   console.log('');
