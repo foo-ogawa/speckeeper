@@ -2634,6 +2634,12 @@
       "description": "Verifies acceptance criteria for FR-401"
     },
     {
+      "from": "TEST-070",
+      "type": "verifies",
+      "to": "FR-701",
+      "description": "Verifies acceptance criteria for FR-701"
+    },
+    {
       "from": "TEST-071",
       "type": "verifies",
       "to": "FR-107",

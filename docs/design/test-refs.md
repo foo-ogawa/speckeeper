@@ -34,7 +34,7 @@
 | TEST-045 | Check command source filtering verification test | vitest | 1 |
 | TEST-050 | Scan diagnostic severity and opt-in deep validation verification test | vitest | 7 |
 | TEST-051 | Absent spec ID warning verification test | vitest | 3 |
-| TEST-070 | Common lint item verification test | vitest | 3 |
+| TEST-070 | Common lint item verification test | vitest | 4 |
 | TEST-071 | Core-provided test verification logic test | vitest | 1 |
 | TEST-072 | External SSOT reference interface test | vitest | 1 |
 | TEST-073 | External SSOT constraint check test | vitest | 2 |
@@ -108,6 +108,7 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-104-08 | `FR-104-08.*modelLevel configuration` | modelLevel setting test |
+| FR-104-08 | `FR-104-08 reports a relation whose target level the modelLevel of the models does not allow` | The modelLevel of the models drives lint's relation level check |
 | FR-104-09 | `FR-104-09.*level.*property` | level property retrieval test |
 
 ---
@@ -868,6 +869,7 @@
 - FR-101
 - FR-102
 - FR-401
+- FR-701
 
 ### Test Case Patterns
 
@@ -881,6 +883,8 @@
 | FR-102-03 | `FR-102-03 prohibits a TBD once the gate reaches its deadline phase` | A TBD is allowed before its deadline phase and prohibited at it |
 | FR-401-05 | `FR-401-05 reports every slot left unresolved at the specified phase` | Every TBD still unresolved at the specified phase is reported |
 | FR-401-06 | `FR-401-06 detects an element that takes part in no relation` | Orphan elements are detected |
+| FR-401-04 | `FR-401-04 reports a cycle through one-way relations and names its path` | Lint reports a cycle through one-way relations |
+| FR-701-05 | `FR-701-05 reports a relation whose source is not more concrete than its target` | Lint reports a relation the level constraint of its type does not allow |
 
 ---
 
