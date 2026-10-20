@@ -34,7 +34,7 @@
 | TEST-045 | Check command source filtering verification test | vitest | 1 |
 | TEST-050 | Scan diagnostic severity and opt-in deep validation verification test | vitest | 7 |
 | TEST-051 | Absent spec ID warning verification test | vitest | 3 |
-| TEST-070 | Common lint item verification test | vitest | 3 |
+| TEST-070 | Common lint item verification test | vitest | 4 |
 | TEST-071 | Core-provided test verification logic test | vitest | 1 |
 | TEST-072 | External SSOT reference interface test | vitest | 1 |
 | TEST-073 | External SSOT constraint check test | vitest | 2 |
@@ -47,6 +47,7 @@
 | TEST-080 | LLM-backed command verification test (prompt construction, --show-prompt, report format, proposed link schema) | vitest | 5 |
 | TEST-081 | Command performance verification test at the declared requirement, file and entity scale | vitest | 1 |
 | TEST-082 | Per-target LLM review verification test (declaration, context, packet hash, judge, credentials, output schema, incremental runs, verifier, records, lint gate, emit/ingest, rebaseline) | vitest | 15 |
+| TEST-083 | Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs) | vitest | 1 |
 
 ---
 
@@ -107,6 +108,7 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-104-08 | `FR-104-08.*modelLevel configuration` | modelLevel setting test |
+| FR-104-08 | `FR-104-08 reports a relation whose target level the modelLevel of the models does not allow` | The modelLevel of the models drives lint's relation level check |
 | FR-104-09 | `FR-104-09.*level.*property` | level property retrieval test |
 
 ---
@@ -300,7 +302,7 @@
 
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
-| FR-104-01 | `FR-104-01.*available model types header` | Outputs model types header when type omitted |
+| FR-104-01 | `FR-104-01.*model types the config registers` | Element types are the models the config registers |
 
 ---
 
@@ -867,6 +869,7 @@
 - FR-101
 - FR-102
 - FR-401
+- FR-701
 
 ### Test Case Patterns
 
@@ -880,6 +883,8 @@
 | FR-102-03 | `FR-102-03 prohibits a TBD once the gate reaches its deadline phase` | A TBD is allowed before its deadline phase and prohibited at it |
 | FR-401-05 | `FR-401-05 reports every slot left unresolved at the specified phase` | Every TBD still unresolved at the specified phase is reported |
 | FR-401-06 | `FR-401-06 detects an element that takes part in no relation` | Orphan elements are detected |
+| FR-401-04 | `FR-401-04 reports a cycle through one-way relations and names its path` | Lint reports a cycle through one-way relations |
+| FR-701-05 | `FR-701-05 reports a relation whose source is not more concrete than its target` | Lint reports a relation the level constraint of its type does not allow |
 
 ---
 
@@ -980,7 +985,7 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-605-02 | `FR-605-02 the registered models declare the verification logic themselves` | The registered models carry the verification logic in their own definitions |
-| FR-605-03 | `FR-605-03 check external-ssot reports exactly what the declared checkers report` | The check command reports only what the model-declared checkers produce |
+| FR-605-03 | `FR-605-03 check reports exactly what the declared checkers report` | The check command reports only what the model-declared checkers produce |
 | FR-1017-01 | `FR-1017-01 uses the path each spec configures` | A configured source path is the path the checker resolves |
 | FR-1017-02 | `FR-1017-02 falls back to a hardcoded default when the spec configures no path` | Without a configured path the checker uses its hardcoded default |
 
@@ -1232,5 +1237,25 @@
 | FR-1210-01 | `FR-1210-01 records a result for the current packet and rejects one whose packet hash is no longer current` | records a result for the current packet and rejects one whose packet hash is no longer current |
 | FR-1212-01 | `FR-1212-01 replaces the hashes, keeps the findings, and records the change without a personal identity` | replaces the hashes, keeps the findings, and records the change without a personal identity |
 | FR-1212-02 | `FR-1212-02 needs --reason and leaves targets without a record alone` | needs --reason and leaves targets without a record alone |
+
+---
+
+## TEST-083: Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs)
+
+### Test Source
+
+- **Path**: `test/cli/declared-values.test.ts`
+- **Framework**: vitest
+
+### Verified Requirements
+
+- NFR-014
+
+### Test Case Patterns
+
+| Acceptance Criteria ID | Pattern | Description |
+|------------------------|---------|-------------|
+| NFR-014-02 | `NFR-014-02 .* rejects a value it does not declare with the input-error exit` | Every value the contract restricts is rejected outside its declaration |
+| NFR-014-02 | `NFR-014-02 .* ends with (exit 1|the input-error exit 2)` | The CLI ends an undeclared value with the contract's input-error exit |
 
 ---

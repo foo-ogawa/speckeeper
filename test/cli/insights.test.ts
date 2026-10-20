@@ -45,9 +45,4 @@ describe('FR-701, FR-800: insightsCommand', () => {
     expect(parsed.source).toBe('speckeeper');
     expect(parsed.edges).toHaveLength(1);
   });
-
-  it('exits with code 1 for unsupported format', async () => {
-    await insightsCommand({ format: 'text' as 'json' });
-    expect(process.exitCode).toBe(1);
-  });
 });

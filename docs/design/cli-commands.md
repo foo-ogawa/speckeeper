@@ -39,9 +39,7 @@ speckeeper build [options]
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
-| -o, --output | option | path |  | . | Output directory base path |
-| -f, --format | option | enum (markdown, json, both) |  | both | Output format |
-| -w, --watch | option | boolean |  | false | Watch file changes and auto-regenerate |
+| -o, --output | option | path |  | . | Base directory the docs/ and specs/ trees are written under |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
 
 ### Examples
@@ -49,8 +47,6 @@ speckeeper build [options]
 ```bash
 speckeeper build
 speckeeper build --output ./dist
-speckeeper build --format markdown
-speckeeper build --watch
 ```
 
 ### Exit Codes
@@ -95,8 +91,7 @@ speckeeper lint --format json
 | Code | Description |
 |------|-------------|
 | 0 | No issues |
-| 1 | Errors found |
-| 2 | Warnings found (in strict mode) |
+| 1 | Errors found, or warnings with --strict |
 
 ---
 
@@ -151,7 +146,7 @@ speckeeper check [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | enum (external-ssot, openapi, ddl, iac, custom, all, test) |  | - | Type of check to run, filtering sources by type |
+| <type> | argument | string |  | - | Source type to scan, the type of a configured source, or all (the default) |
 | -c, --config | option | path |  | - | Path to config file |
 | --strict | option | boolean |  | false | Treat warnings as errors |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
@@ -162,10 +157,8 @@ speckeeper check [options]
 ```bash
 speckeeper check
 speckeeper check openapi
-speckeeper check ddl
-speckeeper check iac
-speckeeper check external-ssot --verbose
-speckeeper check test --coverage
+speckeeper check annotation --verbose
+speckeeper check --coverage
 ```
 
 ### Exit Codes
@@ -173,8 +166,7 @@ speckeeper check test --coverage
 | Code | Description |
 |------|-------------|
 | 0 | Consistency OK |
-| 1 | Consistency error |
-| 2 | External SSOT file not found |
+| 1 | Consistency error, or an external SSOT file not found |
 
 ---
 
@@ -226,17 +218,15 @@ speckeeper new [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | enum (requirement, usecase, entity, component, screen, flow, error-case, term) | ✓ | - | Element type to create |
-| -k, --kind | option | string |  | - | Sub-kind (e.g., functional, non-functional for requirements) |
+| <type> | argument | string | ✓ | - | Element type to create, the ID of a model the config registers |
 | -n, --name | option | string |  | - | Name of the element |
 | -o, --output | option | path |  | - | Output directory path |
-| -t, --template | option | path |  | - | Path to template file |
 | --dry-run | option | boolean |  | false | Preview generated file content without writing |
 
 ### Examples
 
 ```bash
-speckeeper new requirement --kind functional --name "User Login"
+speckeeper new requirement --name "User Login"
 speckeeper new entity --dry-run
 ```
 
@@ -409,8 +399,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 |------|-------------|
 | 0 | Explanation completed |
 | 1 | Unexpected error |
-| 2 | Configuration or input error |
-| 3 | No input on stdin |
+| 2 | Input error (no input on stdin, or an invalid argument) |
 | 10 | Completed with blocking findings |
 | 11 | Runtime dependency missing |
 | 12 | LLM provider or adapter error |
@@ -740,6 +729,7 @@ speckeeper extract [options]
 | <commands> | argument | string |  | - | Command IDs to extract, in dot notation |
 | -a, --all | option | boolean |  | false | Extract all commands |
 | --include-meta | option | boolean |  | true | Include extraction metadata |
+| --no-include-meta | option | boolean |  | - | Leave out the extraction metadata |
 | -F, --format | option | enum (yaml, json) |  | yaml | Output format |
 
 ### Examples

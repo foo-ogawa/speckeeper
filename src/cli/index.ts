@@ -33,7 +33,7 @@ import chalk from 'chalk';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createProgram, type CommandHandlers } from '../generated/program.js';
+import type { CommandHandlers } from '../generated/program.js';
 import { buildCommand } from './build.js';
 import { lintCommand } from './lint.js';
 import { driftCommand } from './drift.js';
@@ -49,15 +49,8 @@ import { commandProposeTraceLinks } from './propose-trace-links.js';
 import { commandExplainImpact } from './explain-impact-result.js';
 import { commandProposeAcceptanceCriteria } from './propose-acceptance-criteria.js';
 import { reviewCommand, reviewIngestCommand, reviewRebaselineCommand } from './review.js';
+import { createCheckedProgram } from './declared-values.js';
 import { resolvedDsl } from '../generated/dsl/index.js';
-import type { InitOptions } from './init.js';
-import type { BuildCommandOptions } from './build.js';
-import type { LintCommandOptions } from './lint.js';
-import type { DriftCommandOptions } from './drift.js';
-import type { CheckCommandOptions } from './check.js';
-import type { ImpactCommandOptions } from './impact.js';
-import type { InsightsCommandOptions } from './insights.js';
-import type { ScaffoldCommandOptions } from './scaffold.js';
 
 function getVersion(): string {
   try {
@@ -71,84 +64,45 @@ function getVersion(): string {
 
 const handlers: CommandHandlers = {
   init: async (opts) => {
-    await runInit(opts as InitOptions);
+    await runInit(opts);
   },
   build: async (opts) => {
-    await buildCommand(opts as BuildCommandOptions);
+    await buildCommand(opts);
   },
   lint: async (opts) => {
-    await lintCommand(opts as LintCommandOptions);
+    await lintCommand(opts);
   },
   drift: async (opts) => {
-    await driftCommand(opts as DriftCommandOptions);
+    await driftCommand(opts);
   },
   check: async (type, opts) => {
-    await checkCommand(type, opts as CheckCommandOptions);
+    await checkCommand(type, opts);
   },
   new: async (type, opts) => {
-    await newCommand({ type, output: opts.output, dryRun: opts.dryRun });
+    await newCommand(type, opts);
   },
   impact: async (id, opts) => {
-    await impactCommand(id!, opts as ImpactCommandOptions);
+    await impactCommand(id, opts);
   },
   insights: async (opts) => {
-    await insightsCommand(opts as InsightsCommandOptions);
+    await insightsCommand(opts);
   },
   scaffold: async (opts) => {
-    await scaffoldCommand(opts as ScaffoldCommandOptions);
+    await scaffoldCommand(opts);
   },
   convert: async (file, opts) => {
-    await runConvert(file!, opts);
+    await runConvert(file, opts);
   },
-  auditRequirements: (opts) =>
-    commandAuditRequirements({
-      config: opts.config,
-      adapter: opts.adapter,
-      model: opts.model,
-      showPrompt: opts.showPrompt,
-      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-      output: opts.output,
-      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-      logFile: opts.logFile,
-    }),
-  proposeTraceLinks: (opts) =>
-    commandProposeTraceLinks({
-      config: opts.config,
-      adapter: opts.adapter,
-      model: opts.model,
-      showPrompt: opts.showPrompt,
-      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-      output: opts.output,
-      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-      logFile: opts.logFile,
-    }),
-  explainImpact: (opts) =>
-    commandExplainImpact({
-      adapter: opts.adapter,
-      model: opts.model,
-      showPrompt: opts.showPrompt,
-      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-      output: opts.output,
-      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-      logFile: opts.logFile,
-    }),
-  proposeAcceptanceCriteria: (specIds, opts) =>
-    commandProposeAcceptanceCriteria(specIds, {
-      config: opts.config,
-      adapter: opts.adapter,
-      model: opts.model,
-      showPrompt: opts.showPrompt,
-      failOn: opts.failOn as 'warning' | 'error' | 'critical' | undefined,
-      output: opts.output,
-      reportFormat: opts.reportFormat as 'json' | 'text' | 'yaml' | undefined,
-      logFile: opts.logFile,
-    }),
+  auditRequirements: (opts) => commandAuditRequirements(opts),
+  proposeTraceLinks: (opts) => commandProposeTraceLinks(opts),
+  explainImpact: (opts) => commandExplainImpact(opts),
+  proposeAcceptanceCriteria: (specIds, opts) => commandProposeAcceptanceCriteria(specIds, opts),
   review: async (opts) => {
     const exitCode = await reviewCommand(opts);
     process.exitCode = exitCode;
   },
   reviewIngest: async (dir, opts) => {
-    const exitCode = await reviewIngestCommand(dir!, opts);
+    const exitCode = await reviewIngestCommand(dir, opts);
     process.exitCode = exitCode;
   },
   reviewRebaseline: async (opts) => {
@@ -171,7 +125,7 @@ const handlers: CommandHandlers = {
   },
 };
 
-createProgram(handlers, getVersion())
+createCheckedProgram(handlers, getVersion())
   .parseAsync()
   .catch((error: unknown) => {
     console.error(chalk.red(error instanceof Error ? error.message : String(error)));

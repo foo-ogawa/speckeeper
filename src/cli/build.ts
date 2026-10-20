@@ -5,7 +5,7 @@
  */
 
 import chalk from 'chalk';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
 import { batchWriteFiles } from '../utils/file-writer.js';
 import {
@@ -20,10 +20,9 @@ import {
 
 export interface BuildCommandOptions {
   config?: string;
+  /** Base directory the docs and specs trees are written under */
   output?: string;
-  format?: 'markdown' | 'json' | 'both';
   verbose?: boolean;
-  clean?: boolean;
 }
 
 // ============================================================================
@@ -34,22 +33,22 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   console.log(chalk.blue('speckeeper build'));
   console.log('');
   
-  const cwd = process.cwd();
   const config = await loadConfig(options.config);
+  const base = options.output ?? '.';
+  const roots: ExporterOutputRoots = {
+    docs: join(resolve(base), config.docsDir),
+    specs: join(resolve(base), config.specsDir),
+  };
   
   console.log(chalk.gray(`  Design:  ${config.designDir || 'design'}/`));
-  console.log(chalk.gray(`  Docs:    ${config.docsDir}/`));
-  console.log(chalk.gray(`  Specs:   ${config.specsDir}/`));
+  console.log(chalk.gray(`  Docs:    ${join(base, config.docsDir)}/`));
+  console.log(chalk.gray(`  Specs:   ${join(base, config.specsDir)}/`));
   console.log('');
   
   try {
     const models = (config.models ?? []) as BuildableModel[];
     const specs = config.specs;
 
-    const roots: ExporterOutputRoots = {
-      docs: join(cwd, config.docsDir),
-      specs: join(cwd, config.specsDir),
-    };
 
     if (models.length === 0) {
       console.log(chalk.yellow('  No models registered. Add models to speckeeper.config.ts.'));

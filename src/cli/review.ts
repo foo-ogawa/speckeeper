@@ -120,7 +120,7 @@ async function runReview(opts: ReviewCommandOptions, environment: ReviewEnvironm
   }
 
   const ordered = runOrder(selected.filter(t => opts.force || t.state !== 'fresh'));
-  const maxTargets = opts.maxTargets !== undefined ? parsePositive(opts.maxTargets, '--max-targets') : undefined;
+  const maxTargets = opts.maxTargets !== undefined ? Number(opts.maxTargets) : undefined;
   const toRun = maxTargets !== undefined ? ordered.slice(0, maxTargets) : ordered;
 
   if (opts.emit) return emit(toRun, opts.emit, environment.cwd, json);
@@ -175,7 +175,7 @@ async function runReview(opts: ReviewCommandOptions, environment: ReviewEnvironm
   console.error(chalk.gray(`  Judging ${toRun.length} target(s) with ${adapter} (${credentials})...`));
   const result = await judgeTargets(toRun, {
     ...connection,
-    concurrency: parsePositive(opts.concurrency ?? '2', '--concurrency'),
+    concurrency: Number(opts.concurrency ?? 2),
     registry,
     env: environment.env,
     now: environment.now,
@@ -354,12 +354,6 @@ function parseAdapter(name: string): ReviewAdapterName {
   const adapter = ADAPTERS.find(a => a === name);
   if (!adapter) throw new ReviewConfigError(`Unknown adapter "${name}". Available: ${ADAPTERS.join(', ')}`);
   return adapter;
-}
-
-function parsePositive(value: string, option: string): number {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n < 1) throw new ReviewConfigError(`${option} must be a positive integer, got "${value}"`);
-  return n;
 }
 
 /** The planned targets --check and --target select; an unknown ID is an error */

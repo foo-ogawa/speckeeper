@@ -3,7 +3,7 @@ cli_contracts: 0.1.0
 
 info:
   title: speckeeper CLI
-  version: 0.18.3
+  version: 0.19.0
   description: >-
     TypeScript-first specification validation framework — validate design
     consistency, external SSOT integrity, and traceability with type-safe
@@ -120,12 +120,11 @@ command_sets:
       build:
         summary: Generate docs/ and specs/ from TypeScript models.
         description: >-
-          Loads the design TypeScript models and generates machine-readable
-          specs/ output and optionally human-readable docs/ output. Supports
-          markdown, JSON, or both formats.
+          Loads the design TypeScript models and generates the machine-readable
+          specs/ and the human-readable docs/ output.
         usage:
           - speckeeper build
-          - speckeeper build --format json --output ./out
+          - speckeeper build --output ./out
           - speckeeper build --verbose
 
         effects:
@@ -150,29 +149,11 @@ command_sets:
 
           - name: output
             aliases: [o]
-            description: Base output directory path.
+            description: Base directory the docs/ and specs/ trees are written under.
             value_name: path
             schema:
               type: string
               default: "."
-
-          - name: format
-            aliases: [f]
-            description: "Output format: markdown, json, both."
-            value_name: format
-            schema:
-              type: string
-              default: both
-              enum: [markdown, json, both]
-
-          - name: watch
-            aliases: [w]
-            description: Watch for changes and auto-regenerate.
-            schema:
-              type: boolean
-              default: false
-            effects:
-              executionMode: watch
 
           - name: verbose
             aliases: [v]
@@ -324,18 +305,18 @@ command_sets:
           Sources include OpenAPI, DDL, annotations, and custom scanners.
         usage:
           - speckeeper check
-          - speckeeper check external-ssot --verbose
-          - speckeeper check test --coverage
+          - speckeeper check openapi --verbose
+          - speckeeper check --coverage
 
         arguments:
           - name: type
             index: 0
             required: false
             description: >-
-              Type of check to run. Filters sources by type.
+              Source type to scan: the type of a configured source (built in:
+              openapi, ddl, annotation), or all, the default.
             schema:
               type: string
-              enum: [external-ssot, openapi, ddl, iac, custom, all, test]
 
         options:
           - name: config
@@ -404,19 +385,11 @@ command_sets:
             index: 0
             required: true
             description: >-
-              Element type to create.
+              Element type to create: the ID of a model the config registers.
             schema:
               type: string
-              enum: [requirement, usecase, entity, component, screen, flow, error-case, term]
 
         options:
-          - name: kind
-            aliases: [k]
-            description: Sub-kind (e.g. functional, non-functional for requirements).
-            value_name: kind
-            schema:
-              type: string
-
           - name: name
             aliases: [n]
             description: Name of the element.
@@ -431,17 +404,6 @@ command_sets:
             schema:
               type: string
 
-          - name: template
-            aliases: [t]
-            description: Path to template file.
-            value_name: path
-            schema:
-              type: string
-            file:
-              mode: read
-              exists: true
-              encoding: utf-8
-
           - name: dry-run
             description: Preview generated file content without writing.
             schema:
@@ -455,7 +417,7 @@ command_sets:
               format: text
 
           '1':
-            description: Creation failed.
+            description: Creation failed (the type is not a model the config registers, or the file exists).
             stderr:
               format: text
 
@@ -1064,7 +1026,7 @@ command_sets:
               format: text
 
           '2':
-            description: No input on stdin.
+            description: Input error (no input on stdin, or an invalid argument).
             stderr:
               format: text
 

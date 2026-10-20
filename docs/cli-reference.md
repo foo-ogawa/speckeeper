@@ -2,7 +2,7 @@
 
 TypeScript-first specification validation framework — validate design consistency, external SSOT integrity, and traceability with type-safe TypeScript DSL. Supports design lint, external source checks (OpenAPI, DDL, annotations), drift detection, impact analysis, and scaffolding from Mermaid flowcharts.
 
-**Version:** 0.18.3
+**Version:** 0.19.0
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ speckeeper init --format yaml
 
 Generate docs/ and specs/ from TypeScript models.
 
-Loads the design TypeScript models and generates machine-readable specs/ output and optionally human-readable docs/ output. Supports markdown, JSON, or both formats.
+Loads the design TypeScript models and generates the machine-readable specs/ and the human-readable docs/ output.
 
 **Usage:**
 
@@ -96,7 +96,7 @@ Loads the design TypeScript models and generates machine-readable specs/ output 
 speckeeper build
 ```
 ```
-speckeeper build --format json --output ./out
+speckeeper build --output ./out
 ```
 ```
 speckeeper build --verbose
@@ -107,9 +107,7 @@ speckeeper build --verbose
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
-| `--output` | -o | No | `"."` | Base output directory path. |
-| `--format` | -f | No | `"both"` | Output format: markdown, json, both. |
-| `--watch` | -w | No | `false` | Watch for changes and auto-regenerate. |
+| `--output` | -o | No | `"."` | Base directory the docs/ and specs/ trees are written under. |
 | `--verbose` | -v | No | `false` | Show detailed output. |
 
 #### Exit Codes
@@ -225,17 +223,17 @@ Validates specifications against actual implementation artifacts using a global 
 speckeeper check
 ```
 ```
-speckeeper check external-ssot --verbose
+speckeeper check openapi --verbose
 ```
 ```
-speckeeper check test --coverage
+speckeeper check --coverage
 ```
 
 #### Arguments
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | No | Type of check to run. Filters sources by type. |
+| `type` | No | Source type to scan: the type of a configured source (built in: openapi, ddl, annotation), or all, the default. |
 
 #### Options
 
@@ -284,16 +282,14 @@ speckeeper new entity
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | Yes | Element type to create. |
+| `type` | Yes | Element type to create: the ID of a model the config registers. |
 
 #### Options
 
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
-| `--kind` | -k | No |  | Sub-kind (e.g. functional, non-functional for requirements). |
 | `--name` | -n | No |  | Name of the element. |
 | `--output` | -o | No |  | Output directory path. |
-| `--template` | -t | No |  | Path to template file. |
 | `--dry-run` |  | No | `false` | Preview generated file content without writing. |
 
 #### Exit Codes
@@ -302,7 +298,7 @@ speckeeper new entity
 
 - **stdout:** format=`text`
 
-**Exit 1:** Creation failed.
+**Exit 1:** Creation failed (the type is not a model the config registers, or the file exists).
 
 - **stderr:** format=`text`
 
@@ -1817,7 +1813,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 
 - **stderr:** format=`text`
 
-**Exit 2:** No input on stdin.
+**Exit 2:** Input error (no input on stdin, or an invalid argument).
 
 - **stderr:** format=`text`
 

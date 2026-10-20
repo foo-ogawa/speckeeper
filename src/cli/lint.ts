@@ -21,7 +21,7 @@ export interface LintCommandOptions {
   phase?: string;
   /** Warnings fail the run as errors do, and info results are reported */
   strict?: boolean;
-  format?: 'text' | 'json' | 'github';
+  format?: string;
 }
 
 export type LintSeverity = 'error' | 'warning' | 'info';
@@ -132,7 +132,7 @@ async function runModelLint(models: any[], specs: SpecEntry[] | undefined, optio
     }
   }
 
-  for (const result of await runDesignLint(specs, { phase: options.gatePhase, review: options.review })) {
+  for (const result of await runDesignLint(specs, { phase: options.gatePhase, review: options.review, models })) {
     issues.push({
       rule: result.ruleId,
       severity: result.severity,

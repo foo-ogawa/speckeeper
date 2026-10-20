@@ -49,7 +49,7 @@ Below are examples of models actually defined in the speckeeper project.
 
 ### CLICommand Model (with External SSOT Checker)
 
-<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="348" end="467" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
+<!--@embedoc:code_snippet file="design/_models/cli-command.ts" start="384" end="503" lang="typescript" title="design/_models/cli-command.ts (excerpt)" no_source="true"-->
 **design/_models/cli-command.ts (excerpt)**
 
 ```typescript
@@ -214,7 +214,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="28" end="87" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="25" end="84" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -283,7 +283,7 @@ export interface CheckResult {
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="254" end="301" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="251" end="298" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
@@ -351,15 +351,7 @@ Defines the abstraction level of a model:
 
 ### Relation Types
 
-| Type | Direction Constraint | Description |
-|------|----------------------|-------------|
-| `implements` | spec→external | Spec is implemented as external artifact (OpenAPI, DDL) |
-| `satisfies` | L1→L0 | Satisfies a use case |
-| `refines` | Same level or lower | Refinement |
-| `verifiedBy` | spec→test | Spec is verified by external test code |
-| `verifies` | test→implementation | Test verifies implementation code (external, no checker generated) |
-| `dependsOn` | None | Dependency |
-| `relatedTo` | None | Association |
+Each relation type allows only some levels for its source and target, and `speckeeper lint` reports a relation that joins other levels (`relation-level`). The levels each type allows are listed in the README's [Relation Types](../README.md#relation-types).
 
 ---
 

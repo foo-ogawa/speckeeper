@@ -67,7 +67,7 @@
 
 ### Main Flow
 
-1. Run speckeeper check external-ssot
+1. Run speckeeper check
 2. Load OpenAPI/DDL files
 3. Verify requirement-external SSOT consistency
 4. Display verification results
@@ -107,7 +107,7 @@
 
 ### Main Flow
 
-1. Run speckeeper check contract
+1. Run speckeeper check with the contract definitions configured as sources
 2. Compare implementation and contract definition
 3. Report if violations exist
 

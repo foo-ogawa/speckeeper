@@ -103,7 +103,7 @@ describe('FR-605: verification logic lives in the _models/ definitions', () => {
     expect(result.errors.map((e) => e.message).join('\n')).toContain('no-such-command');
   });
 
-  it('FR-605-03 check external-ssot reports exactly what the declared checkers report', async () => {
+  it('FR-605-03 check reports exactly what the declared checkers report', async () => {
     const expected = modelsDeclaringVerification().flatMap(issuesFromDeclaredChecker).sort();
     expect(expected.length).toBeGreaterThan(0);
 
@@ -112,7 +112,7 @@ describe('FR-605: verification logic lives in the _models/ definitions', () => {
       logs.push(args.map(String).join(' '));
     });
 
-    await checkCommand('external-ssot', { config: join(repoRoot, 'speckeeper.config.ts') });
+    await checkCommand(undefined, { config: join(repoRoot, 'speckeeper.config.ts') });
 
     const reported = logs
       .map((line) => line.trim())

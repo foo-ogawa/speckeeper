@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 import { Model, RelationSchema } from '../../src/core/model.js';
+import { runDesignLint, COMMON_LINT_RULES } from '../../src/core/design-lint.js';
 import type { ModelLevel, LintRule, Exporter } from '../../src/core/model.js';
 
 // ============================================================================
@@ -121,34 +122,37 @@ describe('FR-104: Model definition - modelLevel', () => {
     });
   });
 
-  describe('Integration with relation constraint validation', () => {
-    it('Relation validation is possible on models with modelLevel set', () => {
-      const model = new TestL2Model();
-      const spec = {
-        id: 'L2-001',
-        name: 'Test Spec',
-        relations: [
-          { type: 'implements' as const, target: 'L1-001', description: 'Implements L1' },
-        ],
-      };
-      
-      // Verify that validateRelations can be called
-      const errors = model.validateRelations(spec);
-      expect(Array.isArray(errors)).toBe(true);
+  describe('FR-104-08: the modelLevel of a model drives the relation level check of lint', () => {
+    it('FR-104-08 reports a relation whose target level the modelLevel of the models does not allow', async () => {
+      const l0 = new TestL0Model();
+      const l1 = new TestL1Model();
+      const l2 = new TestL2Model();
+      const results = await runDesignLint([
+        { model: l0, data: [{ id: 'L0-001', name: 'Business' }] },
+        { model: l1, data: [{ id: 'L1-001', name: 'Requirement' }] },
+        {
+          model: l2,
+          data: [{
+            id: 'L2-001',
+            name: 'Design',
+            relations: [{ type: 'implements', target: 'L1-001' }, { type: 'implements', target: 'L0-001' }],
+          }],
+        },
+      ], { models: [l0, l1, l2] });
+
+      const violations = results.filter(result => result.ruleId === COMMON_LINT_RULES.relationLevel);
+      expect(violations.map(violation => violation.message)).toEqual([expect.stringContaining('"L0-001"')]);
     });
 
-    it('Relation validation works on models without modelLevel (level check is skipped)', () => {
-      const model = new TestNoLevelModel();
-      const spec = {
-        id: 'NL-001',
-        name: 'Test Spec',
-        relations: [
-          { type: 'relatedTo' as const, target: 'OTHER-001', description: 'Related' },
-        ],
-      };
-      
-      const errors = model.validateRelations(spec);
-      expect(Array.isArray(errors)).toBe(true);
+    it('FR-104-08 leaves relations of a model without modelLevel unchecked', async () => {
+      const l0 = new TestL0Model();
+      const noLevel = new TestNoLevelModel();
+      const results = await runDesignLint([
+        { model: l0, data: [{ id: 'L0-001', name: 'Business' }] },
+        { model: noLevel, data: [{ id: 'NL-001', name: 'Unlevelled', relations: [{ type: 'implements', target: 'L0-001' }] }] },
+      ], { models: [l0, noLevel] });
+
+      expect(results.filter(result => result.ruleId === COMMON_LINT_RULES.relationLevel)).toEqual([]);
     });
   });
 });

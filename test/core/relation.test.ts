@@ -110,5 +110,30 @@ describe('FR-401: detectCycles', () => {
       expect(errors[0].type).toBe('cycle_detected');
       expect(errors[0].relation.target).toBe('FR-001');
     });
+
+    it('FR-401-04 reports no cycle through an element that only leads into one', () => {
+      const errors = detectCycles([
+        rel('FR-001', 'FR-002'),
+        rel('FR-002', 'FR-001'),
+        rel('FR-003', 'FR-001'),
+      ]);
+
+      expect(errors.map((error) => error.message)).toEqual(['Circular reference detected: FR-001 → FR-002 → FR-001']);
+    });
+
+    it('FR-401-04 reports every cycle, also after the first one it finds', () => {
+      const errors = detectCycles([
+        rel('FR-001', 'FR-002'),
+        rel('FR-002', 'FR-001'),
+        rel('FR-002', 'FR-003'),
+        rel('FR-003', 'FR-004'),
+        rel('FR-004', 'FR-003'),
+      ]);
+
+      expect(errors.map((error) => error.message).sort()).toEqual([
+        'Circular reference detected: FR-001 → FR-002 → FR-001',
+        'Circular reference detected: FR-003 → FR-004 → FR-003',
+      ]);
+    });
   });
 });

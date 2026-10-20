@@ -16,27 +16,9 @@ specs:
         name: output
         alias: o
         type: path
-        description: Output directory base path
+        description: Base directory the docs/ and specs/ trees are written under
         required: false
         default: .
-      - kind: option
-        name: format
-        alias: f
-        type: enum
-        description: Output format
-        required: false
-        choices:
-          - markdown
-          - json
-          - both
-        default: both
-      - kind: option
-        name: watch
-        alias: w
-        type: boolean
-        description: Watch file changes and auto-regenerate
-        required: false
-        default: false
       - kind: option
         name: verbose
         alias: v
@@ -52,8 +34,6 @@ specs:
     examples:
       - speckeeper build
       - speckeeper build --output ./dist
-      - speckeeper build --format markdown
-      - speckeeper build --watch
     exitCodes:
       - code: 0
         description: Success
@@ -118,9 +98,7 @@ specs:
       - code: 0
         description: No issues
       - code: 1
-        description: Errors found
-      - code: 2
-        description: Warnings found (in strict mode)
+        description: Errors found, or warnings with --strict
     ciStep:
       enabled: true
       order: 1
@@ -186,17 +164,9 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: enum
-        description: Type of check to run, filtering sources by type
+        type: string
+        description: Source type to scan, the type of a configured source, or all (the default)
         required: false
-        choices:
-          - external-ssot
-          - openapi
-          - ddl
-          - iac
-          - custom
-          - all
-          - test
       - kind: option
         name: config
         alias: c
@@ -231,22 +201,17 @@ specs:
     examples:
       - speckeeper check
       - speckeeper check openapi
-      - speckeeper check ddl
-      - speckeeper check iac
-      - speckeeper check external-ssot --verbose
-      - speckeeper check test --coverage
+      - speckeeper check annotation --verbose
+      - speckeeper check --coverage
     exitCodes:
       - code: 0
         description: Consistency OK
       - code: 1
-        description: Consistency error
-      - code: 2
-        description: External SSOT file not found
+        description: Consistency error, or an external SSOT file not found
     ciStep:
       enabled: true
       order: 4
       description: External SSOT consistency check
-      subCommand: external-ssot
   - id: CMD-INIT
     name: init
     description: Initialize a new speckeeper project with starter templates
@@ -289,24 +254,9 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: enum
-        description: Element type to create
-        required: true
-        choices:
-          - requirement
-          - usecase
-          - entity
-          - component
-          - screen
-          - flow
-          - error-case
-          - term
-      - kind: option
-        name: kind
-        alias: k
         type: string
-        description: Sub-kind (e.g., functional, non-functional for requirements)
-        required: false
+        description: Element type to create, the ID of a model the config registers
+        required: true
       - kind: option
         name: name
         alias: n
@@ -320,12 +270,6 @@ specs:
         description: Output directory path
         required: false
       - kind: option
-        name: template
-        alias: t
-        type: path
-        description: Path to template file
-        required: false
-      - kind: option
         name: dry-run
         type: boolean
         description: Preview generated file content without writing
@@ -335,7 +279,7 @@ specs:
     relatedRequirements:
       - FR-104
     examples:
-      - speckeeper new requirement --kind functional --name "User Login"
+      - speckeeper new requirement --name "User Login"
       - speckeeper new entity --dry-run
     exitCodes:
       - code: 0
@@ -639,9 +583,7 @@ specs:
       - code: 1
         description: Unexpected error
       - code: 2
-        description: Configuration or input error
-      - code: 3
-        description: No input on stdin
+        description: Input error (no input on stdin, or an invalid argument)
       - code: 10
         description: Completed with blocking findings
       - code: 11
@@ -1133,6 +1075,11 @@ specs:
         description: Include extraction metadata
         required: false
         default: true
+      - kind: option
+        name: no-include-meta
+        type: boolean
+        description: Leave out the extraction metadata
+        required: false
       - kind: option
         name: format
         alias: F

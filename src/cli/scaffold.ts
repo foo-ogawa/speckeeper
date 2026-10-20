@@ -16,14 +16,17 @@ import type { GeneratedFile, MermaidNode, ScaffoldDiagnostic } from '../scaffold
 const SPECKEEPER_CLASS = 'speckeeper';
 
 export interface ScaffoldCommandOptions {
-  source: string;
+  source?: string;
   output?: string;
   force?: boolean;
   dryRun?: boolean;
-  format?: 'ts' | 'yaml';
+  format?: string;
 }
 
 export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<void> {
+  if (!options.source) throw new Error('scaffold needs --source');
+  const specFormat = options.format === 'yaml' ? 'yaml' : 'ts';
+
   console.log(chalk.blue('speckeeper scaffold'));
   console.log('');
 
@@ -73,7 +76,6 @@ export async function scaffoldCommand(options: ScaffoldCommandOptions): Promise<
     ? resolve(options.output)
     : join(process.cwd(), 'design');
 
-  const specFormat = options.format ?? 'ts';
   const modelFiles = generateAllModelFiles(speckeeperNodes, resolved, flowchart.nodes, specFormat);
   const indexFile = generateModelsIndex(modelFiles);
 

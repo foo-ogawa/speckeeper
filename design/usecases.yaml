@@ -177,7 +177,7 @@ entries:
         mainFlow:
           - stepNumber: 1
             type: user_action
-            description: Run speckeeper check external-ssot
+            description: Run speckeeper check
           - stepNumber: 2
             type: system_response
             description: Load OpenAPI/DDL files
@@ -278,7 +278,7 @@ entries:
         mainFlow:
           - stepNumber: 1
             type: user_action
-            description: Run speckeeper check contract
+            description: Run speckeeper check with the contract definitions configured as sources
           - stepNumber: 2
             type: system_response
             description: Compare implementation and contract definition

@@ -13,7 +13,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Readable } from 'node:stream';
 import { join } from 'node:path';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 
@@ -222,6 +222,17 @@ describe('FR-1103: propose-acceptance-criteria', () => {
     expect(other).toBeDefined();
     expect(prompt).not.toContain(other as string);
   }, 60_000);
+
+  it('FR-1103-01 rejects a spec ID no spec has with the input-error exit 2 and names it', async () => {
+    const { commandProposeAcceptanceCriteria } = await import(
+      '../../src/cli/propose-acceptance-criteria.js'
+    );
+
+    await expect(
+      commandProposeAcceptanceCriteria(['FR-100', 'NOPE-1'], { config: configPath, showPrompt: true }),
+    ).rejects.toMatchObject({ exitCode: 2, message: expect.stringContaining('NOPE-1') });
+    expect(executeTask).not.toHaveBeenCalled();
+  }, 60_000);
 });
 
 describe('FR-1211: the LLM commands run on @aaac/runtime', () => {
@@ -291,4 +302,47 @@ describe('FR-1102: explain-impact report', () => {
     expect(text).toContain('Summary: Small change');
     expect(text).toContain('Only the export screen is affected.');
   });
+});
+
+describe('the LLM commands end a configuration error with the exit 2 the contract declares', () => {
+  /** The commands that read the config, each given the path of a config to load */
+  const withConfig = {
+    'audit-requirements': async (config: string) => {
+      const { commandAuditRequirements } = await import('../../src/cli/audit-requirements.js');
+      return commandAuditRequirements({ config, showPrompt: true });
+    },
+    'propose-trace-links': async (config: string) => {
+      const { commandProposeTraceLinks } = await import('../../src/cli/propose-trace-links.js');
+      return commandProposeTraceLinks({ config, showPrompt: true });
+    },
+    'propose-acceptance-criteria': async (config: string) => {
+      const { commandProposeAcceptanceCriteria } = await import('../../src/cli/propose-acceptance-criteria.js');
+      return commandProposeAcceptanceCriteria([], { config, showPrompt: true });
+    },
+  };
+
+  it.each(Object.entries(withConfig))('%s rejects a config that does not exist with exit code 2', async (_name, run) => {
+    await expect(run(join(tmpdir(), 'speckeeper-no-such-config.ts'))).rejects.toMatchObject({ exitCode: 2 });
+  });
+
+  it.each(Object.entries(withConfig))('%s rejects a config that fails to load with exit code 2', async (_name, run) => {
+    const dir = mkdtempSync(join(tmpdir(), 'speckeeper-broken-config-'));
+    try {
+      writeFileSync(join(dir, 'speckeeper.config.yaml'), 'designDir: [unclosed\n');
+      await expect(run(join(dir, 'speckeeper.config.yaml'))).rejects.toMatchObject({ exitCode: 2 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('audit-requirements --config to a missing file exits 2 from the command line', () => {
+    const result = spawnSync(
+      process.execPath,
+      [join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs'), join(repoRoot, 'src', 'cli', 'index.ts'),
+        'audit-requirements', '--config', 'nope.ts', '--show-prompt'],
+      { cwd: repoRoot, encoding: 'utf-8', timeout: 120_000 },
+    );
+    expect(result.stderr).toContain('Failed to load config');
+    expect(result.status).toBe(2);
+  }, 150_000);
 });

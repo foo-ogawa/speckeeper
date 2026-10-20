@@ -21,7 +21,8 @@ export interface AuditConfig {
 }
 
 export interface AuditOptions {
-  failOn?: "warning" | "error" | "critical";
+  /** Minimum severity that causes a non-zero exit: warning, error or critical */
+  failOn?: string;
   logFile?: string;
   showPrompt?: boolean;
 }

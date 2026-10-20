@@ -205,8 +205,8 @@ To ensure all acceptance criteria are covered by test cases and maintain spec-te
 
 - **NFR-013-01**: TestRef definitions (TEST-020~025) exist in design/test-refs.yaml for each CLI test file [test]
 - **NFR-013-02**: TestRefs are linked to corresponding command IDs via implementsCommand [test]
-- **NFR-013-03**: speckeeper check test succeeds for all TestRefs [test]
-- **NFR-013-04**: speckeeper check test --coverage achieves 100% for target acceptance criteria [test]
+- **NFR-013-03**: speckeeper check succeeds for all TestRefs [test]
+- **NFR-013-04**: speckeeper check --coverage achieves 100% for target acceptance criteria [test]
 
 ---
 
@@ -223,6 +223,7 @@ To ensure specification, DSL contract, and generated implementation stay synchro
 ### Acceptance Criteria
 
 - **NFR-014-01**: All command definitions in design/cli-commands.yaml match cli-contract.yaml and generated code (parameters, subcommands, exit codes) [test]
+- **NFR-014-02**: The CLI rejects an option or argument value outside the values cli-contract.yaml declares for it (enum, integer, minimum) before the command runs, and ends with the contract's input-error exit (2 where the command declares it, 1 otherwise) [test]
 
 ---
 

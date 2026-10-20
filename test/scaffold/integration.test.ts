@@ -2,8 +2,10 @@
  * Integration test — scaffold end-to-end with app-skelton README.md mermaid
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { parseMarkdownFlowchart } from '../../src/scaffold/mermaid-parser.js';
 import { resolveEdges } from '../../src/scaffold/edge-vocabulary.js';
 import { generateAllModelFiles } from '../../src/scaffold/model-generator.js';
@@ -204,4 +206,39 @@ describe('scaffold integration with app-skelton README.md', () => {
       expect(indexFile.content).toContain('export const allModels');
     });
   });
+});
+
+describe('scaffold on the command line', () => {
+  const repoRoot = join(__dirname, '..', '..');
+
+  /** Runs the CLI from the current sources in a fresh directory, which is removed afterwards */
+  function scaffoldIn(args: string[], inspect: (result: SpawnSyncReturns<string>, dir: string) => void): void {
+    const dir = mkdtempSync(join(tmpdir(), 'speckeeper-scaffold-'));
+    try {
+      const result = spawnSync(
+        process.execPath,
+        [join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs'), join(repoRoot, 'src', 'cli', 'index.ts'), 'scaffold', ...args],
+        { cwd: dir, encoding: 'utf-8', timeout: 120_000 },
+      );
+      inspect(result, dir);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('ends a run without --source with exit 1 and a message naming --source', () => {
+    scaffoldIn([], (result) => {
+      expect(result.stderr).toContain('--source');
+      expect(result.stderr).not.toContain('paths[0]');
+      expect(result.status).toBe(1);
+    });
+  }, 150_000);
+
+  it('ends a --format outside ts and yaml with exit 1 and writes nothing', () => {
+    scaffoldIn(['--source', README_PATH, '--format', 'xml'], (result, dir) => {
+      expect(result.stderr).toContain('--format');
+      expect(result.status).toBe(1);
+      expect(existsSync(join(dir, 'design'))).toBe(false);
+    });
+  }, 150_000);
 });

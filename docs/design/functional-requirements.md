@@ -414,7 +414,7 @@ Since consistency checks are implemented per model, filter by model name
 ### Acceptance Criteria
 
 - **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract) [test]
+- **FR-602-02**: speckeeper check [type] scans only the configured sources of that type (openapi, ddl, annotation, or a custom source type) [test]
 - **FR-602-03**: Type argument corresponds to check categories, not model IDs [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
@@ -473,8 +473,8 @@ To consolidate check logic with model definitions, reducing management overhead 
 
 - **FR-605-01**: Scaffold does not generate _checkers/ directory [test]
 - **FR-605-02**: Verification logic is included in _models/ model definitions [test]
-- **FR-605-03**: speckeeper check external-ssot uses verification logic from _models/ model definitions only [test]
-- **FR-605-04**: speckeeper check external-ssot does not reference _checkers/ directory [test]
+- **FR-605-03**: speckeeper check uses verification logic from _models/ model definitions only [test]
+- **FR-605-04**: speckeeper check does not reference _checkers/ directory [test]
 - **FR-605-05**: Checker template functions (src/scaffold/templates/checkers/) are removed; checker logic moves to core DSL (src/core/dsl/) [test]
 
 ---

@@ -23,7 +23,7 @@ export interface DriftCommandOptions {
   config?: string;
   /** Rewrite drifted and missing files with their generated content */
   update?: boolean;
-  format?: 'text' | 'json' | 'diff';
+  format?: string;
   failOnDrift?: boolean;
 }
 

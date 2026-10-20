@@ -1,6 +1,16 @@
-import { loadConfig } from "../utils/config-loader.js";
+import { loadConfig, type SpeckeeperConfig } from "../utils/config-loader.js";
 import { getSpecsFromConfig } from "../core/model.js";
 import type { LintIssue } from "../cli/lint.js";
+import { EXIT_INPUT_ERROR } from "./orchestrator.js";
+
+/** The project config; one that cannot be loaded is a configuration error */
+async function loadProjectConfig(configPath: string | undefined): Promise<SpeckeeperConfig> {
+  try {
+    return await loadConfig(configPath);
+  } catch (error) {
+    throw Object.assign(error as Error, { exitCode: EXIT_INPUT_ERROR });
+  }
+}
 
 export interface SpecSummary {
   id: string;
@@ -89,7 +99,7 @@ function runLintForContext(
 export async function buildAuditRequirementsContext(
   configPath: string | undefined,
 ): Promise<string> {
-  const config = await loadConfig(configPath);
+  const config = await loadProjectConfig(configPath);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const models = (config.models || []) as any[];
   const specs = config.specs as unknown[] | undefined;
@@ -128,7 +138,7 @@ export async function buildAuditRequirementsContext(
 export async function buildProposeTraceLinksContext(
   configPath: string | undefined,
 ): Promise<string> {
-  const config = await loadConfig(configPath);
+  const config = await loadProjectConfig(configPath);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const models = (config.models || []) as any[];
   const specs = config.specs as unknown[] | undefined;
@@ -197,7 +207,7 @@ export async function buildProposeAcceptanceCriteriaContext(
   configPath: string | undefined,
   targetSpecIds?: string[],
 ): Promise<string> {
-  const config = await loadConfig(configPath);
+  const config = await loadProjectConfig(configPath);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const models = (config.models || []) as any[];
   const specs = config.specs as unknown[] | undefined;
@@ -205,6 +215,10 @@ export async function buildProposeAcceptanceCriteriaContext(
   const allSummaries = extractSpecSummaries(models, specs);
   const lintIssues = runLintForContext(models, specs);
 
+  const unknown = (targetSpecIds ?? []).filter((id) => !allSummaries.some((s) => s.id === id));
+  if (unknown.length > 0) {
+    throw Object.assign(new Error(`No spec has the ID ${unknown.join(", ")}`), { exitCode: EXIT_INPUT_ERROR });
+  }
   const targetSpecs = targetSpecIds && targetSpecIds.length > 0
     ? allSummaries.filter((s) => targetSpecIds.includes(s.id))
     : allSummaries;

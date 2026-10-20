@@ -268,3 +268,94 @@ describe('FR-401-05: no TBD remains at the specified phase', () => {
     expect(issuesOf(await runDesignLint(specs, { phase: 'OPS' }), COMMON_LINT_RULES.phaseTbd)).toEqual([]);
   });
 });
+
+/** The registered models with their levels, as lint passes them */
+const levelled = [
+  { id: 'usecase', level: 'L0' as const },
+  { id: 'requirement', level: 'L1' as const },
+  { id: 'component', level: 'L2' as const },
+  { id: 'screen', level: 'L3' as const },
+];
+
+describe('FR-701-05: lint detects level violations', () => {
+  it('FR-701-05 reports a relation whose source is not more concrete than its target, as the type requires', async () => {
+    const results = await runDesignLint([
+      entry('usecase', [{ id: 'UC-001' }]),
+      entry('requirement', [{ id: 'FR-001', relations: [{ type: 'refines', target: 'FR-002' }] }, { id: 'FR-002' }]),
+      entry('screen', [{ id: 'SCR-001', relations: [{ type: 'refines', target: 'UC-001' }] }]),
+    ], { models: levelled });
+
+    const violations = issuesOf(results, COMMON_LINT_RULES.relationLevel);
+    expect(violations.map(v => v.specId)).toEqual(['FR-001']);
+    expect(violations[0].severity).toBe('error');
+    expect(violations[0].message).toContain('FR-002');
+  });
+
+  it('FR-701-05 reports a relation to a level the type does not allow as its target', async () => {
+    const results = await runDesignLint([
+      entry('component', [{ id: 'COMP-001', relations: [{ type: 'implements', target: 'SCR-001' }] }]),
+      entry('screen', [{ id: 'SCR-001' }]),
+    ], { models: levelled });
+
+    const violations = issuesOf(results, COMMON_LINT_RULES.relationLevel);
+    expect(violations.map(v => v.specId)).toEqual(['COMP-001']);
+    expect(violations[0].message).toContain('L1');
+  });
+
+  it('FR-701-05 reports nothing for relations every level constraint allows, and skips models without a level', async () => {
+    const results = await runDesignLint([
+      entry('usecase', [{ id: 'UC-001' }]),
+      entry('requirement', [
+        { id: 'FR-001', relations: [{ type: 'satisfies', target: 'UC-001' }, { type: 'includes', target: 'FR-002' }] },
+        { id: 'FR-002' },
+      ]),
+      entry('component', [{ id: 'COMP-001', relations: [{ type: 'implements', target: 'FR-001' }] }]),
+      entry('glossary', [{ id: 'TERM-001', relations: [{ type: 'refines', target: 'COMP-001' }] }]),
+    ], { models: levelled });
+
+    expect(issuesOf(results, COMMON_LINT_RULES.relationLevel)).toEqual([]);
+  });
+});
+
+describe('FR-401-04: lint verifies no circular references exist', () => {
+  it('FR-401-04 reports a cycle through one-way relations and names its path', async () => {
+    const results = await runDesignLint([
+      entry('component', [
+        { id: 'COMP-001', relations: [{ type: 'dependsOn', target: 'COMP-002' }] },
+        { id: 'COMP-002', relations: [{ type: 'dependsOn', target: 'COMP-003' }] },
+        { id: 'COMP-003', relations: [{ type: 'uses', target: 'COMP-001' }] },
+      ]),
+    ], { models: levelled });
+
+    const cycles = issuesOf(results, COMMON_LINT_RULES.relationCycle);
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0].severity).toBe('error');
+    expect(cycles[0].message).toContain('COMP-001 → COMP-002 → COMP-003 → COMP-001');
+  });
+
+  it('FR-401-04 does not count a bidirectional relation (relatedTo, traces) as a cycle', async () => {
+    const results = await runDesignLint([
+      entry('component', [
+        { id: 'COMP-001', relations: [{ type: 'relatedTo', target: 'COMP-002' }, { type: 'dependsOn', target: 'COMP-002' }] },
+        { id: 'COMP-002', relations: [{ type: 'relatedTo', target: 'COMP-001' }, { type: 'traces', target: 'COMP-001' }] },
+      ]),
+    ], { models: levelled });
+
+    expect(issuesOf(results, COMMON_LINT_RULES.relationCycle)).toEqual([]);
+  });
+
+  it('FR-401-04 reports only real cycles when another element leads into one', async () => {
+    const results = await runDesignLint([
+      entry('component', [
+        { id: 'COMP-001', relations: [{ type: 'dependsOn', target: 'COMP-002' }] },
+        { id: 'COMP-002', relations: [{ type: 'dependsOn', target: 'COMP-001' }] },
+        { id: 'COMP-003', relations: [{ type: 'dependsOn', target: 'COMP-001' }] },
+      ]),
+    ], { models: levelled });
+
+    const cycles = issuesOf(results, COMMON_LINT_RULES.relationCycle).map(c => c.message);
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0]).toContain('COMP-001 → COMP-002 → COMP-001');
+    expect(cycles.join('\n')).not.toContain('COMP-003');
+  });
+});

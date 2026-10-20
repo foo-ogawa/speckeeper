@@ -19,7 +19,8 @@ import type { SourceConfig } from '../core/config-api.js';
 
 export interface CheckCommandOptions {
   config?: string;
-  type?: 'openapi' | 'ddl' | 'iac' | 'all';
+  /** Warnings fail the run as errors do */
+  strict?: boolean;
   verbose?: boolean;
   coverage?: boolean;
 }
@@ -50,7 +51,7 @@ export async function checkCommand(
 
   const cwd = process.cwd();
   const config = await loadConfig(options.config);
-  const checkType = type || options.type || 'all';
+  const checkType = type ?? 'all';
 
   console.log(chalk.gray(`  Design: ${config.designDir || 'design'}/`));
   console.log(chalk.gray(`  Type:   ${checkType}`));
@@ -98,22 +99,22 @@ export async function checkCommand(
       }
     }
 
-    if (sources.length > 0 && allSpecIds.length > 0) {
-      // Filter sources by checkType
-      const filteredSources = checkType === 'all'
-        ? sources
-        : sources.filter(s => s.type === checkType);
-      if (filteredSources.length === 0) {
-        results.push({
-          type: checkType,
-          success: false,
-          issues: [{
-            severity: 'error',
-            message: `No source of type "${checkType}" is configured, so nothing would be checked (configured: ${[...new Set(sources.map(s => s.type))].join(', ')})`,
-          }],
-        });
-      }
+    // The type names the sources to scan; one that no configured source has would check nothing
+    const filteredSources = checkType === 'all'
+      ? sources
+      : sources.filter(s => s.type === checkType);
+    if (checkType !== 'all' && filteredSources.length === 0) {
+      results.push({
+        type: checkType,
+        success: false,
+        issues: [{
+          severity: 'error',
+          message: `No source of type "${checkType}" is configured, so nothing would be checked (configured: ${[...new Set(sources.map(s => s.type))].join(', ') || 'none'})`,
+        }],
+      });
+    }
 
+    if (sources.length > 0 && allSpecIds.length > 0) {
       // Run global scan (with lookup key overrides)
       const { matches, diagnostics: scanDiagnostics } = runGlobalScan(
         filteredSources, allSpecIds, cwd,
@@ -276,7 +277,8 @@ export async function checkCommand(
     }
 
     const hasErrors = results.some(r => !r.success);
-    if (hasErrors) {
+    const hasWarnings = results.some(r => r.issues.some(issue => issue.severity === 'warning'));
+    if (hasErrors || (options.strict && hasWarnings)) {
       process.exitCode = 1;
     }
 

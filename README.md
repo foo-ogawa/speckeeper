@@ -142,7 +142,7 @@ export default defineSpecs(
 npx speckeeper lint
 
 # Check test coverage against requirements
-npx speckeeper check test --coverage
+npx speckeeper check --coverage
 
 # Analyze change impact
 npx speckeeper impact FR-001
@@ -166,7 +166,7 @@ npx speckeeper audit-requirements --adapter openai
 | `speckeeper build` | Generate `docs/` and `specs/` from TypeScript models |
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
-| `speckeeper check test --coverage` | Verify test coverage for requirements |
+| `speckeeper check --coverage` | Verify test coverage for requirements |
 | `speckeeper drift` | Detect manual edits to generated `docs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 | `speckeeper new <type>` | Create a new element with auto-generated ID |
@@ -313,7 +313,8 @@ Checks include:
 - **ID uniqueness** — No duplicate IDs within model types
 - **ID conventions** — Enforce naming patterns (e.g., `FR-001`, `COMP-AUTH`)
 - **Reference integrity** — All referenced IDs must exist
-- **Circular dependency detection** — Prevent reference loops
+- **Relation level constraints** — Each relation type allows only some model levels for its source and target (see [Relation Types](#relation-types))
+- **Circular dependency detection** — No cycle through one-way relations (`relatedTo` and `traces` link both ways and are not followed)
 - **Phase gates** — Ensure TBD items are resolved by target phase
 - **Custom lint rules** — Define model-specific validation
 
@@ -506,7 +507,7 @@ The check exits 1 when the transitive coverage, or any per-model coverage checke
 (it would otherwise measure nothing and pass).
 
 ```bash
-$ npx speckeeper check test --coverage
+$ npx speckeeper check --coverage
 
   Transitive coverage (via satisfies)
   ─────────────────────────────────────
@@ -542,17 +543,22 @@ FR-001 (Requirement)
 
 ### Relation Types
 
-| Relation | Direction | Description |
-|----------|-----------|-------------|
-| `implements` | spec→external | Spec is implemented as external artifact (OpenAPI, DDL) |
-| `verifiedBy` | spec→test | Spec is verified by external test code |
-| `satisfies` | L1→L0 | Satisfies a use case |
-| `refines` | Same level or lower | Refinement |
-| `verifies` | test→implementation | Test verifies implementation code (external, no checker) |
-| `dependsOn` | None | Dependency |
-| `relatedTo` | None | Association |
+| Relation | Levels lint allows (source → target) | Description |
+|----------|--------------------------------------|-------------|
+| `implements` | more concrete → L1 | Design or implementation implements a requirement |
+| `satisfies` | same or more concrete → L0, L1 | Satisfies a use case or requirement |
+| `refines` | more concrete → L0, L1 | Refines a more abstract element (not one of the same level) |
+| `verifies` | any → L0, L1 | Test verifies a requirement or use case |
+| `verifiedBy` | any → L2, L3 | Spec is verified by test code |
+| `dependsOn` | same or more concrete → any | Dependency, including between elements of the same level |
+| `uses` | any → any | Runtime reference |
+| `includes` | same level | A whole contains its part |
+| `traces` | any → any | Tracking link, both ways |
+| `relatedTo` | any → any | Association, both ways |
 
-See [Model Entity Catalog](./docs/model_entity_catalog.md) for full details on relation types and level constraints.
+The levels are the `modelLevel` of the models (L0 business, L1 requirements, L2 design, L3 detailed design and implementation); a relation that touches a model without a level is not checked.
+
+See [FR-701 in the framework specification](./docs/framework_requirements_spec.md#fr-701-inter-model-relations) for the level model and the cycle rules.
 
 ## Customizing Models
 

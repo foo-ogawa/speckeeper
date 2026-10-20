@@ -14,8 +14,6 @@ export type InitExitResult =
 export interface BuildOptions {
   config?: string;
   output?: string;
-  format?: "markdown" | "json" | "both";
-  watch?: boolean;
   verbose?: boolean;
 }
 
@@ -52,7 +50,7 @@ export type DriftExitResult =
   | { exitCode: 1; stdout: unknown };
 
 export interface CheckArgs {
-  type?: "external-ssot" | "openapi" | "ddl" | "iac" | "custom" | "all" | "test";
+  type?: string;
 }
 
 export interface CheckOptions {
@@ -69,14 +67,12 @@ export type CheckExitResult =
   | { exitCode: 1; stdout: unknown };
 
 export interface NewArgs {
-  type: "requirement" | "usecase" | "entity" | "component" | "screen" | "flow" | "error-case" | "term";
+  type: string;
 }
 
 export interface NewOptions {
-  kind?: string;
   name?: string;
   output?: string;
-  template?: string;
   dryRun?: boolean;
 }
 

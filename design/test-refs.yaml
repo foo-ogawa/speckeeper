@@ -44,6 +44,9 @@ specs:
       - acceptanceCriteriaId: FR-104-08
         pattern: FR-104-08.*modelLevel configuration
         description: modelLevel setting test
+      - acceptanceCriteriaId: FR-104-08
+        pattern: FR-104-08 reports a relation whose target level the modelLevel of the models does not allow
+        description: The modelLevel of the models drives lint's relation level check
       - acceptanceCriteriaId: FR-104-09
         pattern: FR-104-09.*level.*property
         description: level property retrieval test
@@ -95,9 +98,9 @@ specs:
       - type: verifies
         target: FR-105
         description: Verifies acceptance criteria for FR-105
-      - type: verifies
+      - type: uses
         target: CMD-INIT
-        description: Verifies CMD-INIT
+        description: Runs CMD-INIT
   - id: TEST-020
     description: Lint command verification test
     source:
@@ -137,9 +140,9 @@ specs:
       - type: verifies
         target: FR-402
         description: Verifies acceptance criteria for FR-402
-      - type: verifies
+      - type: uses
         target: CMD-LINT
-        description: Verifies CMD-LINT
+        description: Runs CMD-LINT
   - id: TEST-021
     description: Check command verification test
     source:
@@ -186,9 +189,9 @@ specs:
       - type: verifies
         target: FR-604
         description: Verifies acceptance criteria for FR-604
-      - type: verifies
+      - type: uses
         target: CMD-CHECK
-        description: Verifies CMD-CHECK
+        description: Runs CMD-CHECK
   - id: TEST-022
     description: Build command verification test
     source:
@@ -212,9 +215,9 @@ specs:
       - type: verifies
         target: FR-301
         description: Verifies acceptance criteria for FR-301
-      - type: verifies
+      - type: uses
         target: CMD-BUILD
-        description: Verifies CMD-BUILD
+        description: Runs CMD-BUILD
   - id: TEST-023
     description: Impact command verification test
     source:
@@ -237,9 +240,9 @@ specs:
       - type: verifies
         target: FR-700
         description: Verifies acceptance criteria for FR-700
-      - type: verifies
+      - type: uses
         target: CMD-IMPACT
-        description: Verifies CMD-IMPACT
+        description: Runs CMD-IMPACT
   - id: TEST-024
     description: Drift command verification test
     source:
@@ -262,9 +265,9 @@ specs:
       - type: verifies
         target: FR-500
         description: Verifies acceptance criteria for FR-500
-      - type: verifies
+      - type: uses
         target: CMD-DRIFT
-        description: Verifies CMD-DRIFT
+        description: Runs CMD-DRIFT
   - id: TEST-025
     description: New command verification test
     source:
@@ -275,15 +278,15 @@ specs:
     implementsCommand: CMD-NEW
     testCasePatterns:
       - acceptanceCriteriaId: FR-104-01
-        pattern: FR-104-01.*available model types header
-        description: Outputs model types header when type omitted
+        pattern: FR-104-01.*model types the config registers
+        description: Element types are the models the config registers
     relations:
       - type: verifies
         target: FR-104
         description: Verifies acceptance criteria for FR-104
-      - type: verifies
+      - type: uses
         target: CMD-NEW
-        description: Verifies CMD-NEW
+        description: Runs CMD-NEW
   - id: TEST-026
     description: Scaffold integration verification test (mermaid parsing, class-based generation)
     source:
@@ -306,9 +309,9 @@ specs:
       - type: verifies
         target: FR-106
         description: Verifies acceptance criteria for FR-106
-      - type: verifies
+      - type: uses
         target: CMD-SCAFFOLD
-        description: Verifies CMD-SCAFFOLD
+        description: Runs CMD-SCAFFOLD
   - id: TEST-027
     description: Global scanner and coverage checker verification test (OpenAPI, SQL DDL, relation coverage)
     source:
@@ -857,9 +860,9 @@ specs:
       - type: verifies
         target: FR-1104
         description: Verifies acceptance criteria for FR-1104
-      - type: verifies
+      - type: uses
         target: CMD-CONVERT
-        description: Verifies CMD-CONVERT
+        description: Runs CMD-CONVERT
   - id: TEST-042
     description: Model-declared externalChecker and coverageChecker verification test
     source:
@@ -1045,6 +1048,7 @@ specs:
       - FR-101
       - FR-102
       - FR-401
+      - FR-701
     testCasePatterns:
       - acceptanceCriteriaId: FR-101-01
         pattern: FR-101-01 reports an id that more than one element declares
@@ -1070,6 +1074,12 @@ specs:
       - acceptanceCriteriaId: FR-401-06
         pattern: FR-401-06 detects an element that takes part in no relation
         description: Orphan elements are detected
+      - acceptanceCriteriaId: FR-401-04
+        pattern: FR-401-04 reports a cycle through one-way relations and names its path
+        description: Lint reports a cycle through one-way relations
+      - acceptanceCriteriaId: FR-701-05
+        pattern: FR-701-05 reports a relation whose source is not more concrete than its target
+        description: Lint reports a relation the level constraint of its type does not allow
     relations:
       - type: verifies
         target: FR-101
@@ -1080,6 +1090,9 @@ specs:
       - type: verifies
         target: FR-401
         description: Verifies acceptance criteria for FR-401
+      - type: verifies
+        target: FR-701
+        description: Verifies acceptance criteria for FR-701
   - id: TEST-071
     description: Core-provided test verification logic test
     source:
@@ -1166,7 +1179,7 @@ specs:
         pattern: FR-605-02 the registered models declare the verification logic themselves
         description: The registered models carry the verification logic in their own definitions
       - acceptanceCriteriaId: FR-605-03
-        pattern: FR-605-03 check external-ssot reports exactly what the declared checkers report
+        pattern: FR-605-03 check reports exactly what the declared checkers report
         description: The check command reports only what the model-declared checkers produce
       - acceptanceCriteriaId: FR-1017-01
         pattern: FR-1017-01 uses the path each spec configures
@@ -1651,3 +1664,21 @@ specs:
       - type: verifies
         target: NFR-017
         description: Verifies acceptance criteria for NFR-017
+  - id: TEST-083
+    description: Contract value check verification test (values outside what cli-contract.yaml declares are rejected before a command runs)
+    source:
+      path: test/cli/declared-values.test.ts
+      framework: vitest
+    verifiesRequirements:
+      - NFR-014
+    testCasePatterns:
+      - acceptanceCriteriaId: NFR-014-02
+        pattern: NFR-014-02 .* rejects a value it does not declare with the input-error exit
+        description: Every value the contract restricts is rejected outside its declaration
+      - acceptanceCriteriaId: NFR-014-02
+        pattern: NFR-014-02 .* ends with (exit 1|the input-error exit 2)
+        description: The CLI ends an undeclared value with the contract's input-error exit
+    relations:
+      - type: verifies
+        target: NFR-014
+        description: Verifies acceptance criteria for NFR-014

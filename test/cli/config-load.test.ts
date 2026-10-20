@@ -140,6 +140,27 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
     expect(result.stderr).toContain('custom-design/');
   }, 90_000);
 
+  it('loads a TypeScript config given to --config as a path relative to the working directory', () => {
+    writeFileSync(
+      join(projectDir, 'relative.config.ts'),
+      "import { defineConfig } from 'speckeeper';\n" +
+        "export default defineConfig({ projectName: 'config-load-test', designDir: 'relative-design' });\n",
+    );
+
+    for (const given of ['relative.config.ts', './relative.config.ts']) {
+      const result = spawnSync(process.execPath, [bundlePath, 'lint', '--config', given], {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 60_000,
+      });
+
+      expect(result.stderr, given).not.toContain('Failed to load config');
+      expect(result.stderr, given).toContain('relative-design/');
+      expect(result.status, given).toBe(0);
+    }
+    unlinkSync(join(projectDir, 'relative.config.ts'));
+  }, 120_000);
+
   it('loads the project scaffolded by init, whose config imports the design modules', () => {
     for (const entry of readdirSync(projectDir)) {
       if (entry.startsWith('speckeeper.config.')) unlinkSync(join(projectDir, entry));
@@ -158,6 +179,20 @@ describe('FR-104, NFR-004, NFR-005, NFR-009: speckeeper CLI config loading', () 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('Loaded:');
   }, 120_000);
+
+  it('FR-104-07 creates an element of a model the project scaffolded by init registers', () => {
+    // Uses the project scaffolded by init in the test above, which declares REQ-001.
+    const result = spawnSync(
+      process.execPath,
+      [bundlePath, 'new', 'requirement', '--name', 'User Login', '--dry-run'],
+      { cwd: projectDir, encoding: 'utf8', timeout: 60_000 },
+    );
+
+    expect(result.stderr).not.toContain('Unknown model type');
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('id: "REQ-002"');
+    expect(result.stdout).toContain('name: "User Login"');
+  }, 90_000);
 
   it('writes the whole -f json report into a pipe when lint fails', () => {
     // Uses the models scaffolded by init in the test above. A report larger than
