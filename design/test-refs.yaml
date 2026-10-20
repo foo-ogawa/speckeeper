@@ -95,9 +95,9 @@ specs:
       - type: verifies
         target: FR-105
         description: Verifies acceptance criteria for FR-105
-      - type: verifies
+      - type: uses
         target: CMD-INIT
-        description: Verifies CMD-INIT
+        description: Runs CMD-INIT
   - id: TEST-020
     description: Lint command verification test
     source:
@@ -137,9 +137,9 @@ specs:
       - type: verifies
         target: FR-402
         description: Verifies acceptance criteria for FR-402
-      - type: verifies
+      - type: uses
         target: CMD-LINT
-        description: Verifies CMD-LINT
+        description: Runs CMD-LINT
   - id: TEST-021
     description: Check command verification test
     source:
@@ -186,9 +186,9 @@ specs:
       - type: verifies
         target: FR-604
         description: Verifies acceptance criteria for FR-604
-      - type: verifies
+      - type: uses
         target: CMD-CHECK
-        description: Verifies CMD-CHECK
+        description: Runs CMD-CHECK
   - id: TEST-022
     description: Build command verification test
     source:
@@ -212,9 +212,9 @@ specs:
       - type: verifies
         target: FR-301
         description: Verifies acceptance criteria for FR-301
-      - type: verifies
+      - type: uses
         target: CMD-BUILD
-        description: Verifies CMD-BUILD
+        description: Runs CMD-BUILD
   - id: TEST-023
     description: Impact command verification test
     source:
@@ -237,9 +237,9 @@ specs:
       - type: verifies
         target: FR-700
         description: Verifies acceptance criteria for FR-700
-      - type: verifies
+      - type: uses
         target: CMD-IMPACT
-        description: Verifies CMD-IMPACT
+        description: Runs CMD-IMPACT
   - id: TEST-024
     description: Drift command verification test
     source:
@@ -262,9 +262,9 @@ specs:
       - type: verifies
         target: FR-500
         description: Verifies acceptance criteria for FR-500
-      - type: verifies
+      - type: uses
         target: CMD-DRIFT
-        description: Verifies CMD-DRIFT
+        description: Runs CMD-DRIFT
   - id: TEST-025
     description: New command verification test
     source:
@@ -281,9 +281,9 @@ specs:
       - type: verifies
         target: FR-104
         description: Verifies acceptance criteria for FR-104
-      - type: verifies
+      - type: uses
         target: CMD-NEW
-        description: Verifies CMD-NEW
+        description: Runs CMD-NEW
   - id: TEST-026
     description: Scaffold integration verification test (mermaid parsing, class-based generation)
     source:
@@ -306,9 +306,9 @@ specs:
       - type: verifies
         target: FR-106
         description: Verifies acceptance criteria for FR-106
-      - type: verifies
+      - type: uses
         target: CMD-SCAFFOLD
-        description: Verifies CMD-SCAFFOLD
+        description: Runs CMD-SCAFFOLD
   - id: TEST-027
     description: Global scanner and coverage checker verification test (OpenAPI, SQL DDL, relation coverage)
     source:
@@ -857,9 +857,9 @@ specs:
       - type: verifies
         target: FR-1104
         description: Verifies acceptance criteria for FR-1104
-      - type: verifies
+      - type: uses
         target: CMD-CONVERT
-        description: Verifies CMD-CONVERT
+        description: Runs CMD-CONVERT
   - id: TEST-042
     description: Model-declared externalChecker and coverageChecker verification test
     source:

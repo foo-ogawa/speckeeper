@@ -1433,17 +1433,12 @@
     {
       "from": "E-001",
       "type": "refines",
-      "to": "ART-001"
+      "to": "FR-104",
+      "description": "Refines model definition requirement"
     },
     {
       "from": "E-001",
-      "type": "refines",
-      "to": "FR-104",
-      "description": "Refines model definition requirement"
-    },
-    {
-      "from": "E-010",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
@@ -1453,23 +1448,28 @@
       "description": "Refines model definition requirement"
     },
     {
+      "from": "E-010",
+      "type": "traces",
+      "to": "ART-001"
+    },
+    {
       "from": "E-011",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
       "from": "E-012",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
       "from": "E-020",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
       "from": "E-030",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
@@ -1480,7 +1480,7 @@
     },
     {
       "from": "E-040",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-003"
     },
     {
@@ -1497,12 +1497,12 @@
     },
     {
       "from": "E-041",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-003"
     },
     {
       "from": "E-050",
-      "type": "refines",
+      "type": "traces",
       "to": "ART-001"
     },
     {
@@ -1519,61 +1519,61 @@
     },
     {
       "from": "FR-1000",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-600",
       "description": "Implements external SSOT consistency checks"
     },
     {
       "from": "FR-1001",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "OpenAPI parsing capability"
     },
     {
       "from": "FR-1002",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Spec ID lookup strategy"
     },
     {
       "from": "FR-1003",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Missing spec ID detection"
     },
     {
       "from": "FR-1004",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Optional method verification"
     },
     {
       "from": "FR-1005",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Optional parameter/response verification"
     },
     {
       "from": "FR-1006",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Mismatch reporting"
     },
     {
       "from": "FR-1007",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "File not found handling"
     },
     {
       "from": "FR-1008",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Parse failure handling"
     },
     {
       "from": "FR-1009",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "DDL parsing capability"
     },
@@ -1585,61 +1585,61 @@
     },
     {
       "from": "FR-1010",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Table existence verification"
     },
     {
       "from": "FR-1011",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Column existence verification"
     },
     {
       "from": "FR-1012",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Type containment verification"
     },
     {
       "from": "FR-1013",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "SQL checker warning reporting"
     },
     {
       "from": "FR-1014",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "DDL file not found handling"
     },
     {
       "from": "FR-1015",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Graceful parse degradation"
     },
     {
       "from": "FR-1016",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Pattern consistency"
     },
     {
       "from": "FR-1017",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Path resolution fallback"
     },
     {
       "from": "FR-1018",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Dependency constraint"
     },
     {
       "from": "FR-1019",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1000",
       "description": "Documentation accuracy"
     },
@@ -1675,13 +1675,13 @@
     },
     {
       "from": "FR-106",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-105",
       "description": "Refines scaffold generation mechanism"
     },
     {
       "from": "FR-107",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-104",
       "description": "Refines model definition by providing reusable factories"
     },
@@ -1699,7 +1699,7 @@
     },
     {
       "from": "FR-1102",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-700",
       "description": "Refines change impact analysis with human-readable output"
     },
@@ -1711,7 +1711,7 @@
     },
     {
       "from": "FR-1104",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-104",
       "description": "Extends model definition with format conversion"
     },
@@ -1724,84 +1724,84 @@
     {
       "from": "FR-1201",
       "type": "dependsOn",
-      "to": "FR-700",
-      "description": "Follows relations with the impact traversal"
-    },
-    {
-      "from": "FR-1201",
-      "type": "refines",
       "to": "FR-1200",
       "description": "Refines the check's context"
     },
     {
+      "from": "FR-1201",
+      "type": "dependsOn",
+      "to": "FR-700",
+      "description": "Follows relations with the impact traversal"
+    },
+    {
       "from": "FR-1202",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1200",
       "description": "Refines what a judgment is about"
     },
     {
       "from": "FR-1203",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1200",
       "description": "Refines how a check is judged"
     },
     {
       "from": "FR-1204",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1203",
       "description": "Refines when the judge may run"
     },
     {
       "from": "FR-1205",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1200",
       "description": "Refines the check's output"
     },
     {
       "from": "FR-1206",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1203",
       "description": "Refines which targets are judged"
     },
     {
       "from": "FR-1207",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1203",
       "description": "Refines the judgment with a second opinion per finding"
     },
     {
       "from": "FR-1208",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1200",
       "description": "Refines where judgments are kept"
     },
     {
       "from": "FR-1209",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-400",
       "description": "Adds the review gate to the common lint items"
     },
     {
       "from": "FR-1210",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1203",
       "description": "Refines judging outside the SDK"
     },
     {
       "from": "FR-1211",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1100",
       "description": "Changes the runtime the LLM commands run on"
     },
     {
       "from": "FR-1212",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1206",
       "description": "Refines how a stale record becomes current"
     },
     {
       "from": "FR-1213",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-1205",
       "description": "Refines the output with declared codes and severities"
     },
@@ -1813,7 +1813,7 @@
     },
     {
       "from": "FR-201",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-200",
       "description": "Refines external SSOT reference path management"
     },
@@ -1891,19 +1891,19 @@
     },
     {
       "from": "FR-604",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-600",
       "description": "Concretization of external SSOT consistency check (coverage)"
     },
     {
       "from": "FR-605",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-600",
       "description": "Refines check architecture by integrating into models"
     },
     {
       "from": "FR-605",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-603",
       "description": "Refines external checker by model integration"
     },
@@ -1927,13 +1927,13 @@
     },
     {
       "from": "FR-702",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-701",
       "description": "Refines inter-model relation types with verifiedBy/verifies"
     },
     {
       "from": "FR-703",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-701",
       "description": "Refines relation schema with edge-type-specific structures"
     },
@@ -1957,7 +1957,7 @@
     },
     {
       "from": "NFR-013",
-      "type": "refines",
+      "type": "dependsOn",
       "to": "FR-604",
       "description": "Refines coverage verification for CLI tests"
     },
@@ -2029,9 +2029,9 @@
     },
     {
       "from": "TEST-019",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-INIT",
-      "description": "Verifies CMD-INIT"
+      "description": "Runs CMD-INIT"
     },
     {
       "from": "TEST-019",
@@ -2041,9 +2041,9 @@
     },
     {
       "from": "TEST-020",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-LINT",
-      "description": "Verifies CMD-LINT"
+      "description": "Runs CMD-LINT"
     },
     {
       "from": "TEST-020",
@@ -2065,9 +2065,9 @@
     },
     {
       "from": "TEST-021",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-CHECK",
-      "description": "Verifies CMD-CHECK"
+      "description": "Runs CMD-CHECK"
     },
     {
       "from": "TEST-021",
@@ -2095,9 +2095,9 @@
     },
     {
       "from": "TEST-022",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-BUILD",
-      "description": "Verifies CMD-BUILD"
+      "description": "Runs CMD-BUILD"
     },
     {
       "from": "TEST-022",
@@ -2113,9 +2113,9 @@
     },
     {
       "from": "TEST-023",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-IMPACT",
-      "description": "Verifies CMD-IMPACT"
+      "description": "Runs CMD-IMPACT"
     },
     {
       "from": "TEST-023",
@@ -2125,9 +2125,9 @@
     },
     {
       "from": "TEST-024",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-DRIFT",
-      "description": "Verifies CMD-DRIFT"
+      "description": "Runs CMD-DRIFT"
     },
     {
       "from": "TEST-024",
@@ -2137,9 +2137,9 @@
     },
     {
       "from": "TEST-025",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-NEW",
-      "description": "Verifies CMD-NEW"
+      "description": "Runs CMD-NEW"
     },
     {
       "from": "TEST-025",
@@ -2149,9 +2149,9 @@
     },
     {
       "from": "TEST-026",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-SCAFFOLD",
-      "description": "Verifies CMD-SCAFFOLD"
+      "description": "Runs CMD-SCAFFOLD"
     },
     {
       "from": "TEST-026",
@@ -2431,9 +2431,9 @@
     },
     {
       "from": "TEST-041",
-      "type": "verifies",
+      "type": "uses",
       "to": "CMD-CONVERT",
-      "description": "Verifies CMD-CONVERT"
+      "description": "Runs CMD-CONVERT"
     },
     {
       "from": "TEST-041",

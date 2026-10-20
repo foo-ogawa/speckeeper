@@ -146,7 +146,7 @@ class EntityModel extends Model<typeof EntitySchema> {
    * Coverage Checker
    * 
    * Verifies that concept model Entities are documented in Artifacts
-   * Checks if Entity.relations has documents, refines, or implements relations to Artifacts
+   * Checks if Entity.relations traces an Artifact (an L3 artifact is not a target refines or implements allows)
    */
   protected coverageChecker: CoverageChecker<Entity> = {
     targetModel: 'artifact',
@@ -165,14 +165,14 @@ class EntityModel extends Model<typeof EntitySchema> {
       }
 
       // Verify that Entity is documented in Artifact
-      // Check if Entity.relations references ART-* with 'documents', 'refines', or 'implements'
+      // Check if Entity.relations traces an ART-*
       const coveredItems: CoverageResult['coveredItems'] = [];
       const uncoveredItems: CoverageResult['uncoveredItems'] = [];
 
       for (const entity of specs) {
         const relatedArtifacts = (entity.relations || [])
           .filter(rel => 
-            ['documents', 'refines', 'implements'].includes(rel.type) && 
+            rel.type === 'traces' && 
             rel.target.startsWith('ART-')
           )
           .map(rel => rel.target);

@@ -115,7 +115,7 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 │      - TestRef → Requirement (acceptanceCriteria)                │
 │      - Requirement → UseCase (satisfies)                         │
 │      - Component → Requirement (implements)                      │
-│      - Entity → Artifact (documents)                             │
+│      - Entity → Artifact (traces)                                │
 └─────────────────────────────────────────────────────────────────┘
            ↓ Reference                        ↓ Consistency check
 ┌────────────────────────────────┐  ┌────────────────────────────────┐

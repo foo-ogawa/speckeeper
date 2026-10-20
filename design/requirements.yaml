@@ -305,7 +305,7 @@ entries:
               remains
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-105
             description: Refines scaffold generation mechanism
       - id: FR-107
@@ -341,7 +341,7 @@ entries:
             description: All core-provided factories are optional; custom logic can coexist with core factories
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-104
             description: Refines model definition by providing reusable factories
       - id: FR-200
@@ -393,7 +393,7 @@ entries:
             description: Mermaid flowchart is scaffold-only and does not contain runtime configuration such as file paths
             verificationMethod: review
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-200
             description: Refines external SSOT reference path management
       - id: FR-300
@@ -843,7 +843,7 @@ entries:
           are covered by TestRef.testCasePatterns.
           Coverage logic is defined in each project's design/.
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-600
             description: Concretization of external SSOT consistency check (coverage)
       - id: FR-605
@@ -874,10 +874,10 @@ entries:
               (src/core/dsl/)
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-600
             description: Refines check architecture by integrating into models
-          - type: refines
+          - type: dependsOn
             target: FR-603
             description: Refines external checker by model integration
       - id: FR-700
@@ -1132,7 +1132,7 @@ entries:
             description: verifies (typically external→external) is recognized for traceability but not a checker generation target
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-701
             description: Refines inter-model relation types with verifiedBy/verifies
       - id: FR-703
@@ -1157,7 +1157,7 @@ entries:
             description: Edge-type-specific relation schemas are provided by core; no manual definition needed in model definitions
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-701
             description: Refines relation schema with edge-type-specific structures
       - id: FR-800
@@ -1189,7 +1189,7 @@ entries:
             description: All child requirements (FR-1001~FR-1019) are satisfied
             verificationMethod: review
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-600
             description: Implements external SSOT consistency checks
       - id: FR-1001
@@ -1207,7 +1207,7 @@ entries:
             description: JSON format OpenAPI files are parsed successfully
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: OpenAPI parsing capability
       - id: FR-1002
@@ -1232,7 +1232,7 @@ entries:
             description: Spec ID found via x-spec-id extension
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Spec ID lookup strategy
       - id: FR-1003
@@ -1247,7 +1247,7 @@ entries:
             description: Warning reported when spec ID is not found
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Missing spec ID detection
       - id: FR-1004
@@ -1265,7 +1265,7 @@ entries:
             description: Warning reported for method mismatch
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Optional method verification
       - id: FR-1005
@@ -1287,7 +1287,7 @@ entries:
             description: Type containment is used for type comparison
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Optional parameter/response verification
       - id: FR-1006
@@ -1311,7 +1311,7 @@ entries:
             description: Warning for type mismatch
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Mismatch reporting
       - id: FR-1007
@@ -1326,7 +1326,7 @@ entries:
             description: Error reported with missing file path
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: File not found handling
       - id: FR-1008
@@ -1344,7 +1344,7 @@ entries:
             description: Error reported for empty file
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Parse failure handling
       - id: FR-1009
@@ -1362,7 +1362,7 @@ entries:
             description: Table names, column names, and column types extracted
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: DDL parsing capability
       - id: FR-1010
@@ -1377,7 +1377,7 @@ entries:
             description: Warning when referenced table is missing
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Table existence verification
       - id: FR-1011
@@ -1395,7 +1395,7 @@ entries:
             description: Column check skipped when table is missing
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Column existence verification
       - id: FR-1012
@@ -1416,7 +1416,7 @@ entries:
             description: Narrower DDL type produces warning (INT→SMALLINT NG)
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Type containment verification
       - id: FR-1013
@@ -1437,7 +1437,7 @@ entries:
             description: Warning for type mismatch
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: SQL checker warning reporting
       - id: FR-1014
@@ -1452,7 +1452,7 @@ entries:
             description: Error reported with missing file path
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: DDL file not found handling
       - id: FR-1015
@@ -1470,7 +1470,7 @@ entries:
             description: Warning emitted for parse fallback
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Graceful parse degradation
       - id: FR-1016
@@ -1488,7 +1488,7 @@ entries:
             description: SQL checker follows file→parse→verify pattern
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Pattern consistency
       - id: FR-1017
@@ -1506,7 +1506,7 @@ entries:
             description: Default path used when no config
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Path resolution fallback
       - id: FR-1018
@@ -1521,7 +1521,7 @@ entries:
             description: Only node-sql-parser added as new dependency
             verificationMethod: review
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Dependency constraint
       - id: FR-1019
@@ -1539,7 +1539,7 @@ entries:
             description: scaffold-mermaid-spec.md Section 7 describes validation levels
             verificationMethod: review
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1000
             description: Documentation accuracy
       - id: FR-1100
@@ -1613,7 +1613,7 @@ entries:
             description: --show-prompt outputs the constructed prompt without calling LLM
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-700
             description: Refines change impact analysis with human-readable output
       - id: FR-1103
@@ -1660,7 +1660,7 @@ entries:
             description: --dry-run previews conversion without writing files
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-104
             description: Extends model definition with format conversion
       - id: FR-1200
@@ -1703,7 +1703,7 @@ entries:
               configurable depth, relation types, and edge filter, in a stable order
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1200
             description: Refines the check's context
           - type: dependsOn
@@ -1728,7 +1728,7 @@ entries:
             description: The judge signature (adapter, model, verifier model) is recorded separately from the packet hash
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1200
             description: Refines what a judgment is about
       - id: FR-1203
@@ -1766,7 +1766,7 @@ entries:
             description: review.claudeExecutable sets the Claude Code executable the claude adapter runs
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1200
             description: Refines how a check is judged
       - id: FR-1204
@@ -1795,7 +1795,7 @@ entries:
               while judging is an adapter error that also says how to log in again
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1203
             description: Refines when the judge may run
       - id: FR-1205
@@ -1820,7 +1820,7 @@ entries:
               schema mismatch
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1200
             description: Refines the check's output
       - id: FR-1206
@@ -1845,7 +1845,7 @@ entries:
             description: --max-targets caps one run in a stable order so that split runs never judge a target twice
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1203
             description: Refines which targets are judged
       - id: FR-1207
@@ -1861,7 +1861,7 @@ entries:
               rationale
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1203
             description: Refines the judgment with a second opinion per finding
       - id: FR-1208
@@ -1890,7 +1890,7 @@ entries:
             description: Status carries over only for one-to-one fingerprint matches; other findings become open
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1200
             description: Refines where judgments are kept
       - id: FR-1209
@@ -1916,7 +1916,7 @@ entries:
               stale records whose judge signature differs from the configured one; review uses the same staleness function
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-400
             description: Adds the review gate to the common lint items
       - id: FR-1210
@@ -1932,7 +1932,7 @@ entries:
               directory relative to the project root, or an absolute one as is
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1203
             description: Refines judging outside the SDK
       - id: FR-1211
@@ -1952,7 +1952,7 @@ entries:
             description: package.json declares @aaac/runtime as an optional peer dependency
             verificationMethod: inspection
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1100
             description: Changes the runtime the LLM commands run on
       - id: FR-1212
@@ -1973,7 +1973,7 @@ entries:
             description: rebaseline requires --reason and skips targets that have no record
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1206
             description: Refines how a stale record becomes current
       - id: FR-1213
@@ -2002,7 +2002,7 @@ entries:
             description: A check without rules keeps the common output, where the judge chooses the code and the severity
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-1205
             description: Refines the output with declared codes and severities
   - model: nonfunctional-requirement
@@ -2219,7 +2219,7 @@ entries:
             description: speckeeper check --coverage achieves 100% for target acceptance criteria
             verificationMethod: test
         relations:
-          - type: refines
+          - type: dependsOn
             target: FR-604
             description: Refines coverage verification for CLI tests
       - id: NFR-014

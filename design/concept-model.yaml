@@ -42,7 +42,7 @@ specs:
       - type: refines
         target: FR-104
         description: Refines model definition requirement
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-010
     name: Component
@@ -85,7 +85,7 @@ specs:
       - type: refines
         target: FR-104
         description: Refines model definition requirement
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-011
     name: Boundary
@@ -112,7 +112,7 @@ specs:
         description: Boundary type
         required: false
     relations:
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-012
     name: Layer
@@ -131,7 +131,7 @@ specs:
         description: Layer order (higher is more upper)
         required: true
     relations:
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-020
     name: Entity
@@ -158,7 +158,7 @@ specs:
         description: Belonging boundary ID
         required: false
     relations:
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-030
     name: Screen
@@ -195,7 +195,7 @@ specs:
         description: Whether authentication required
         required: false
     relations:
-      - type: refines
+      - type: traces
         target: ART-001
   - id: E-040
     name: APIRef
@@ -221,7 +221,7 @@ specs:
       - type: implements
         target: FR-200
         description: Implements external SSOT reference requirement
-      - type: refines
+      - type: traces
         target: ART-003
   - id: E-041
     name: TableRef
@@ -257,7 +257,7 @@ specs:
       - type: dependsOn
         target: E-020
         description: Depends on Entity
-      - type: refines
+      - type: traces
         target: ART-003
   - id: E-050
     name: Artifact
@@ -297,5 +297,5 @@ specs:
         description: Source (SSOT ID)
         required: false
     relations:
-      - type: refines
+      - type: traces
         target: ART-001
