@@ -215,6 +215,10 @@ export async function buildProposeAcceptanceCriteriaContext(
   const allSummaries = extractSpecSummaries(models, specs);
   const lintIssues = runLintForContext(models, specs);
 
+  const unknown = (targetSpecIds ?? []).filter((id) => !allSummaries.some((s) => s.id === id));
+  if (unknown.length > 0) {
+    throw Object.assign(new Error(`No spec has the ID ${unknown.join(", ")}`), { exitCode: EXIT_INPUT_ERROR });
+  }
   const targetSpecs = targetSpecIds && targetSpecIds.length > 0
     ? allSummaries.filter((s) => targetSpecIds.includes(s.id))
     : allSummaries;

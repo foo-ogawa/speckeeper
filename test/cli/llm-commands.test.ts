@@ -222,6 +222,17 @@ describe('FR-1103: propose-acceptance-criteria', () => {
     expect(other).toBeDefined();
     expect(prompt).not.toContain(other as string);
   }, 60_000);
+
+  it('FR-1103-01 rejects a spec ID no spec has with the input-error exit 2 and names it', async () => {
+    const { commandProposeAcceptanceCriteria } = await import(
+      '../../src/cli/propose-acceptance-criteria.js'
+    );
+
+    await expect(
+      commandProposeAcceptanceCriteria(['FR-100', 'NOPE-1'], { config: configPath, showPrompt: true }),
+    ).rejects.toMatchObject({ exitCode: 2, message: expect.stringContaining('NOPE-1') });
+    expect(executeTask).not.toHaveBeenCalled();
+  }, 60_000);
 });
 
 describe('FR-1211: the LLM commands run on @aaac/runtime', () => {
