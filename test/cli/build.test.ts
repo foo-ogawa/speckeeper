@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { buildCommand } from '../../src/cli/build.js';
 
 vi.mock('../../src/utils/config-loader.js');
@@ -148,6 +149,20 @@ describe('buildCommand', () => {
       const base = join(process.cwd(), 'out');
       expect(written).toContain(join(base, 'docs', 'output', 'test-file.md'));
       expect(written).toContain(join(base, 'specs', 'index.json'));
+      expect(written.filter(path => !path.startsWith(base + '/'))).toEqual([]);
+    });
+
+    it('writes under an absolute base output directory where it points, not under the working directory', async () => {
+      const model = createMockModel({ exporters: [createMockExporter()] });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      const { batchWriteFiles } = await import('../../src/utils/file-writer.js');
+      const mockedBatchWrite = vi.mocked(batchWriteFiles);
+      const base = join(tmpdir(), 'speckeeper-build-out');
+
+      await buildCommand({ output: base });
+
+      const written = (mockedBatchWrite.mock.calls[0][0] as Array<{ path: string }>).map(f => f.path);
+      expect(written).toContain(join(base, 'docs', 'output', 'test-file.md'));
       expect(written.filter(path => !path.startsWith(base + '/'))).toEqual([]);
     });
   });
