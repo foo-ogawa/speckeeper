@@ -129,7 +129,7 @@ describe('checkCommand', () => {
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
       mockedExistsSync.mockReturnValue(false);
 
-      await checkCommand('external-ssot', {});
+      await checkCommand('all', {});
 
       expect(process.exitCode).toBe(1);
       const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
@@ -152,10 +152,31 @@ describe('checkCommand', () => {
       });
       mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
 
-      await checkCommand('test', { coverage: true });
+      await checkCommand('all', { coverage: true });
 
       expect(model.getCoverageChecker).toHaveBeenCalled();
       expect(model.checkCoverage).toHaveBeenCalled();
+      expect(process.exitCode).toBeUndefined();
+    });
+  });
+
+  describe('FR-602-02 the type names a configured source type', () => {
+    it('FR-602-02 fails when no source is configured and a type is named', async () => {
+      mockedLoadConfig.mockResolvedValue(createMockConfig([createMockModel()]) as never);
+
+      await checkCommand('bogus', {});
+
+      const output = logSpy.mock.calls.map(c => String(c[0])).join('\n');
+      expect(output).toContain('No source of type "bogus" is configured');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('FR-602-02 checks every source without a type, and with all', async () => {
+      mockedLoadConfig.mockResolvedValue(createMockConfig([createMockModel()]) as never);
+
+      await checkCommand(undefined, {});
+      await checkCommand('all', {});
+
       expect(process.exitCode).toBeUndefined();
     });
   });

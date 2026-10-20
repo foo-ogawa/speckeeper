@@ -99,22 +99,22 @@ export async function checkCommand(
       }
     }
 
-    if (sources.length > 0 && allSpecIds.length > 0) {
-      // Filter sources by checkType
-      const filteredSources = checkType === 'all'
-        ? sources
-        : sources.filter(s => s.type === checkType);
-      if (filteredSources.length === 0) {
-        results.push({
-          type: checkType,
-          success: false,
-          issues: [{
-            severity: 'error',
-            message: `No source of type "${checkType}" is configured, so nothing would be checked (configured: ${[...new Set(sources.map(s => s.type))].join(', ')})`,
-          }],
-        });
-      }
+    // The type names the sources to scan; one that no configured source has would check nothing
+    const filteredSources = checkType === 'all'
+      ? sources
+      : sources.filter(s => s.type === checkType);
+    if (checkType !== 'all' && filteredSources.length === 0) {
+      results.push({
+        type: checkType,
+        success: false,
+        issues: [{
+          severity: 'error',
+          message: `No source of type "${checkType}" is configured, so nothing would be checked (configured: ${[...new Set(sources.map(s => s.type))].join(', ') || 'none'})`,
+        }],
+      });
+    }
 
+    if (sources.length > 0 && allSpecIds.length > 0) {
       // Run global scan (with lookup key overrides)
       const { matches, diagnostics: scanDiagnostics } = runGlobalScan(
         filteredSources, allSpecIds, cwd,

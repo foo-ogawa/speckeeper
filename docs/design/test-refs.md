@@ -981,7 +981,7 @@
 | Acceptance Criteria ID | Pattern | Description |
 |------------------------|---------|-------------|
 | FR-605-02 | `FR-605-02 the registered models declare the verification logic themselves` | The registered models carry the verification logic in their own definitions |
-| FR-605-03 | `FR-605-03 check external-ssot reports exactly what the declared checkers report` | The check command reports only what the model-declared checkers produce |
+| FR-605-03 | `FR-605-03 check reports exactly what the declared checkers report` | The check command reports only what the model-declared checkers produce |
 | FR-1017-01 | `FR-1017-01 uses the path each spec configures` | A configured source path is the path the checker resolves |
 | FR-1017-02 | `FR-1017-02 falls back to a hardcoded default when the spec configures no path` | Without a configured path the checker uses its hardcoded default |
 

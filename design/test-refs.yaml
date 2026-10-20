@@ -1166,7 +1166,7 @@ specs:
         pattern: FR-605-02 the registered models declare the verification logic themselves
         description: The registered models carry the verification logic in their own definitions
       - acceptanceCriteriaId: FR-605-03
-        pattern: FR-605-03 check external-ssot reports exactly what the declared checkers report
+        pattern: FR-605-03 check reports exactly what the declared checkers report
         description: The check command reports only what the model-declared checkers produce
       - acceptanceCriteriaId: FR-1017-01
         pattern: FR-1017-01 uses the path each spec configures
