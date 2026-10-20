@@ -91,26 +91,6 @@ export const commandDefinitions = {
         }
       },
       {
-        "name": "format",
-        "schema": {
-          "type": "string",
-          "default": "both",
-          "enum": [
-            "markdown",
-            "json",
-            "both"
-          ]
-        }
-      },
-      {
-        "name": "watch",
-        "schema": {
-          "type": "boolean",
-          "default": false
-        },
-        "effects": {}
-      },
-      {
         "name": "verbose",
         "schema": {
           "type": "boolean",

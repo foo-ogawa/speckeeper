@@ -127,6 +127,20 @@ async function invoke(argv: string[]): Promise<{ ran: string[]; exit?: number; s
   }
 }
 
+describe('options the contract does not declare', () => {
+  it.each([
+    [['build', '--watch']],
+    [['build', '--format', 'json']],
+    [['new', 'requirement', '--kind', 'functional']],
+    [['new', 'requirement', '--template', 'template.ts']],
+  ])('%j is rejected as an unknown option before the command runs', async (argv) => {
+    const result = await invoke(argv);
+    expect(result.ran).toEqual([]);
+    expect(result.exit).toBe(1);
+    expect(result.stderr).toContain('unknown option');
+  });
+});
+
 describe('NFR-014: every value the contract restricts is checked before the command runs', () => {
   afterEach(() => {
     vi.restoreAllMocks();

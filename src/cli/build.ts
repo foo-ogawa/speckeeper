@@ -20,8 +20,8 @@ import {
 
 export interface BuildCommandOptions {
   config?: string;
+  /** Base directory the docs and specs trees are written under */
   output?: string;
-  format?: string;
   verbose?: boolean;
 }
 
@@ -35,10 +35,11 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
   
   const cwd = process.cwd();
   const config = await loadConfig(options.config);
+  const base = options.output ?? '.';
   
   console.log(chalk.gray(`  Design:  ${config.designDir || 'design'}/`));
-  console.log(chalk.gray(`  Docs:    ${config.docsDir}/`));
-  console.log(chalk.gray(`  Specs:   ${config.specsDir}/`));
+  console.log(chalk.gray(`  Docs:    ${join(base, config.docsDir)}/`));
+  console.log(chalk.gray(`  Specs:   ${join(base, config.specsDir)}/`));
   console.log('');
   
   try {
@@ -46,8 +47,8 @@ export async function buildCommand(options: BuildCommandOptions): Promise<void> 
     const specs = config.specs;
 
     const roots: ExporterOutputRoots = {
-      docs: join(cwd, config.docsDir),
-      specs: join(cwd, config.specsDir),
+      docs: join(cwd, base, config.docsDir),
+      specs: join(cwd, base, config.specsDir),
     };
 
     if (models.length === 0) {

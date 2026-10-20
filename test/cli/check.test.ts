@@ -160,6 +160,24 @@ describe('checkCommand', () => {
     });
   });
 
+  describe('--strict', () => {
+    it('fails the run on warnings when strict is set, and only then', async () => {
+      const model = createMockModel({
+        externalSourcePath: 'test/fixtures/data.json',
+        checkResult: { success: true, errors: [], warnings: [{ message: 'Deprecated field', specId: 'SPEC-001' }] },
+      });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      mockedExistsSync.mockReturnValue(true);
+      mockedReadFileSync.mockReturnValue('{"key": "value"}' as never);
+
+      await checkCommand('all', {});
+      expect(process.exitCode).toBeUndefined();
+
+      await checkCommand('all', { strict: true });
+      expect(process.exitCode).toBe(1);
+    });
+  });
+
   describe('no models', () => {
     it('completes successfully with no models', async () => {
       mockedLoadConfig.mockResolvedValue(createMockConfig([]) as never);

@@ -135,6 +135,23 @@ describe('buildCommand', () => {
     });
   });
 
+  describe('--output', () => {
+    it('writes the docs and specs trees under the base output directory', async () => {
+      const model = createMockModel({ exporters: [createMockExporter()] });
+      mockedLoadConfig.mockResolvedValue(createMockConfig([model]) as never);
+      const { batchWriteFiles } = await import('../../src/utils/file-writer.js');
+      const mockedBatchWrite = vi.mocked(batchWriteFiles);
+
+      await buildCommand({ output: 'out' });
+
+      const written = (mockedBatchWrite.mock.calls[0][0] as Array<{ path: string }>).map(f => f.path);
+      const base = join(process.cwd(), 'out');
+      expect(written).toContain(join(base, 'docs', 'output', 'test-file.md'));
+      expect(written).toContain(join(base, 'specs', 'index.json'));
+      expect(written.filter(path => !path.startsWith(base + '/'))).toEqual([]);
+    });
+  });
+
   describe('error handling', () => {
     it('propagates error when loadConfig throws', async () => {
       mockedLoadConfig.mockRejectedValue(new Error('Config not found'));

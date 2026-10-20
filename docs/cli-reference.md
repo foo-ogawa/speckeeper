@@ -88,7 +88,7 @@ speckeeper init --format yaml
 
 Generate docs/ and specs/ from TypeScript models.
 
-Loads the design TypeScript models and generates machine-readable specs/ output and optionally human-readable docs/ output. Supports markdown, JSON, or both formats.
+Loads the design TypeScript models and generates the machine-readable specs/ and the human-readable docs/ output.
 
 **Usage:**
 
@@ -96,7 +96,7 @@ Loads the design TypeScript models and generates machine-readable specs/ output 
 speckeeper build
 ```
 ```
-speckeeper build --format json --output ./out
+speckeeper build --output ./out
 ```
 ```
 speckeeper build --verbose
@@ -107,9 +107,7 @@ speckeeper build --verbose
 | Option | Aliases | Required | Default | Description |
 |---|---|---|---|---|
 | `--config` | -c | No |  | Path to config file. |
-| `--output` | -o | No | `"."` | Base output directory path. |
-| `--format` | -f | No | `"both"` | Output format: markdown, json, both. |
-| `--watch` | -w | No | `false` | Watch for changes and auto-regenerate. |
+| `--output` | -o | No | `"."` | Base directory the docs/ and specs/ trees are written under. |
 | `--verbose` | -v | No | `false` | Show detailed output. |
 
 #### Exit Codes

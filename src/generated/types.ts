@@ -14,8 +14,6 @@ export type InitExitResult =
 export interface BuildOptions {
   config?: string;
   output?: string;
-  format?: "markdown" | "json" | "both";
-  watch?: boolean;
   verbose?: boolean;
 }
 

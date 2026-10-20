@@ -5,7 +5,7 @@ import { CONTRACT_YAML, CONTRACT_JSON_STR } from "./contract.js";
 
 export interface CommandHandlers {
   init: (options: { force?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
-  build: (options: { config?: string; output?: string; format?: string; watch?: boolean; verbose?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
+  build: (options: { config?: string; output?: string; verbose?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   lint: (options: { config?: string; phase?: string; strict?: boolean; format?: string }, parentOpts: Record<string, unknown>) => Promise<void>;
   drift: (options: { config?: string; update?: boolean; format?: string; failOnDrift?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
   check: (type: string | undefined, options: { config?: string; strict?: boolean; verbose?: boolean; coverage?: boolean }, parentOpts: Record<string, unknown>) => Promise<void>;
@@ -67,9 +67,7 @@ export function createProgram(
     .command("build")
     .description("Generate docs/ and specs/ from TypeScript models.")
     .option("-c, --config <path>", "Path to config file.")
-    .option("-o, --output <path>", "Base output directory path.", ".")
-    .option("-f, --format <format>", "Output format: markdown, json, both.", "both")
-    .option("-w, --watch", "Watch for changes and auto-regenerate.", false)
+    .option("-o, --output <path>", "Base directory the docs/ and specs/ trees are written under.", ".")
     .option("-v, --verbose", "Show detailed output.", false)
     .action(async (opts, cmd) => {
       const globalOpts = cmd.optsWithGlobals();

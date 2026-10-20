@@ -39,9 +39,7 @@ speckeeper build [options]
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
 | -c, --config | option | path |  | - | Path to config file |
-| -o, --output | option | path |  | . | Output directory base path |
-| -f, --format | option | enum (markdown, json, both) |  | both | Output format |
-| -w, --watch | option | boolean |  | false | Watch file changes and auto-regenerate |
+| -o, --output | option | path |  | . | Base directory the docs/ and specs/ trees are written under |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
 
 ### Examples
@@ -49,8 +47,6 @@ speckeeper build [options]
 ```bash
 speckeeper build
 speckeeper build --output ./dist
-speckeeper build --format markdown
-speckeeper build --watch
 ```
 
 ### Exit Codes

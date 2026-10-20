@@ -16,27 +16,9 @@ specs:
         name: output
         alias: o
         type: path
-        description: Output directory base path
+        description: Base directory the docs/ and specs/ trees are written under
         required: false
         default: .
-      - kind: option
-        name: format
-        alias: f
-        type: enum
-        description: Output format
-        required: false
-        choices:
-          - markdown
-          - json
-          - both
-        default: both
-      - kind: option
-        name: watch
-        alias: w
-        type: boolean
-        description: Watch file changes and auto-regenerate
-        required: false
-        default: false
       - kind: option
         name: verbose
         alias: v
@@ -52,8 +34,6 @@ specs:
     examples:
       - speckeeper build
       - speckeeper build --output ./dist
-      - speckeeper build --format markdown
-      - speckeeper build --watch
     exitCodes:
       - code: 0
         description: Success

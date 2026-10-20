@@ -19,6 +19,8 @@ import type { SourceConfig } from '../core/config-api.js';
 
 export interface CheckCommandOptions {
   config?: string;
+  /** Warnings fail the run as errors do */
+  strict?: boolean;
   verbose?: boolean;
   coverage?: boolean;
 }
@@ -275,7 +277,8 @@ export async function checkCommand(
     }
 
     const hasErrors = results.some(r => !r.success);
-    if (hasErrors) {
+    const hasWarnings = results.some(r => r.issues.some(issue => issue.severity === 'warning'));
+    if (hasErrors || (options.strict && hasWarnings)) {
       process.exitCode = 1;
     }
 

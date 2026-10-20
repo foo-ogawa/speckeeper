@@ -120,12 +120,11 @@ command_sets:
       build:
         summary: Generate docs/ and specs/ from TypeScript models.
         description: >-
-          Loads the design TypeScript models and generates machine-readable
-          specs/ output and optionally human-readable docs/ output. Supports
-          markdown, JSON, or both formats.
+          Loads the design TypeScript models and generates the machine-readable
+          specs/ and the human-readable docs/ output.
         usage:
           - speckeeper build
-          - speckeeper build --format json --output ./out
+          - speckeeper build --output ./out
           - speckeeper build --verbose
 
         effects:
@@ -150,29 +149,11 @@ command_sets:
 
           - name: output
             aliases: [o]
-            description: Base output directory path.
+            description: Base directory the docs/ and specs/ trees are written under.
             value_name: path
             schema:
               type: string
               default: "."
-
-          - name: format
-            aliases: [f]
-            description: "Output format: markdown, json, both."
-            value_name: format
-            schema:
-              type: string
-              default: both
-              enum: [markdown, json, both]
-
-          - name: watch
-            aliases: [w]
-            description: Watch for changes and auto-regenerate.
-            schema:
-              type: boolean
-              default: false
-            effects:
-              executionMode: watch
 
           - name: verbose
             aliases: [v]
