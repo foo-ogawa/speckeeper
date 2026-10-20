@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import type { Phase } from '../types/common.js';
 
@@ -128,13 +129,14 @@ function mergeOverDefaults(parsed: unknown, resolvedPath: string): SpeckeeperCon
  *
  * Returns the built-in defaults only when no config file exists. A config file
  * that exists but cannot be loaded throws, so callers fail instead of reporting
- * success against settings that were never applied.
+ * success against settings that were never applied. A relative `configPath` is
+ * relative to `cwd`.
  */
 export async function loadConfig(
   configPath?: string,
   cwd: string = process.cwd()
 ): Promise<SpeckeeperConfig> {
-  const resolvedPath = configPath ?? findConfigFile(cwd);
+  const resolvedPath = configPath !== undefined ? resolve(cwd, configPath) : findConfigFile(cwd);
 
   if (!resolvedPath) {
     return { ...defaultConfig };
@@ -154,7 +156,7 @@ export async function loadConfig(
     }
 
     if (ext === 'ts' || ext === 'js') {
-      const module = await import(resolvedPath);
+      const module = await import(pathToFileURL(resolvedPath).href);
       return mergeOverDefaults(module.default ?? module, resolvedPath);
     }
   } catch (error) {
