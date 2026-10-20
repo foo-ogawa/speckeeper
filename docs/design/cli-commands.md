@@ -95,8 +95,7 @@ speckeeper lint --format json
 | Code | Description |
 |------|-------------|
 | 0 | No issues |
-| 1 | Errors found |
-| 2 | Warnings found (in strict mode) |
+| 1 | Errors found, or warnings with --strict |
 
 ---
 
@@ -173,8 +172,7 @@ speckeeper check test --coverage
 | Code | Description |
 |------|-------------|
 | 0 | Consistency OK |
-| 1 | Consistency error |
-| 2 | External SSOT file not found |
+| 1 | Consistency error, or an external SSOT file not found |
 
 ---
 
@@ -409,8 +407,7 @@ speckeeper impact ENT-ORDER --format json | speckeeper explain-impact --adapter 
 |------|-------------|
 | 0 | Explanation completed |
 | 1 | Unexpected error |
-| 2 | Configuration or input error |
-| 3 | No input on stdin |
+| 2 | Input error (no input on stdin, or an invalid argument) |
 | 10 | Completed with blocking findings |
 | 11 | Runtime dependency missing |
 | 12 | LLM provider or adapter error |
@@ -740,6 +737,7 @@ speckeeper extract [options]
 | <commands> | argument | string |  | - | Command IDs to extract, in dot notation |
 | -a, --all | option | boolean |  | false | Extract all commands |
 | --include-meta | option | boolean |  | true | Include extraction metadata |
+| --no-include-meta | option | boolean |  | - | Leave out the extraction metadata |
 | -F, --format | option | enum (yaml, json) |  | yaml | Output format |
 
 ### Examples

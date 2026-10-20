@@ -118,9 +118,7 @@ specs:
       - code: 0
         description: No issues
       - code: 1
-        description: Errors found
-      - code: 2
-        description: Warnings found (in strict mode)
+        description: Errors found, or warnings with --strict
     ciStep:
       enabled: true
       order: 1
@@ -239,9 +237,7 @@ specs:
       - code: 0
         description: Consistency OK
       - code: 1
-        description: Consistency error
-      - code: 2
-        description: External SSOT file not found
+        description: Consistency error, or an external SSOT file not found
     ciStep:
       enabled: true
       order: 4
@@ -639,9 +635,7 @@ specs:
       - code: 1
         description: Unexpected error
       - code: 2
-        description: Configuration or input error
-      - code: 3
-        description: No input on stdin
+        description: Input error (no input on stdin, or an invalid argument)
       - code: 10
         description: Completed with blocking findings
       - code: 11
@@ -1133,6 +1127,11 @@ specs:
         description: Include extraction metadata
         required: false
         default: true
+      - kind: option
+        name: no-include-meta
+        type: boolean
+        description: Leave out the extraction metadata
+        required: false
       - kind: option
         name: format
         alias: F

@@ -211,7 +211,7 @@ describe('NFR-014: CLI definitions match the contract and the generated program'
     vi.restoreAllMocks();
   });
 
-  const MISMATCH_RULES = ['cmd-spec-impl-mismatch', 'cmd-impl-without-spec'];
+  const MISMATCH_RULES = ['cmd-spec-impl-mismatch', 'cmd-spec-contract-mismatch', 'cmd-impl-without-spec'];
 
   it('NFR-014-01 every command definition matches the contract and the generated program', () => {
     const specs = cliCommandSpecs();
