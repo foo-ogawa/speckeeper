@@ -164,17 +164,9 @@ specs:
     parameters:
       - kind: argument
         name: type
-        type: enum
-        description: Type of check to run, filtering sources by type
+        type: string
+        description: Source type to scan, the type of a configured source, or all (the default)
         required: false
-        choices:
-          - external-ssot
-          - openapi
-          - ddl
-          - iac
-          - custom
-          - all
-          - test
       - kind: option
         name: config
         alias: c
@@ -209,10 +201,8 @@ specs:
     examples:
       - speckeeper check
       - speckeeper check openapi
-      - speckeeper check ddl
-      - speckeeper check iac
-      - speckeeper check external-ssot --verbose
-      - speckeeper check test --coverage
+      - speckeeper check annotation --verbose
+      - speckeeper check --coverage
     exitCodes:
       - code: 0
         description: Consistency OK
@@ -222,7 +212,6 @@ specs:
       enabled: true
       order: 4
       description: External SSOT consistency check
-      subCommand: external-ssot
   - id: CMD-INIT
     name: init
     description: Initialize a new speckeeper project with starter templates

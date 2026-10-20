@@ -110,9 +110,8 @@ Design artifacts (API specifications, screen specifications, DB schemas, etc.) a
 │   ⑦ embedoc build       : docs/ marker update                    │
 ├─────────────────────────────────────────────────────────────────┤
 │ Phase 3: ci:verify (Reconciliation)                              │
-│   ⑧ speckeeper check external-ssot : External SSOT consistency       │
-│   ⑨ speckeeper check test          : Test-requirement linkage        │
-│   ⑩ speckeeper check test --coverage : Coverage verification         │
+│   ⑧ speckeeper check            : External SSOT consistency      │
+│   ⑨ speckeeper check --coverage : Coverage verification          │
 │      - TestRef → Requirement (acceptanceCriteria)                │
 │      - Requirement → UseCase (satisfies)                         │
 │      - Component → Requirement (implements)                      │
@@ -215,8 +214,7 @@ src/  # Application implementation code (not managed by speckeeper)
   - `lint` (Design consistency)
   - `build` (Generate docs/specs)
   - `drift` (Detect manual edits to artifacts)
-  - `check external-ssot` (External SSOT consistency check)
-  - `check contract` (Contract consistency, can be omitted when using external SSOT)
+  - `check` (External SSOT consistency check)
 <!--@embedoc:end-->
 
 ---
@@ -553,7 +551,7 @@ All external SSOT consistency checks are uniformly composed of existence, type, 
 Provide CLI command to execute external SSOT consistency check
 
 - **FR-602-01**: speckeeper check runs external SSOT consistency check for all models [test]
-- **FR-602-02**: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract) [test]
+- **FR-602-02**: speckeeper check [type] scans only the configured sources of that type (openapi, ddl, annotation, or a custom source type) [test]
 - **FR-602-03**: Type argument corresponds to check categories, not model IDs [review]
 - **FR-602-04**: Only models with externalChecker are targeted [test]
 
@@ -563,12 +561,10 @@ Provide CLI command to execute external SSOT consistency check
 # External SSOT consistency check for all models
 speckeeper check
 
-# Check specific type only
-speckeeper check external-ssot   # All external SSOT checks
-speckeeper check openapi         # OpenAPI consistency only
-speckeeper check ddl             # DDL consistency only
-speckeeper check test            # Test reference consistency
-speckeeper check contract        # Contract consistency
+# Scan the sources of one type only
+speckeeper check openapi         # OpenAPI sources only
+speckeeper check ddl             # DDL sources only
+speckeeper check annotation      # Annotated code and tests only
 ```
 
 #### FR-603: External Checker
@@ -669,8 +665,8 @@ External SSOT and test verification logic is integrated into _models/ definition
 
 - **FR-605-01**: Scaffold does not generate _checkers/ directory [test]
 - **FR-605-02**: Verification logic is included in _models/ model definitions [test]
-- **FR-605-03**: speckeeper check external-ssot uses verification logic from _models/ model definitions only [test]
-- **FR-605-04**: speckeeper check external-ssot does not reference _checkers/ directory [test]
+- **FR-605-03**: speckeeper check uses verification logic from _models/ model definitions only [test]
+- **FR-605-04**: speckeeper check does not reference _checkers/ directory [test]
 - **FR-605-05**: Checker template functions (src/scaffold/templates/checkers/) are removed; checker logic moves to core DSL (src/core/dsl/) [test]
 
 Implement actual validation logic for externalOpenAPIChecker and externalSqlSchemaChecker, replacing stubs with real file parsing and verification
@@ -1040,12 +1036,12 @@ Can be distributed as npm package
 
 Refer to `acceptanceCriteria` defined in each requirement (FR-*, NFR-*, CR-*).
 
-Verification of acceptance criteria is automated with `speckeeper check test --coverage`,
+Verification of acceptance criteria is automated with `speckeeper check --coverage`,
 which confirms that acceptance criteria with `verificationMethod: test` are covered by `TestRef`.
 
 ```bash
 # Check acceptance criteria coverage
-npx speckeeper check test --coverage
+npx speckeeper check --coverage
 ```
 
 ---

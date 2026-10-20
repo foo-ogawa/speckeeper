@@ -55,7 +55,7 @@
     "ci": "npm run ci:validate && npm run ci:generate && npm run ci:verify",
     "ci:validate": "npm run typecheck && npm run lint && npm run lint:design && npm run build && npm run bundle && npx speckeeper lint && npm run test:run",
     "ci:generate": "embedoc build",
-    "ci:verify": "npx speckeeper check external-ssot && npx speckeeper check test && npx speckeeper check test --coverage",
+    "ci:verify": "npx speckeeper check && npx speckeeper check --coverage",
     "test:ci": "vitest run",
     "test:bundle": "vitest run --config vitest.bundle.config.ts"
   },

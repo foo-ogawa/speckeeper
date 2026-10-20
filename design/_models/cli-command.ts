@@ -603,9 +603,6 @@ function renderCIList(commands: CLICommand[]): string {
     lines.push(`  - \`${stepName}\` (${cmd.ciStep?.description || cmd.description})`);
   }
   
-  // Add contract-check
-  lines.push(`  - \`check contract\` (Contract consistency, can be omitted when using external SSOT)`);
-  
   return lines.join('\n');
 }
 
@@ -628,13 +625,6 @@ function renderCITable(commands: CLICommand[], ctx: RenderContext): string {
       cmd.ciStep?.description || cmd.description,
     ];
   });
-  
-  // Add contract-check
-  rows.push([
-    '5',
-    '`check contract`',
-    'Contract consistency, can be omitted when using external SSOT',
-  ]);
   
   return ctx.markdown.table(headers, rows);
 }

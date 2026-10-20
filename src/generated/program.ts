@@ -116,7 +116,7 @@ export function createProgram(
   program
     .command("check")
     .description("Check external SSOT conformance (including custom models).")
-    .argument("[type]", "Type of check to run. Filters sources by type.")
+    .argument("[type]", "Source type to scan: the type of a configured source (built in: openapi, ddl, annotation), or all, the default.")
     .option("-c, --config <path>", "Path to config file.")
     .option("--strict", "Treat warnings as errors.", false)
     .option("-v, --verbose", "Show detailed output.", false)

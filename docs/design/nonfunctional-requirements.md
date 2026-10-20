@@ -205,8 +205,8 @@ To ensure all acceptance criteria are covered by test cases and maintain spec-te
 
 - **NFR-013-01**: TestRef definitions (TEST-020~025) exist in design/test-refs.yaml for each CLI test file [test]
 - **NFR-013-02**: TestRefs are linked to corresponding command IDs via implementsCommand [test]
-- **NFR-013-03**: speckeeper check test succeeds for all TestRefs [test]
-- **NFR-013-04**: speckeeper check test --coverage achieves 100% for target acceptance criteria [test]
+- **NFR-013-03**: speckeeper check succeeds for all TestRefs [test]
+- **NFR-013-04**: speckeeper check --coverage achieves 100% for target acceptance criteria [test]
 
 ---
 

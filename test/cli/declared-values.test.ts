@@ -127,6 +127,18 @@ async function invoke(argv: string[]): Promise<{ ran: string[]; exit?: number; s
   }
 }
 
+describe('values the project decides', () => {
+  it.each([
+    [['check', 'annotation'], 'the type of a configured source, such as the built-in annotation'],
+    [['check', 'proto'], 'the type of a source with a custom scanner'],
+    [['new', 'functional-requirement'], 'the ID of a model the config registers'],
+  ])('%j reaches the command: %s', async (argv) => {
+    const result = await invoke(argv);
+    expect(result.exit, result.stderr).toBeUndefined();
+    expect(result.ran).toHaveLength(1);
+  });
+});
+
 describe('options the contract does not declare', () => {
   it.each([
     [['build', '--watch']],

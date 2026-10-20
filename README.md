@@ -142,7 +142,7 @@ export default defineSpecs(
 npx speckeeper lint
 
 # Check test coverage against requirements
-npx speckeeper check test --coverage
+npx speckeeper check --coverage
 
 # Analyze change impact
 npx speckeeper impact FR-001
@@ -166,7 +166,7 @@ npx speckeeper audit-requirements --adapter openai
 | `speckeeper build` | Generate `docs/` and `specs/` from TypeScript models |
 | `speckeeper lint` | Validate design integrity (ID uniqueness, references, phase gates) |
 | `speckeeper check` | Verify consistency with external SSOT |
-| `speckeeper check test --coverage` | Verify test coverage for requirements |
+| `speckeeper check --coverage` | Verify test coverage for requirements |
 | `speckeeper drift` | Detect manual edits to generated `docs/` files |
 | `speckeeper impact <id>` | Analyze change impact for a specific element |
 | `speckeeper new <type>` | Create a new element with auto-generated ID |
@@ -506,7 +506,7 @@ The check exits 1 when the transitive coverage, or any per-model coverage checke
 (it would otherwise measure nothing and pass).
 
 ```bash
-$ npx speckeeper check test --coverage
+$ npx speckeeper check --coverage
 
   Transitive coverage (via satisfies)
   ─────────────────────────────────────

@@ -698,7 +698,8 @@ entries:
             description: speckeeper check runs external SSOT consistency check for all models
             verificationMethod: test
           - id: FR-602-02
-            description: speckeeper check [type] filters checks by type (openapi, ddl, iac, external-ssot, test, contract)
+            description: speckeeper check [type] scans only the configured sources of that type (openapi, ddl, annotation, or a
+              custom source type)
             verificationMethod: test
           - id: FR-602-03
             description: Type argument corresponds to check categories, not model IDs
@@ -712,12 +713,10 @@ entries:
               # External SSOT consistency check for all models
               speckeeper check
 
-              # Check specific type only
-              speckeeper check external-ssot   # All external SSOT checks
-              speckeeper check openapi         # OpenAPI consistency only
-              speckeeper check ddl             # DDL consistency only
-              speckeeper check test            # Test reference consistency
-              speckeeper check contract        # Contract consistency
+              # Scan the sources of one type only
+              speckeeper check openapi         # OpenAPI sources only
+              speckeeper check ddl             # DDL sources only
+              speckeeper check annotation      # Annotated code and tests only
             description: Check command examples
         relations:
           - type: satisfies
@@ -865,10 +864,10 @@ entries:
             description: Verification logic is included in _models/ model definitions
             verificationMethod: test
           - id: FR-605-03
-            description: speckeeper check external-ssot uses verification logic from _models/ model definitions only
+            description: speckeeper check uses verification logic from _models/ model definitions only
             verificationMethod: test
           - id: FR-605-04
-            description: speckeeper check external-ssot does not reference _checkers/ directory
+            description: speckeeper check does not reference _checkers/ directory
             verificationMethod: test
           - id: FR-605-05
             description: Checker template functions (src/scaffold/templates/checkers/) are removed; checker logic moves to core DSL
@@ -2214,10 +2213,10 @@ entries:
             description: TestRefs are linked to corresponding command IDs via implementsCommand
             verificationMethod: test
           - id: NFR-013-03
-            description: speckeeper check test succeeds for all TestRefs
+            description: speckeeper check succeeds for all TestRefs
             verificationMethod: test
           - id: NFR-013-04
-            description: speckeeper check test --coverage achieves 100% for target acceptance criteria
+            description: speckeeper check --coverage achieves 100% for target acceptance criteria
             verificationMethod: test
         relations:
           - type: refines

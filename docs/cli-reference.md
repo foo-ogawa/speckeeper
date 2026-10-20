@@ -223,17 +223,17 @@ Validates specifications against actual implementation artifacts using a global 
 speckeeper check
 ```
 ```
-speckeeper check external-ssot --verbose
+speckeeper check openapi --verbose
 ```
 ```
-speckeeper check test --coverage
+speckeeper check --coverage
 ```
 
 #### Arguments
 
 | Name | Required | Description |
 |---|---|---|
-| `type` | No | Type of check to run. Filters sources by type. |
+| `type` | No | Source type to scan: the type of a configured source (built in: openapi, ddl, annotation), or all, the default. |
 
 #### Options
 

@@ -146,7 +146,7 @@ speckeeper check [options]
 
 | Name | Kind | Type | Required | Default | Description |
 |------|------|------|----------|---------|-------------|
-| <type> | argument | enum (external-ssot, openapi, ddl, iac, custom, all, test) |  | - | Type of check to run, filtering sources by type |
+| <type> | argument | string |  | - | Source type to scan, the type of a configured source, or all (the default) |
 | -c, --config | option | path |  | - | Path to config file |
 | --strict | option | boolean |  | false | Treat warnings as errors |
 | -v, --verbose | option | boolean |  | false | Show detailed output |
@@ -157,10 +157,8 @@ speckeeper check [options]
 ```bash
 speckeeper check
 speckeeper check openapi
-speckeeper check ddl
-speckeeper check iac
-speckeeper check external-ssot --verbose
-speckeeper check test --coverage
+speckeeper check annotation --verbose
+speckeeper check --coverage
 ```
 
 ### Exit Codes

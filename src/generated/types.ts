@@ -50,7 +50,7 @@ export type DriftExitResult =
   | { exitCode: 1; stdout: unknown };
 
 export interface CheckArgs {
-  type?: "external-ssot" | "openapi" | "ddl" | "iac" | "custom" | "all" | "test";
+  type?: string;
 }
 
 export interface CheckOptions {

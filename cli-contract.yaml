@@ -305,18 +305,18 @@ command_sets:
           Sources include OpenAPI, DDL, annotations, and custom scanners.
         usage:
           - speckeeper check
-          - speckeeper check external-ssot --verbose
-          - speckeeper check test --coverage
+          - speckeeper check openapi --verbose
+          - speckeeper check --coverage
 
         arguments:
           - name: type
             index: 0
             required: false
             description: >-
-              Type of check to run. Filters sources by type.
+              Source type to scan: the type of a configured source (built in:
+              openapi, ddl, annotation), or all, the default.
             schema:
               type: string
-              enum: [external-ssot, openapi, ddl, iac, custom, all, test]
 
         options:
           - name: config
