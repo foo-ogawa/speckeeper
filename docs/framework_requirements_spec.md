@@ -867,7 +867,7 @@ Business+Domain → Requirements → Design (Policy) → Detailed Design/Impleme
 Circular references are detected under the following conditions:
 
 1. **Direct cycle**: A implements B, B implements A
-2. **Indirect cycle**: A→B→C→A (any combination of relation types)
+2. **Indirect cycle**: A→B→C→A (any combination of one-way relation types; relatedTo and traces link both ways by definition and do not form a cycle)
 3. **Level violation cycle**: Concrete→Abstract→Concrete (level returns)
 
 ```
