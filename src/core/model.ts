@@ -12,9 +12,6 @@ import {
   type ModelLevel,
   type Relation,
   type RelationValidationError,
-  validateRelationLevel,
-  detectCycles,
-  inferModelIdFromSpecId,
 } from './relation.js';
 
 // Re-export relation types
@@ -345,81 +342,6 @@ export abstract class Model<TSchema extends ZodType> {
   }
   
   /**
-   * Validate level constraints of relations
-   * @param spec - Spec instance (if it has relations property)
-   * @returns Array of validation errors
-   */
-  validateRelations(spec: z.infer<TSchema>): RelationValidationError[] {
-    const errors: RelationValidationError[] = [];
-    const specWithRelations = spec as { id?: string; relations?: Relation[] };
-    
-    if (!specWithRelations.relations || !specWithRelations.id) {
-      return errors;
-    }
-    
-    // Get all models to retrieve target model levels
-    const allModels = getAllModels();
-    const modelLevelMap = new Map<string, ModelLevel | undefined>();
-    for (const model of allModels) {
-      modelLevelMap.set(model.id, model.level);
-    }
-    
-    for (const relation of specWithRelations.relations) {
-      // Infer target model ID
-      const targetModelId = inferModelIdFromSpecId(relation.target);
-      if (!targetModelId) {
-        continue; // Skip if model ID cannot be inferred
-      }
-      
-      const targetLevel = modelLevelMap.get(targetModelId);
-      
-      const error = validateRelationLevel(
-        this.level,
-        specWithRelations.id,
-        relation,
-        targetLevel,
-      );
-      
-      if (error) {
-        errors.push(error);
-      }
-    }
-    
-    return errors;
-  }
-  
-  /**
-   * Validate relations of multiple specs (including circular reference check)
-   */
-  validateAllRelations(specs: z.infer<TSchema>[]): RelationValidationError[] {
-    const errors: RelationValidationError[] = [];
-    const allRelations: Array<{ sourceId: string; targetId: string; type: string }> = [];
-    
-    for (const spec of specs) {
-      // Individual level constraint check
-      errors.push(...this.validateRelations(spec));
-      
-      // Collect relations for circular reference check
-      const specWithRelations = spec as { id?: string; relations?: Relation[] };
-      if (specWithRelations.relations && specWithRelations.id) {
-        for (const rel of specWithRelations.relations) {
-          allRelations.push({
-            sourceId: specWithRelations.id,
-            targetId: rel.target,
-            type: rel.type,
-          });
-        }
-      }
-    }
-    
-    // Circular reference check
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    errors.push(...detectCycles(allRelations as any));
-    
-    return errors;
-  }
-  
-  /**
    * Export in specified format (single spec)
    */
   exportSingle(spec: z.infer<TSchema>, format: string): string | null {
@@ -608,58 +530,6 @@ export function getSpecStore(): Map<string, Map<string, unknown>> {
  */
 export function resetSpecStore(): void {
   specStore.clear();
-}
-
-// ============================================================================
-// Model Registry
-// ============================================================================
-
-/** Map of registered models */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const modelRegistry = new Map<string, Model<any>>();
-
-/**
- * Register model
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerModel(model: Model<any>): void {
-  modelRegistry.set(model.id, model);
-}
-
-/**
- * Get model
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getModel(id: string): Model<any> | undefined {
-  return modelRegistry.get(id);
-}
-
-/**
- * Get all registered models
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getAllModels(): Model<any>[] {
-  return Array.from(modelRegistry.values());
-}
-
-/**
- * Clear registry
- */
-export function clearModelRegistry(): void {
-  modelRegistry.clear();
-}
-
-/**
- * Register model instances from config.models array.
- * Filters out non-Model values. Call this once after config is loaded.
- */
-export function registerModelsFromConfig(models: unknown[]): void {
-  for (const model of models) {
-    if (model && typeof model === 'object' && 'id' in model && 'schema' in model) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      registerModel(model as Model<any>);
-    }
-  }
 }
 
 /**

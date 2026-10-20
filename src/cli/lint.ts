@@ -132,7 +132,7 @@ async function runModelLint(models: any[], specs: SpecEntry[] | undefined, optio
     }
   }
 
-  for (const result of await runDesignLint(specs, { phase: options.gatePhase, review: options.review })) {
+  for (const result of await runDesignLint(specs, { phase: options.gatePhase, review: options.review, models })) {
     issues.push({
       rule: result.ruleId,
       severity: result.severity,

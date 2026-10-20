@@ -256,7 +256,8 @@ export function validateRelationLevel(
 }
 
 /**
- * Detect circular references
+ * Detect circular references: one error for every relation that closes a
+ * cycle, naming the path of that cycle
  */
 export function detectCycles(
   relations: Array<{ sourceId: string; targetId: string; type: RelationType }>,
@@ -279,38 +280,31 @@ export function detectCycles(
   const recursionStack = new Set<string>();
   const cyclePath: string[] = [];
   
-  function dfs(node: string): boolean {
+  function dfs(node: string): void {
     visited.add(node);
     recursionStack.add(node);
     cyclePath.push(node);
     
-    const neighbors = graph.get(node);
-    if (neighbors) {
-      for (const neighbor of neighbors) {
-        if (!visited.has(neighbor)) {
-          if (dfs(neighbor)) {
-            return true;
-          }
-        } else if (recursionStack.has(neighbor)) {
-          // Cycle detected
-          const cycleStart = cyclePath.indexOf(neighbor);
-          const cycle = cyclePath.slice(cycleStart);
-          cycle.push(neighbor); // Close the cycle
-          
-          errors.push({
-            type: 'cycle_detected',
-            message: `Circular reference detected: ${cycle.join(' → ')}`,
-            relation: relationMap.get(`${node}→${neighbor}`)!,
-            sourceId: node,
-          });
-          return true;
-        }
+    for (const neighbor of graph.get(node) ?? []) {
+      if (!visited.has(neighbor)) {
+        dfs(neighbor);
+      } else if (recursionStack.has(neighbor)) {
+        // The relation closes a cycle through the nodes on the current path
+        const cycle = cyclePath.slice(cyclePath.indexOf(neighbor));
+        cycle.push(neighbor);
+        
+        errors.push({
+          type: 'cycle_detected',
+          message: `Circular reference detected: ${cycle.join(' → ')}`,
+          relation: relationMap.get(`${node}→${neighbor}`)!,
+          sourceId: node,
+        });
       }
     }
     
+    // Unwind even past a cycle, so a later walk never sees this path as its own
     cyclePath.pop();
     recursionStack.delete(node);
-    return false;
   }
   
   for (const node of graph.keys()) {

@@ -3,12 +3,21 @@
  *
  * Checks that hold across every model, so they cannot be expressed as a
  * `LintRule` (which sees one spec at a time): ID uniqueness, reference
- * integrity, orphan elements, the phase gate, and the review gate.
+ * integrity, relation level constraints, circular references, orphan elements,
+ * the phase gate, and the review gate.
  *
  * Results are `LintResult`s, the same shape a model's own rules produce, so the
  * lint command reports both through one path.
  */
 import { buildReferenceGraph, type LintResult, type SpecEntry } from './model.js';
+import {
+  detectCycles,
+  RELATION_CONSTRAINTS,
+  RELATION_TYPES,
+  validateRelationLevel,
+  type ModelLevel,
+  type RelationType,
+} from './relation.js';
 import type { ReviewSetup } from '../review/checks.js';
 import { REVIEW_LINT_RULES, runReviewGate } from '../review/gate.js';
 import { buildReviewRegistry } from '../review/registry.js';
@@ -26,6 +35,10 @@ export const COMMON_LINT_RULES = {
   idUnique: 'id-unique',
   /** Every relation target resolves to a declared element */
   refExists: 'ref-exists',
+  /** Every relation joins levels its type allows */
+  relationLevel: 'relation-level',
+  /** No cycle runs through one-way relations */
+  relationCycle: 'relation-cycle',
   /** Every element takes part in at least one relation */
   orphan: 'orphan',
   /** No TBD is left unresolved once its deadline phase is reached */
@@ -42,6 +55,8 @@ export interface DesignLintOptions {
   phase?: Phase;
   /** The review setup; the review gate runs when it is given */
   review?: ReviewSetup;
+  /** The registered models; the relation level check reads their levels */
+  models?: ReadonlyArray<{ id: string; level?: ModelLevel }>;
 }
 
 /** The slot field the phase gate reads off a spec */
@@ -80,6 +95,8 @@ export async function runDesignLint(
   return [
     ...checkIdUniqueness(graph.nodes),
     ...checkReferenceIntegrity(graph.nodes, graph.edges),
+    ...checkRelationLevels(graph.nodes, graph.edges, options.models ?? []),
+    ...checkRelationCycles(graph.nodes, graph.edges),
     ...checkOrphans(graph.nodes, graph.edges),
     ...checkPhaseGate(specs, options.phase),
     ...(options.review ? await runReviewGate(options.review, buildReviewRegistry(specs)) : []),
@@ -132,6 +149,60 @@ function checkReferenceIntegrity(
       message: `Relation '${edge.type}' of "${edge.from}" targets "${edge.to}", which is not declared by any model`,
       specId: edge.from,
     }));
+}
+
+type GraphNodes = ReturnType<typeof buildReferenceGraph>['nodes'];
+type GraphEdges = ReturnType<typeof buildReferenceGraph>['edges'];
+
+/** The relations between declared elements, with a type the relation constraints define */
+function declaredRelations(nodes: GraphNodes, edges: GraphEdges): Array<GraphEdges[number] & { type: RelationType }> {
+  const declaredIds = new Set(nodes.map(node => node.id));
+  return edges.filter((edge): edge is GraphEdges[number] & { type: RelationType } =>
+    declaredIds.has(edge.to) && (RELATION_TYPES as readonly string[]).includes(edge.type));
+}
+
+/**
+ * Relation level constraints: each relation type allows only some target
+ * levels and a direction between the levels of its source and target model
+ * (RELATION_CONSTRAINTS). A relation that touches a model without a level is
+ * not checked.
+ */
+function checkRelationLevels(
+  nodes: GraphNodes,
+  edges: GraphEdges,
+  models: ReadonlyArray<{ id: string; level?: ModelLevel }>,
+): LintResult[] {
+  const levelOfModel = new Map(models.map(model => [model.id, model.level]));
+  const levelOf = new Map(nodes.map(node => [node.id, levelOfModel.get(node.model)]));
+
+  return declaredRelations(nodes, edges).flatMap(edge => {
+    const violation = validateRelationLevel(levelOf.get(edge.from), edge.from, { type: edge.type, target: edge.to }, levelOf.get(edge.to));
+    return violation
+      ? [{
+          ruleId: COMMON_LINT_RULES.relationLevel,
+          severity: 'error' as const,
+          message: `Relation '${edge.type}' of "${edge.from}" to "${edge.to}": ${violation.message}`,
+          specId: edge.from,
+        }]
+      : [];
+  });
+}
+
+/**
+ * Circular references: a cycle through one-way relations means every element
+ * on it is, through the others, a refinement or dependency of itself. A
+ * bidirectional relation (relatedTo, traces — propagation both) links both
+ * ways by definition, so it never closes a cycle.
+ */
+function checkRelationCycles(nodes: GraphNodes, edges: GraphEdges): LintResult[] {
+  const oneWay = declaredRelations(nodes, edges).filter(edge => RELATION_CONSTRAINTS[edge.type].propagation !== 'both');
+
+  return detectCycles(oneWay.map(edge => ({ sourceId: edge.from, targetId: edge.to, type: edge.type }))).map(cycle => ({
+    ruleId: COMMON_LINT_RULES.relationCycle,
+    severity: 'error' as const,
+    message: cycle.message,
+    specId: cycle.sourceId,
+  }));
 }
 
 /**

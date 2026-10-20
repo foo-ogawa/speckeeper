@@ -257,6 +257,42 @@ describe('lintCommand', () => {
       expect(process.exitCode).toBe(1);
     });
 
+    it('FR-400-01 verifies the level constraints of relations with the levels of the registered models', async () => {
+      const config = commonItemsConfig([
+        { modelId: 'usecase', data: [{ id: 'UC-001' }] },
+        { modelId: 'screen', data: [{ id: 'SCR-001', relations: [{ type: 'satisfies', target: 'UC-001' }] }] },
+        { modelId: 'requirement', data: [{ id: 'FR-001', relations: [{ type: 'refines', target: 'SCR-001' }] }] },
+      ]);
+      const levels: Record<string, string> = { usecase: 'L0', requirement: 'L1', screen: 'L3' };
+      for (const model of config.models) Object.assign(model, { level: levels[model.id] });
+      mockedLoadConfig.mockResolvedValue(config as never);
+
+      await lintCommand({});
+
+      expect(output()).toContain('relation-level');
+      expect(output()).toContain('SCR-001');
+      expect(output()).not.toContain('UC-001" to');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('FR-400-01 verifies circular references through one-way relations', async () => {
+      mockedLoadConfig.mockResolvedValue(commonItemsConfig([
+        {
+          modelId: 'component',
+          data: [
+            { id: 'COMP-001', relations: [{ type: 'dependsOn', target: 'COMP-002' }] },
+            { id: 'COMP-002', relations: [{ type: 'dependsOn', target: 'COMP-001' }] },
+          ],
+        },
+      ]) as never);
+
+      await lintCommand({});
+
+      expect(output()).toContain('relation-cycle');
+      expect(output()).toContain('COMP-001 → COMP-002 → COMP-001');
+      expect(process.exitCode).toBe(1);
+    });
+
     it('FR-400-01 reports no common lint issue for a consistent design', async () => {
       mockedLoadConfig.mockResolvedValue(commonItemsConfig([
         {

@@ -214,7 +214,7 @@ All models extend the `Model` base class from `src/core/model.ts`.
 
 ### Type Definitions
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="28" end="87" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="25" end="84" lang="typescript" title="src/core/model.ts (Type Definitions)" no_source="true"-->
 **src/core/model.ts (Type Definitions)**
 
 ```typescript
@@ -283,7 +283,7 @@ export interface CheckResult {
 
 ### Model Class
 
-<!--@embedoc:code_snippet file="src/core/model.ts" start="254" end="301" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
+<!--@embedoc:code_snippet file="src/core/model.ts" start="251" end="298" lang="typescript" title="src/core/model.ts (Model Class Properties)" no_source="true"-->
 **src/core/model.ts (Model Class Properties)**
 
 ```typescript
