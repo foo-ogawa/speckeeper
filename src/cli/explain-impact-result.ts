@@ -5,6 +5,7 @@ import {
   computeExitCode,
   formatResult,
   writeOutput,
+  EXIT_INPUT_ERROR,
   EXIT_RUNTIME_MISSING,
   EXIT_ADAPTER_ERROR,
 } from "../agents/index.js";
@@ -27,7 +28,7 @@ export async function commandExplainImpact(
   if (!stdin.trim()) {
     console.error(chalk.red("Error: No input received on stdin."));
     console.error("Usage: speckeeper impact FR-001 --format json | speckeeper explain-impact");
-    process.exitCode = 2;
+    process.exitCode = EXIT_INPUT_ERROR;
     return;
   }
 

@@ -3,6 +3,8 @@ import { handoffSchemas } from "../generated/dsl/handoffs.js";
 import { taskRegistry } from "../generated/dsl/tasks.js";
 import type { AgentTaskResult, AuditConfig, AuditOptions, AuditRunResult, TaskId } from "./types.js";
 
+/** A configuration or input the command cannot run with */
+export const EXIT_INPUT_ERROR = 2;
 export const EXIT_RUNTIME_MISSING = 11;
 export const EXIT_ADAPTER_ERROR = 12;
 
