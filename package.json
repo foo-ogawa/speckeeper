@@ -98,7 +98,7 @@
     "@types/node-sql-parser": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
     "agent-contracts": "^0.35.5",
     "agent-contracts-runtime": "^0.36.13",
     "chalk": "^6.0.0",
@@ -110,7 +110,7 @@
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "js-yaml": "^4.3.2",
