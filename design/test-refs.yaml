@@ -1520,11 +1520,11 @@ specs:
         pattern: 'FR-1201-02 the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order'
         description: 'the relations provider follows the impact traversal with depth, relation types and an edge filter, in a stable order'
       - acceptanceCriteriaId: FR-1202-01
-        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency'
-        description: 'the same specs and config give the same hash regardless of order, line endings and concurrency'
+        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings, concurrency and where the checkout is'
+        description: 'the same specs and config give the same hash regardless of order, line endings, concurrency and where the checkout is'
       - acceptanceCriteriaId: NFR-017-01
-        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency'
-        description: 'the same specs and config give the same hash regardless of order, line endings and concurrency'
+        pattern: 'FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings, concurrency and where the checkout is'
+        description: 'the same specs and config give the same hash regardless of order, line endings, concurrency and where the checkout is'
       - acceptanceCriteriaId: FR-1202-02
         pattern: 'FR-1202-02 --show-packet prints the packet without calling the LLM'
         description: '--show-packet prints the packet without calling the LLM'

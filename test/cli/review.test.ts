@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { z } from 'zod';
 import YAML from 'yaml';
-import { Model, buildReferenceGraph, traverseReferenceGraph, type SpecEntry } from '../../src/core/model.js';
+import { Model, buildReferenceGraph, loadYamlSpecs, traverseReferenceGraph, type SpecEntry } from '../../src/core/model.js';
 import { defineReviewOutput, relationsContext } from '../../src/review/index.js';
 import type { ContextProvider, ReviewCheck, ReviewConfigInput } from '../../src/review/types.js';
 import { buildReviewRegistry } from '../../src/review/registry.js';
@@ -358,7 +358,7 @@ describe('FR-1201 review context provider', () => {
 // ============================================================================
 
 describe('FR-1202 review packet hash', () => {
-  it('FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings and concurrency', async () => {
+  it('FR-1202-01 NFR-017-01 the same specs and config give the same hash regardless of order, line endings, concurrency and where the checkout is', async () => {
     writeFileSync(join(project.dir, 'prompt-lf.md'), 'Report vague criteria.\nBe brief.\n');
     writeFileSync(join(project.dir, 'prompt-crlf.md'), 'Report vague criteria.\r\nBe brief.\r\n');
     const hashOf = async (promptFile: string, specs: SpecEntry[]) => {
@@ -374,6 +374,19 @@ describe('FR-1202 review packet hash', () => {
     expect(await hashOf('prompt-crlf.md', design())).toEqual(base);
     expect(await hashOf('prompt-lf.md', [...design()].reverse())).toEqual(base);
     expect(base['REQ-001']).not.toBe(base['REQ-002']);
+
+    const fromCheckout = async (checkout: string) => {
+      const dir = join(project.dir, checkout);
+      mkdirSync(dir);
+      writeFileSync(join(dir, 'requirements.yaml'), YAML.stringify({ model: 'requirement', specs: design()[0].data }));
+      const model = requirementModel([verifiability]);
+      const setup = resolveReviewSetup(undefined, [model], project.dir)!;
+      const registry = buildReviewRegistry(loadYamlSpecs(join(dir, 'requirements.yaml'), [model]).entries);
+      const packet = await buildPacket(setup.checks[0], { id: 'REQ-001', specIds: ['REQ-001'] }, registry, project.dir);
+      expect(packet.text).not.toContain(dir);
+      return { hash: packet.hash, specs: packet.inputHashes.specs };
+    };
+    expect(await fromCheckout('a')).toEqual(await fromCheckout('b'));
   });
 
   it('FR-1202-02 --show-packet prints the packet without calling the LLM', async () => {
