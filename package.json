@@ -73,7 +73,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "embedoc": "^0.14.9",
     "glob": "^14.0.6",
     "tsx": "^4.23.15",
     "yaml": "^2.9.1",
@@ -104,6 +103,7 @@
     "chalk": "^6.0.1",
     "cli-contracts": "^0.35.0",
     "commander": "^15.1.0",
+    "embedoc": "^0.14.9",
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "node-sql-parser": "^5.4.0",
