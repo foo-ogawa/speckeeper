@@ -119,6 +119,9 @@
     "@typescript-eslint/typescript-estree": {
       "minimatch": "^11.0.8"
     },
+    "embedoc": {
+      "glob": "^14.0.6"
+    },
     "eslint": {
       "minimatch": "^11.0.8"
     }
