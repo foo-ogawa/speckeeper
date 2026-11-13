@@ -103,7 +103,7 @@
     "chalk": "^6.0.1",
     "cli-contracts": "^0.35.0",
     "commander": "^15.1.0",
-    "embedoc": "^0.14.9",
+    "embedoc": "^0.14.10",
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "node-sql-parser": "^5.4.0",
@@ -119,9 +119,6 @@
     },
     "@typescript-eslint/typescript-estree": {
       "minimatch": "^11.0.8"
-    },
-    "embedoc": {
-      "glob": "^14.0.6"
     },
     "eslint": {
       "minimatch": "^11.0.8"
