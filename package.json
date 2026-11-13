@@ -74,10 +74,10 @@
   "license": "MIT",
   "dependencies": {
     "embedoc": "^0.14.9",
-    "glob": "^13.0.6",
-    "tsx": "^4.21.0",
-    "yaml": "^2.9.0",
-    "zod": "^4.4.3"
+    "glob": "^14.0.6",
+    "tsx": "^4.23.15",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "@aaac/runtime": "^0.2.7",
@@ -92,30 +92,35 @@
     }
   },
   "devDependencies": {
-    "@aaac/runtime": "^0.2.7",
+    "@aaac/runtime": "^0.2.10",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22.20.0",
+    "@types/node": "^22.20.5",
     "@types/node-sql-parser": "^1.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.65.0",
-    "@typescript-eslint/parser": "^8.65.0",
-    "@vitest/coverage-v8": "^4.1.12",
-    "agent-contracts": "^0.35.5",
-    "agent-contracts-runtime": "^0.36.13",
-    "chalk": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.2",
+    "@typescript-eslint/parser": "^8.72.2",
+    "@vitest/coverage-v8": "^5.1.0",
+    "agent-contracts": "^0.35.9",
+    "agent-contracts-runtime": "^0.36.15",
+    "chalk": "^6.0.1",
     "cli-contracts": "^0.35.0",
-    "commander": "^15.0.0",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.8.0",
+    "commander": "^15.1.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.14.0",
     "node-sql-parser": "^5.4.0",
-    "tsup": "^8.5.1",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.12"
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0"
   },
   "overrides": {
-    "js-yaml": "^4.3.2",
-    "tsup": {
-      "esbuild": "^0.28.1"
+    "@eslint/config-array": {
+      "minimatch": "^11.0.8"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
+    "eslint": {
+      "minimatch": "^11.0.8"
     }
   }
 }
