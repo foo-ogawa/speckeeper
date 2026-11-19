@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import ts from 'typescript';
 import type { MermaidNode, ResolvedEdge } from '../../src/scaffold/types.js';
 import {
   generateModelFile,
@@ -74,6 +75,41 @@ describe('FR-106, FR-605: generateModelFile', () => {
     expect(result.content).not.toContain('protected externalChecker');
     expect(result.content).toContain('protected exporters');
     expect(result.content).toContain('protected lintRules');
+  });
+
+  it.each([
+    ["User's Guide"],
+    ["x';static{process.stdout.write('INJECTED')}z='"],
+    ['back\\slash "quoted"'],
+  ])('carries the label %j as the description string, whatever it contains', label => {
+    const nodes = new Map<string, MermaidNode>();
+    const req = makeNode('REQ', ['speckeeper'], { label });
+    const api = makeNode('API', ['openapi'], { label: 'Orders */ API' });
+    nodes.set('REQ', req);
+    nodes.set('API', api);
+
+    const { content } = generateModelFile(req, [], [makeEdge('REQ', 'API', 'implements')], nodes);
+    const { diagnostics } = ts.transpileModule(content, { reportDiagnostics: true });
+    expect(diagnostics?.map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n'))).toEqual([]);
+
+    const source = ts.createSourceFile('req.ts', content, ts.ScriptTarget.ES2022, true);
+    const members: string[] = [];
+    let description: string | undefined;
+    source.forEachChild(function visit(node): void {
+      if (ts.isClassDeclaration(node)) {
+        for (const member of node.members) {
+          members.push(ts.SyntaxKind[member.kind]);
+          if (ts.isPropertyDeclaration(member) && member.name.getText(source) === 'description' &&
+            member.initializer && ts.isStringLiteral(member.initializer)) {
+            description = member.initializer.text;
+          }
+        }
+      }
+      node.forEachChild(visit);
+    });
+    expect(description).toBe(label);
+    expect(members).not.toContain('ClassStaticBlockDeclaration');
+    expect(content).toContain('API (Orders *\\/ API)');
   });
 });
 

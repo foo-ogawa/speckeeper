@@ -100,6 +100,7 @@ class TERM,SR,FR,NFR,CDM,UC,LDM,AT speckeeper
 
 - The class name must be `speckeeper`. scaffold filters by this class name.
 - Nodes not listed in the `class` line are treated as "external nodes" and no model files are generated for them.
+- In every `class` line, the node IDs follow the node ID rule (§2.1) and the class name consists of letters, digits, underscores and hyphens, starting with a letter or underscore. A `class` line that does not fit is not a class assignment and is ignored.
 
 ### 4.2 Artifact Class Assignment
 
@@ -120,7 +121,7 @@ The artifact class controls three things:
 2. **File name**: kebab-case of the class name (e.g., `acceptanceTest` → `acceptance-test.ts`)
 3. **Node grouping**: Multiple nodes assigned the same class are consolidated into a single model file
 
-Any class name is valid — there is no fixed registry. All artifact classes use the same base template (schema, lint rule stubs, exporter stubs).
+Any class name that follows the class name rule (§4.1) is valid — there is no fixed registry. All artifact classes use the same base template (schema, lint rule stubs, exporter stubs).
 
 If a speckeeper-managed node has no artifact class assigned, scaffold derives a default class from the node ID (lowercased).
 

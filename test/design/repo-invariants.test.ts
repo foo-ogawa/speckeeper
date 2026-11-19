@@ -12,12 +12,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import { glob } from 'glob';
-import { toPosixPaths } from '../../src/core/paths.js';
 import {
   acceptanceCriterion,
   artifactFiles,
   parenthesisedLists,
+  repoFiles,
   repoRoot,
   requirement,
 } from './design-data.ts';
@@ -37,11 +36,7 @@ function packageJson(): { scripts: Record<string, string>; engines: { node: stri
 }
 
 function collected(config: VitestSuiteConfig): string[] {
-  return toPosixPaths(glob.sync(config.test.include, {
-    cwd: repoRoot,
-    ignore: config.test.exclude ?? [],
-    nodir: true,
-  }));
+  return repoFiles(config.test.include, config.test.exclude ?? []);
 }
 
 describe('FR-605: the separate checker locations are gone', () => {

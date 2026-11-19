@@ -15,6 +15,19 @@ import type {
 } from './types.js';
 
 /**
+ * Node ID: letters, digits and underscores, not starting with a digit
+ * (docs/scaffold-mermaid-spec.md §2.1). Every line that names a node reads
+ * its ID with this, so an ID that does not fit is never a node.
+ */
+const NODE_ID = '[A-Za-z_]\\w*';
+
+/**
+ * Class name: a node ID that may also contain `-` (`acceptance-test`). The
+ * artifact class names the model and its file, so it is held to a name.
+ */
+const CLASS_NAME = '[A-Za-z_][\\w-]*';
+
+/**
  * Extract mermaid code blocks from Markdown content
  */
 export function extractMermaidBlocks(markdown: string): string[] {
@@ -88,7 +101,7 @@ export function parseFlowchart(mermaidSource: string): ParsedFlowchart {
       continue;
     }
 
-    const classAssignMatch = line.match(/^class\s+(\S+)\s+(\S+)/);
+    const classAssignMatch = line.match(CLASS_ASSIGN_PATTERN);
     if (classAssignMatch) {
       const nodeIds = classAssignMatch[1].split(',').map(s => s.trim());
       classAssignments.push({ nodeIds, className: classAssignMatch[2] });
@@ -165,7 +178,13 @@ function ensureNode(nodes: Map<string, MermaidNode>, id: string, label?: string)
 }
 
 /** Node with optional label: ID[Label text] or ID */
-const NODE_PATTERN = /([A-Za-z_]\w*)(?:\[([^\]]*)\])?/;
+const NODE_PATTERN = new RegExp(`(${NODE_ID})(?:\\[([^\\]]*)\\])?`);
+
+/** `class ID1,ID2 className` */
+const CLASS_ASSIGN_PATTERN = new RegExp(`^class\\s+(${NODE_ID}(?:,${NODE_ID})*)\\s+(${CLASS_NAME})(?=\\s|$)`);
+
+/** `ID[Label]` on a line of its own */
+const STANDALONE_NODE_PATTERN = new RegExp(`^(${NODE_ID})\\[([^\\]]*)\\]\\s*$`);
 
 interface ParsedEdgeResult {
   sourceId: string;
@@ -252,7 +271,7 @@ function tryParseEdgeLine(line: string): ParsedEdgeResult[] | null {
 }
 
 function tryParseStandaloneNode(line: string): { id: string; label: string | undefined } | null {
-  const m = line.match(/^([A-Za-z_]\w*)\[([^\]]*)\]\s*$/);
+  const m = line.match(STANDALONE_NODE_PATTERN);
   if (m) {
     return { id: m[1], label: m[2] };
   }
