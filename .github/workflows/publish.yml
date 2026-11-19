@@ -10,14 +10,22 @@ on:
 
 jobs:
   publish:
+    # The workflow_run path publishes the commit the triggering "GitHub Release"
+    # run checked and tagged, and only a run of this repository's own main
+    # (push or dispatch) counts as one.
     if: >-
       github.event_name == 'release' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,13 +46,24 @@ jobs:
           if npm view "speckeeper@${VERSION}" version >/dev/null 2>&1; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "Version ${VERSION} is already on npm"
+            exit 0
+          fi
+
+          # A release run also completes, successfully, for a later commit that
+          # leaves the version alone (the tag already exists, so it checks
+          # nothing). Only the commit the tag points at is that version.
+          TAG="v${VERSION}"
+          git fetch --no-tags --depth=1 origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          if [ "$(git rev-parse "${TAG}^{commit}")" != "$(git rev-parse HEAD)" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "${TAG} points at $(git rev-parse "${TAG}^{commit}"), not at the checked-out $(git rev-parse HEAD)"
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install dependencies
         if: steps.need.outputs.publish == 'true'
-        run: npm ci --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --ignore-scripts
       - name: Build
         if: steps.need.outputs.publish == 'true'
         run: npm run build
