@@ -11,8 +11,9 @@ function renderCheckerBindingGuidance(bindings: CheckerBinding[]): string {
   if (bindings.length === 0) return '';
 
   const lines = bindings.map(binding => {
+    // The label is free text inside this comment; `*/` in it would end the comment.
     const target = binding.targetLabel && binding.targetLabel !== binding.targetId
-      ? `${binding.targetId} (${binding.targetLabel})`
+      ? `${binding.targetId} (${binding.targetLabel.replaceAll('*/', '*\\/')})`
       : binding.targetId;
     return ` * - ${binding.relation} → ${target}`;
   });
@@ -76,7 +77,7 @@ class ${className} extends Model<typeof ${schemaName}> {
   readonly name = '${params.modelName}';
   readonly idPrefix = '${params.idPrefix}';
   readonly schema = ${schemaName};
-  readonly description = '${params.description}';
+  readonly description = ${JSON.stringify(params.description)};
   // TODO: adjust modelLevel
   protected modelLevel: ModelLevel = '${params.level}';
 

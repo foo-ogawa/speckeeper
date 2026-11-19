@@ -175,6 +175,21 @@ describe('parseFlowchart', () => {
       expect(result.nodes.get('API')?.classes).not.toContain('speckeeper');
       expect(result.nodes.get('DDL')?.classes).not.toContain('speckeeper');
     });
+
+    it('holds class lines to the node ID and class name grammar', () => {
+      const parsed = parseFlowchart([
+        'flowchart TB',
+        '  REQ[Req]',
+        '  class REQ speckeeper',
+        '  class REQ acceptance-test',
+        '  class REQ ../../escaped',
+        '  class REQ a/b',
+        '  class ../x,REQ requirement',
+      ].join('\n'));
+      expect(parsed.nodes.get('REQ')?.classes).toEqual(['speckeeper', 'acceptance-test']);
+      expect([...parsed.nodes.keys()]).toEqual(['REQ']);
+      expect(parsed.classAssignments.map(a => a.className)).toEqual(['speckeeper', 'acceptance-test']);
+    });
   });
 });
 
