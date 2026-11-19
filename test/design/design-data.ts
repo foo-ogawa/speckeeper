@@ -4,12 +4,11 @@
  * cli-contract.yaml, artifact-contracts.yaml — so the tests never carry a second
  * copy of a fact that lives somewhere else.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import { glob } from 'glob';
 import { buildRegistryFromConfig, getSpecsFromConfig } from '../../src/core/model.js';
-import { toPosixPaths } from '../../src/core/paths.js';
+import { globSync } from '../../src/utils/glob.js';
 import design from '../../design/index.ts';
 import { REQUIREMENT_MODEL_IDS } from '../../design/_models/requirement.ts';
 import { CLICommandModel } from '../../design/_models/cli-command.ts';
@@ -91,13 +90,13 @@ export function artifactFiles(artifactId: string): string[] {
   const artifact = contracts.artifacts[artifactId];
   if (!artifact) throw new Error(`No artifact "${artifactId}" in artifact-contracts.yaml`);
 
-  return toPosixPaths(
-    glob.sync(artifact.path_patterns, {
-      cwd: repoRoot,
-      ignore: artifact.exclude_patterns ?? [],
-      nodir: true,
-    }),
-  ).sort();
+  return repoFiles(artifact.path_patterns, artifact.exclude_patterns ?? []);
+}
+
+/** Repo-relative paths of the files (not directories) the patterns match. */
+export function repoFiles(patterns: string[], ignore: string[]): string[] {
+  const paths = new Set(patterns.flatMap(pattern => globSync(pattern, { cwd: repoRoot, ignore })));
+  return [...paths].filter(path => statSync(join(repoRoot, path)).isFile()).sort();
 }
 
 /** The spec registry the coverage checkers consume, keyed by model id. */

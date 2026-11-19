@@ -130,13 +130,13 @@ export function checkBatchDrift(
 // File Discovery
 // ============================================================================
 
-import { glob } from 'glob';
+import { globSync } from './glob.js';
 
 export async function findFiles(
   pattern: string,
   cwd: string = process.cwd()
 ): Promise<string[]> {
-  return glob(pattern, { cwd, absolute: true });
+  return globSync(pattern, { cwd, absolute: true });
 }
 
 export async function findTypeScriptFiles(
@@ -150,7 +150,7 @@ export async function findDefinitionFiles(
   subDir: string
 ): Promise<string[]> {
   const pattern = join(srcDir, subDir, '**/*.ts');
-  return glob(pattern, { absolute: true, ignore: ['**/*.d.ts', '**/index.ts'] });
+  return globSync(pattern, { absolute: true, ignore: ['**/*.d.ts', '**/index.ts'] });
 }
 
 // ============================================================================

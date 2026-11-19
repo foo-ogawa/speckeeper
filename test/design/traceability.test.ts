@@ -12,8 +12,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { glob } from 'glob';
-import { toPosixPaths } from '../../src/core/paths.js';
+import { globSync } from '../../src/utils/glob.js';
 import { CLICommandModel } from '../../design/_models/cli-command.ts';
 import { TestRefModel } from '../../design/_models/test-ref.ts';
 import {
@@ -148,7 +147,7 @@ describe('NFR-013: tests and specifications trace to each other', () => {
   });
 
   it('NFR-013-01 every test file in test/cli/ is declared by a TestRef', () => {
-    const onDisk = toPosixPaths(glob.sync(`${CLI_TEST_DIR}/*.test.ts`, { cwd: repoRoot })).sort();
+    const onDisk = globSync(`${CLI_TEST_DIR}/*.test.ts`, { cwd: repoRoot });
     expect(onDisk.length).toBeGreaterThan(0);
 
     const declared = new Set(testRefSpecs().map((ref) => ref.source.path));
