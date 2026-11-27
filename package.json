@@ -73,6 +73,10 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foo-ogawa/speckeeper.git"
+  },
   "dependencies": {
     "tsx": "^4.23.15",
     "yaml": "^2.9.1",
